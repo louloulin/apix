@@ -18,13 +18,13 @@ class TransformPlugin(
     override val config: PluginConfig
 ) : Plugin {
     private val logger = LoggerFactory.getLogger(TransformPlugin::class.java)
-    
+
     override val type: String = "transform"
-    
+
     // 配置值
     private val requestTransforms: List<Transform> = parseTransforms(config.getJsonObject("request"))
     private val responseTransforms: List<Transform> = parseTransforms(config.getJsonObject("response"))
-    
+
     /**
      * 从配置中解析转换规则。
      */
@@ -32,9 +32,9 @@ class TransformPlugin(
         if (config == null) {
             return emptyList()
         }
-        
+
         val transforms = mutableListOf<Transform>()
-        
+
         // 添加头部转换
         val headers = config.getJsonObject("headers")
         if (headers != null) {
@@ -43,7 +43,7 @@ class TransformPlugin(
                 transforms.add(HeaderTransform(name, value))
             }
         }
-        
+
         // 添加JSON转换
         val json = config.getJsonObject("json")
         if (json != null) {
@@ -52,37 +52,35 @@ class TransformPlugin(
                 transforms.add(JsonTransform(path, value))
             }
         }
-        
+
         return transforms
     }
-    
+
     override fun execute(context: RoutingContext): Future<Void> {
         val promise = Promise.promise<Void>()
-        
+
         try {
             // 应用请求转换
             applyRequestTransforms(context)
-            
+
             // 添加响应处理器来应用响应转换
-            context.addHeadersEndHandler { v ->
+            context.addHeadersEndHandler { _ ->
                 try {
                     applyResponseTransforms(context)
-                    v.complete()
                 } catch (e: Exception) {
                     logger.error("Error applying response transforms", e)
-                    v.fail(e)
                 }
             }
-            
+
             promise.complete()
         } catch (e: Exception) {
             logger.error("Error executing transform plugin", e)
             promise.fail(e)
         }
-        
+
         return promise.future()
     }
-    
+
     /**
      * 应用请求转换。
      */
@@ -91,7 +89,7 @@ class TransformPlugin(
             transform.apply(context, TransformTarget.REQUEST)
         }
     }
-    
+
     /**
      * 应用响应转换。
      */
@@ -100,11 +98,11 @@ class TransformPlugin(
             transform.apply(context, TransformTarget.RESPONSE)
         }
     }
-    
+
     override fun shutdown() {
         // 没有资源需要清理
     }
-    
+
     /**
      * 转换目标（请求或响应）。
      */
@@ -112,7 +110,7 @@ class TransformPlugin(
         REQUEST,
         RESPONSE
     }
-    
+
     /**
      * 表示一个转换操作。
      */
@@ -122,7 +120,7 @@ class TransformPlugin(
          */
         fun apply(context: RoutingContext, target: TransformTarget)
     }
-    
+
     /**
      * 头部转换。
      */
@@ -134,7 +132,7 @@ class TransformPlugin(
             }
         }
     }
-    
+
     /**
      * JSON转换。
      */
@@ -147,7 +145,7 @@ class TransformPlugin(
                         try {
                             val jsonBody = JsonObject(body.toString())
                             setValueAtPath(jsonBody, path, value)
-                            
+
                             // 替换请求体
                             context.setBody(Buffer.buffer(jsonBody.encode()))
                         } catch (e: DecodeException) {
@@ -161,26 +159,26 @@ class TransformPlugin(
                 }
             }
         }
-        
+
         /**
          * 在JSON对象的指定路径设置值。
          */
         private fun setValueAtPath(json: JsonObject, path: String, value: Any) {
             val parts = path.split(".")
             var current = json
-            
+
             for (i in 0 until parts.size - 1) {
                 val part = parts[i]
                 var next = current.getJsonObject(part)
-                
+
                 if (next == null) {
                     next = JsonObject()
                     current.put(part, next)
                 }
-                
+
                 current = next
             }
-            
+
             current.put(parts.last(), value)
         }
     }

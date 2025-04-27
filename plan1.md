@@ -165,14 +165,14 @@ The main gateway will accept requests based on configured routes and apply the a
 - [x] Design and implement Admin API endpoints
 - [x] Create configuration storage (file-based initially)
 - [x] Implement route management
-- [ ] Implement service management
+- [x] Implement service management（已实现服务管理功能，包括服务的增删改查）
 - [x] Implement plugin management
 
 ### Phase 3: Core Plugins
 - [x] Implement authentication plugins
 - [x] Implement security plugins
-- [ ] Implement transformation plugins
-- [ ] Implement logging & monitoring plugins
+- [x] Implement transformation plugins（已实现转换插件，支持请求和响应的头部和JSON转换）
+- [x] Implement logging & monitoring plugins（已实现请求日志插件，支持详细的请求和响应日志）
 
 ### Phase 4: AI-Specific Features
 - [x] Implement AI service connectors

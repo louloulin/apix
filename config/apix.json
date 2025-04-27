@@ -32,6 +32,79 @@
         "max_length": 4000,
         "validate_json": true
       }
+    },
+    {
+      "id": "request-logger",
+      "type": "request-logger",
+      "config": {
+        "log_level": "info",
+        "include_headers": true,
+        "include_body": false,
+        "mask_headers": ["authorization", "x-api-key"]
+      }
+    },
+    {
+      "id": "response-cache",
+      "type": "response-cache",
+      "config": {
+        "ttl_seconds": 300,
+        "max_size": 1000,
+        "methods": ["POST"],
+        "status_codes": [200]
+      }
+    },
+    {
+      "id": "token-usage",
+      "type": "token-usage",
+      "config": {
+        "track_by_model": true,
+        "track_by_user": true,
+        "user_id_header": "X-User-ID"
+      }
+    },
+    {
+      "id": "header-transform",
+      "type": "transform",
+      "config": {
+        "request": {
+          "headers": {
+            "X-Gateway-Version": "1.0.0"
+          }
+        },
+        "response": {
+          "headers": {
+            "X-Powered-By": "APIX Gateway"
+          }
+        }
+      }
+    }
+  ],
+  "services": [
+    {
+      "id": "openai",
+      "name": "OpenAI API",
+      "url": "https://api.openai.com",
+      "host": "api.openai.com",
+      "port": 443,
+      "protocol": "https",
+      "path": "",
+      "retries": 3,
+      "connectTimeout": 30000,
+      "readTimeout": 60000,
+      "enabled": true
+    },
+    {
+      "id": "anthropic",
+      "name": "Anthropic API",
+      "url": "https://api.anthropic.com",
+      "host": "api.anthropic.com",
+      "port": 443,
+      "protocol": "https",
+      "path": "",
+      "retries": 3,
+      "connectTimeout": 30000,
+      "readTimeout": 60000,
+      "enabled": true
     }
   ],
   "routes": [
@@ -41,7 +114,7 @@
       "path": "/v1/chat/completions",
       "methods": ["POST"],
       "targetUrl": "https://api.openai.com/v1/chat/completions",
-      "plugins": ["rate-limiter", "auth", "prompt-validator"],
+      "plugins": ["rate-limiter", "auth", "prompt-validator", "request-logger", "response-cache", "token-usage", "header-transform"],
       "enabled": true
     },
     {
@@ -50,7 +123,7 @@
       "path": "/v1/messages",
       "methods": ["POST"],
       "targetUrl": "https://api.anthropic.com/v1/messages",
-      "plugins": ["rate-limiter", "auth", "prompt-validator"],
+      "plugins": ["rate-limiter", "auth", "prompt-validator", "request-logger", "response-cache", "token-usage", "header-transform"],
       "enabled": true
     }
   ]

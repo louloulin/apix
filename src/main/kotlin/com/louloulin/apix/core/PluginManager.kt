@@ -7,6 +7,10 @@ import com.louloulin.apix.plugins.PluginFactory
 import com.louloulin.apix.plugins.auth.ApiKeyPluginFactory
 import com.louloulin.apix.plugins.security.RateLimitPluginFactory
 import com.louloulin.apix.plugins.ai.PromptValidatorPluginFactory
+import com.louloulin.apix.plugins.ai.ResponseCachePluginFactory
+import com.louloulin.apix.plugins.ai.TokenUsagePluginFactory
+import com.louloulin.apix.plugins.transform.TransformPluginFactory
+import com.louloulin.apix.plugins.logging.RequestLoggerPluginFactory
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import org.slf4j.LoggerFactory
@@ -43,8 +47,16 @@ class PluginManager(
         // Register security plugins
         pluginFactories["rate-limiter"] = RateLimitPluginFactory()
 
+        // Register transformation plugins
+        pluginFactories["transform"] = TransformPluginFactory()
+
+        // Register logging plugins
+        pluginFactories["request-logger"] = RequestLoggerPluginFactory()
+
         // Register AI-specific plugins
         pluginFactories["prompt-validator"] = PromptValidatorPluginFactory()
+        pluginFactories["response-cache"] = ResponseCachePluginFactory()
+        pluginFactories["token-usage"] = TokenUsagePluginFactory()
 
         logger.info("Registered {} built-in plugin factories", pluginFactories.size)
     }

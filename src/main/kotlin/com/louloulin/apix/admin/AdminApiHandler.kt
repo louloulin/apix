@@ -6,6 +6,8 @@ import com.louloulin.apix.core.RouteManager
 import com.louloulin.apix.core.ServiceManager
 import com.louloulin.apix.models.Route
 import com.louloulin.apix.models.Service
+import com.louloulin.apix.plugins.ai.ResponseCachePlugin
+import com.louloulin.apix.plugins.ai.TokenUsagePlugin
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
@@ -54,6 +56,7 @@ class AdminApiHandler(
         // AI-specific endpoints
         router.get("/ai/models").handler(this::getAiModels)
         router.get("/ai/usage").handler(this::getAiUsage)
+        router.post("/ai/cache/clear").handler(this::clearAiCache)
 
         // Config endpoints
         router.get("/config").handler(this::getConfig)
@@ -364,22 +367,52 @@ class AdminApiHandler(
      * Gets AI usage statistics.
      */
     private fun getAiUsage(context: RoutingContext) {
-        // This is a placeholder implementation
-        // In a real gateway, this would return actual usage statistics
+        // 查找令牌使用跟踪插件并获取统计信息
+        var usageStats: JsonObject? = null
 
-        val usageObject = JsonObject()
-            .put("total_tokens", 1000000)
-            .put("prompt_tokens", 700000)
-            .put("completion_tokens", 300000)
-            .put("models", JsonObject()
-                .put("gpt-4", 500000)
-                .put("gpt-3.5-turbo", 300000)
-                .put("claude-3-opus", 200000)
-            )
+        pluginManager.getAllPlugins().forEach { plugin ->
+            if (plugin.type == "token-usage" && plugin is TokenUsagePlugin) {
+                usageStats = plugin.getUsageStats()
+            }
+        }
+
+        // 如果没有找到令牌使用跟踪插件，返回默认统计信息
+        if (usageStats == null) {
+            usageStats = JsonObject()
+                .put("total_tokens", 0)
+                .put("prompt_tokens", 0)
+                .put("completion_tokens", 0)
+                .put("total_requests", 0)
+                .put("models", JsonObject())
+                .put("daily", JsonObject())
+        }
 
         context.response()
             .putHeader("Content-Type", "application/json")
-            .end(JsonObject().put("usage", usageObject).encode())
+            .end(JsonObject().put("usage", usageStats).encode())
+    }
+
+    /**
+     * Clears the AI response cache.
+     */
+    private fun clearAiCache(context: RoutingContext) {
+        // 查找所有响应缓存插件并清除缓存
+        var cacheCleared = false
+
+        pluginManager.getAllPlugins().forEach { plugin ->
+            if (plugin.type == "response-cache" && plugin is ResponseCachePlugin) {
+                plugin.clearCache()
+                cacheCleared = true
+            }
+        }
+
+        context.response()
+            .putHeader("Content-Type", "application/json")
+            .end(JsonObject()
+                .put("success", true)
+                .put("cache_cleared", cacheCleared)
+                .encode()
+            )
     }
 
     /**
