@@ -1,6 +1,6 @@
 plugins {
     kotlin("jvm") version "2.1.20"
-    id("io.vertx.vertx-plugin") version "1.4.0"
+    id("application")
     id("org.graalvm.buildtools.native") version "0.9.28"
 }
 
@@ -36,6 +36,8 @@ dependencies {
     testImplementation("io.vertx:vertx-junit5")
     testImplementation("io.vertx:vertx-web-client")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testImplementation("org.mockito:mockito-core:5.4.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
 }
 
 tasks.test {

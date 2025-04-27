@@ -16,23 +16,23 @@ class ApixVerticle : AbstractVerticle() {
     private lateinit var configManager: ConfigManager
     private lateinit var pluginManager: PluginManager
     private lateinit var routeManager: RouteManager
-    
+
     override fun start(startPromise: Promise<Void>) {
         logger.info("Initializing APIX Gateway...")
-        
+
         try {
             // Initialize configuration
             configManager = ConfigManager(vertx)
-            
+
             // Initialize plugin system
             pluginManager = PluginManager(vertx, configManager)
-            
+
             // Initialize route manager
             routeManager = RouteManager(vertx, configManager, pluginManager)
-            
+
             // Create main router
             val mainRouter = Router.router(vertx)
-            
+
             // Add common handlers
             mainRouter.route().handler(LoggerHandler.create())
             mainRouter.route().handler(BodyHandler.create())
@@ -46,26 +46,28 @@ class ApixVerticle : AbstractVerticle() {
                     io.vertx.core.http.HttpMethod.OPTIONS
                 ))
             )
-            
+
             // Set up admin API routes
+            val adminRouter = Router.router(vertx)
             val adminApiHandler = AdminApiHandler(configManager, pluginManager, routeManager)
-            adminApiHandler.setupRoutes(mainRouter.mountSubRouter("/admin", Router.router(vertx)))
-            
+            adminApiHandler.setupRoutes(adminRouter)
+            mainRouter.mountSubRouter("/admin", adminRouter)
+
             // Set up gateway routes
             routeManager.setupRoutes(mainRouter)
-            
+
             // Create HTTP server
             val serverOptions = HttpServerOptions()
                 .setPort(configManager.getGatewayPort())
                 .setHost(configManager.getGatewayHost())
-            
+
             // Start the server
             vertx.createHttpServer(serverOptions)
                 .requestHandler(mainRouter)
                 .listen { result ->
                     if (result.succeeded()) {
-                        logger.info("APIX Gateway listening on {}:{}", 
-                            configManager.getGatewayHost(), 
+                        logger.info("APIX Gateway listening on {}:{}",
+                            configManager.getGatewayHost(),
                             configManager.getGatewayPort())
                         startPromise.complete()
                     } else {
@@ -73,19 +75,19 @@ class ApixVerticle : AbstractVerticle() {
                         startPromise.fail(result.cause())
                     }
                 }
-                
+
         } catch (e: Exception) {
             logger.error("Error initializing APIX Gateway", e)
             startPromise.fail(e)
         }
     }
-    
+
     override fun stop(stopPromise: Promise<Void>) {
         logger.info("Stopping APIX Gateway...")
-        
+
         // Cleanup resources
         pluginManager.shutdown()
-        
+
         stopPromise.complete()
     }
 }

@@ -58,7 +58,8 @@ class PluginManager(
         try {
             val pluginsConfig = configManager.getPluginsConfig()
 
-            pluginsConfig.forEach { pluginConfig ->
+            pluginsConfig.forEach { configObj ->
+                val pluginConfig = configObj as JsonObject
                 val pluginType = pluginConfig.getString("type")
                 val pluginId = pluginConfig.getString("id")
 
