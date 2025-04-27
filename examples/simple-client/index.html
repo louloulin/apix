@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APIX Gateway Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .chat-container {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .user-message {
+            background-color: #e6f7ff;
+            margin-left: 20%;
+        }
+        .ai-message {
+            background-color: #f0f0f0;
+            margin-right: 20%;
+        }
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+        textarea {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            resize: none;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #40a9ff;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .settings {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+        }
+        .settings-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .settings-row label {
+            width: 120px;
+        }
+        .settings-row input, .settings-row select {
+            flex-grow: 1;
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #1890ff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>APIX Gateway Demo</h1>
+    <div class="container">
+        <div class="settings">
+            <h2>Settings</h2>
+            <div class="settings-row">
+                <label for="gateway-url">Gateway URL:</label>
+                <input type="text" id="gateway-url" value="http://localhost:8080">
+            </div>
+            <div class="settings-row">
+                <label for="api-key">API Key:</label>
+                <input type="text" id="api-key" value="test-key">
+            </div>
+            <div class="settings-row">
+                <label for="model">Model:</label>
+                <select id="model">
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    <option value="gpt-4">GPT-4</option>
+                    <option value="claude-3-opus">Claude 3 Opus</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="chat-container" id="chat-container"></div>
+        
+        <div class="input-container">
+            <textarea id="user-input" rows="3" placeholder="Type your message here..."></textarea>
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const gatewayUrlInput = document.getElementById('gateway-url');
+        const apiKeyInput = document.getElementById('api-key');
+        const modelSelect = document.getElementById('model');
+        
+        let messages = [];
+        
+        // Add event listener for the send button
+        sendButton.addEventListener('click', sendMessage);
+        
+        // Add event listener for the Enter key
+        userInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        async function sendMessage() {
+            const userMessage = userInput.value.trim();
+            
+            if (!userMessage) return;
+            
+            // Disable the send button and input
+            sendButton.disabled = true;
+            userInput.disabled = true;
+            
+            // Add loading indicator
+            sendButton.innerHTML = 'Sending <span class="loading"></span>';
+            
+            // Add the user message to the chat
+            addMessage('user', userMessage);
+            
+            // Clear the input
+            userInput.value = '';
+            
+            // Add the message to the messages array
+            messages.push({ role: 'user', content: userMessage });
+            
+            try {
+                // Get the gateway URL and API key
+                const gatewayUrl = gatewayUrlInput.value.trim();
+                const apiKey = apiKeyInput.value.trim();
+                const model = modelSelect.value;
+                
+                // Determine the endpoint based on the model
+                let endpoint = '/v1/chat/completions';
+                let requestBody = {
+                    model: model,
+                    messages: messages
+                };
+                
+                if (model.startsWith('claude')) {
+                    endpoint = '/v1/messages';
+                    requestBody = {
+                        model: model,
+                        messages: messages.map(msg => ({
+                            role: msg.role === 'assistant' ? 'assistant' : 'user',
+                            content: msg.content
+                        }))
+                    };
+                }
+                
+                // Send the request to the gateway
+                const response = await fetch(`${gatewayUrl}${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Extract the AI response
+                let aiMessage;
+                if (model.startsWith('claude')) {
+                    aiMessage = data.content[0].text;
+                } else {
+                    aiMessage = data.choices[0].message.content;
+                }
+                
+                // Add the AI message to the chat
+                addMessage('ai', aiMessage);
+                
+                // Add the AI message to the messages array
+                messages.push({ role: 'assistant', content: aiMessage });
+                
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('ai', `Error: ${error.message}`);
+            } finally {
+                // Re-enable the send button and input
+                sendButton.disabled = false;
+                userInput.disabled = false;
+                sendButton.textContent = 'Send';
+            }
+        }
+        
+        function addMessage(role, content) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.classList.add(role === 'user' ? 'user-message' : 'ai-message');
+            
+            // Replace newlines with <br> tags
+            const formattedContent = content.replace(/\n/g, '<br>');
+            
+            messageElement.innerHTML = formattedContent;
+            chatContainer.appendChild(messageElement);
+            
+            // Scroll to the bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>

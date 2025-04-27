@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APIX Gateway Advanced Demo</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>APIX Gateway Advanced Demo</h1>
+            <div class="tabs">
+                <button class="tab-button active" data-tab="chat">Chat</button>
+                <button class="tab-button" data-tab="usage">Usage Stats</button>
+                <button class="tab-button" data-tab="admin">Admin</button>
+            </div>
+        </header>
+        
+        <main>
+            <section id="chat" class="tab-content active">
+                <div class="settings-panel">
+                    <h2>Settings</h2>
+                    <div class="form-group">
+                        <label for="gateway-url">Gateway URL:</label>
+                        <input type="text" id="gateway-url" value="<%= gatewayUrl %>">
+                    </div>
+                    <div class="form-group">
+                        <label for="api-key">API Key:</label>
+                        <input type="text" id="api-key" value="<%= apiKey %>">
+                    </div>
+                    <div class="form-group">
+                        <label for="model">Model:</label>
+                        <select id="model">
+                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                            <option value="gpt-4">GPT-4</option>
+                            <option value="claude-3-opus">Claude 3 Opus</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="chat-container">
+                    <div id="messages" class="messages"></div>
+                    
+                    <div class="input-area">
+                        <textarea id="user-input" placeholder="Type your message here..."></textarea>
+                        <button id="send-button">Send</button>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="usage" class="tab-content">
+                <h2>Token Usage Statistics</h2>
+                <button id="refresh-usage">Refresh</button>
+                
+                <div class="stats-container">
+                    <div class="stats-card">
+                        <h3>Total Usage</h3>
+                        <div id="total-stats" class="stats-content">
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card">
+                        <h3>Usage by Model</h3>
+                        <div id="model-stats" class="stats-content">
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card">
+                        <h3>Daily Usage</h3>
+                        <div id="daily-stats" class="stats-content">
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="admin" class="tab-content">
+                <h2>Admin Controls</h2>
+                
+                <div class="admin-card">
+                    <h3>Cache Management</h3>
+                    <p>Clear the response cache to ensure fresh responses from AI services.</p>
+                    <button id="clear-cache">Clear Cache</button>
+                    <div id="cache-status" class="status-message"></div>
+                </div>
+                
+                <div class="admin-card">
+                    <h3>Available Models</h3>
+                    <button id="refresh-models">Refresh</button>
+                    <div id="models-list" class="models-container">
+                        <p>Loading...</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <script src="/js/app.js"></script>
+</body>
+</html>

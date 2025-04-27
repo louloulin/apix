@@ -87,7 +87,7 @@ class AdminApiHandler(
             val body = context.body().asJsonObject()
             val route = Route.fromJson(body)
 
-            routeManager.updateRoute(route)
+            routeManager.addRoute(route)
 
             context.response()
                 .setStatusCode(201)
@@ -150,7 +150,7 @@ class AdminApiHandler(
 
             val route = Route.fromJson(body)
 
-            routeManager.updateRoute(route)
+            routeManager.addRoute(route)
 
             context.response()
                 .putHeader("Content-Type", "application/json")

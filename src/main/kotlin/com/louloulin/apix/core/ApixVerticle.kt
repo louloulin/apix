@@ -31,11 +31,13 @@ class ApixVerticle : AbstractVerticle() {
             // Initialize service manager
             serviceManager = ServiceManager(vertx, configManager)
 
-            // Initialize route manager
-            routeManager = RouteManager(vertx, configManager, pluginManager)
-
             // Create main router
             val mainRouter = Router.router(vertx)
+
+            // Initialize route manager
+            routeManager = RouteManager(vertx, mainRouter, configManager, pluginManager)
+
+            // Main router already created above
 
             // Add common handlers
             mainRouter.route().handler(LoggerHandler.create())
@@ -57,8 +59,7 @@ class ApixVerticle : AbstractVerticle() {
             adminApiHandler.setupRoutes(adminRouter)
             mainRouter.mountSubRouter("/admin", adminRouter)
 
-            // Set up gateway routes
-            routeManager.setupRoutes(mainRouter)
+            // Gateway routes are set up automatically by the RouteManager
 
             // Create HTTP server
             val serverOptions = HttpServerOptions()

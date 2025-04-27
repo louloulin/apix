@@ -13,11 +13,13 @@ fun main() {
     logger.info("Starting APIX - AI Agent Gateway")
 
     // Configure Vert.x with metrics
-    val vertxOptions = VertxOptions().apply {
-        metricsOptions = MicrometerMetricsOptions()
-            .setEnabled(true)
-            .setPrometheusOptions(VertxPrometheusOptions().setEnabled(true))
-    }
+    val vertxOptions = VertxOptions()
+    // Disable metrics for native image compatibility
+    // .apply {
+    //     metricsOptions = MicrometerMetricsOptions()
+    //         .setEnabled(true)
+    //         .setPrometheusOptions(VertxPrometheusOptions().setEnabled(true))
+    // }
 
     // Create Vert.x instance
     val vertx = Vertx.vertx(vertxOptions)
