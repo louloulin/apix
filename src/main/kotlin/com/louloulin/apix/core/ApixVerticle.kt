@@ -16,6 +16,7 @@ class ApixVerticle : AbstractVerticle() {
     private lateinit var configManager: ConfigManager
     private lateinit var pluginManager: PluginManager
     private lateinit var routeManager: RouteManager
+    private lateinit var serviceManager: ServiceManager
 
     override fun start(startPromise: Promise<Void>) {
         logger.info("Initializing APIX Gateway...")
@@ -26,6 +27,9 @@ class ApixVerticle : AbstractVerticle() {
 
             // Initialize plugin system
             pluginManager = PluginManager(vertx, configManager)
+
+            // Initialize service manager
+            serviceManager = ServiceManager(vertx, configManager)
 
             // Initialize route manager
             routeManager = RouteManager(vertx, configManager, pluginManager)
@@ -49,7 +53,7 @@ class ApixVerticle : AbstractVerticle() {
 
             // Set up admin API routes
             val adminRouter = Router.router(vertx)
-            val adminApiHandler = AdminApiHandler(configManager, pluginManager, routeManager)
+            val adminApiHandler = AdminApiHandler(configManager, pluginManager, routeManager, serviceManager)
             adminApiHandler.setupRoutes(adminRouter)
             mainRouter.mountSubRouter("/admin", adminRouter)
 

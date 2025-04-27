@@ -44,6 +44,7 @@ class ConfigManager(private val vertx: Vertx) {
             )
             .put("plugins", JsonArray())
             .put("routes", JsonArray())
+            .put("services", JsonArray())
 
         // Try to load configuration from file
         val configPath = System.getProperty("apix.config.path", "config/apix.json")
@@ -149,6 +150,13 @@ class ConfigManager(private val vertx: Vertx) {
      */
     fun getRoutesConfig(): JsonArray {
         return config.getJsonArray("routes", JsonArray())
+    }
+
+    /**
+     * Gets the services configuration.
+     */
+    fun getServicesConfig(): JsonArray {
+        return config.getJsonArray("services", JsonArray())
     }
 
     /**
