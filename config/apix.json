@@ -1,0 +1,57 @@
+{
+  "gateway": {
+    "host": "0.0.0.0",
+    "port": 8080
+  },
+  "admin": {
+    "enabled": true,
+    "host": "0.0.0.0",
+    "port": 8081
+  },
+  "plugins": [
+    {
+      "id": "rate-limiter",
+      "type": "rate-limiter",
+      "config": {
+        "limit": 100,
+        "window": 60
+      }
+    },
+    {
+      "id": "auth",
+      "type": "api-key",
+      "config": {
+        "header": "X-API-Key",
+        "keys": ["test-key"]
+      }
+    },
+    {
+      "id": "prompt-validator",
+      "type": "prompt-validator",
+      "config": {
+        "max_length": 4000,
+        "validate_json": true
+      }
+    }
+  ],
+  "routes": [
+    {
+      "id": "openai-chat",
+      "name": "OpenAI Chat Completions",
+      "path": "/v1/chat/completions",
+      "methods": ["POST"],
+      "targetUrl": "https://api.openai.com/v1/chat/completions",
+      "plugins": ["rate-limiter", "auth", "prompt-validator"],
+      "enabled": true
+    },
+    {
+      "id": "anthropic-messages",
+      "name": "Anthropic Messages",
+      "path": "/v1/messages",
+      "methods": ["POST"],
+      "targetUrl": "https://api.anthropic.com/v1/messages",
+      "plugins": ["rate-limiter", "auth", "prompt-validator"],
+      "enabled": true
+    }
+  ]
+}
