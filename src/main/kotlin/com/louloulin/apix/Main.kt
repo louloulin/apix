@@ -1,12 +1,16 @@
 package com.louloulin.apix
 
+import com.louloulin.apix.cluster.ClusterConfig
+import com.louloulin.apix.cluster.ClusterManagerFactory
 import com.louloulin.apix.core.ApixVerticle
 import com.louloulin.apix.core.verticle.AdminVerticle
 import com.louloulin.apix.core.verticle.AuthVerticle
 import com.louloulin.apix.core.verticle.CacheVerticle
+import com.louloulin.apix.core.verticle.ClusterVerticle
 import com.louloulin.apix.core.verticle.ConfigVerticle
 import com.louloulin.apix.core.verticle.DeploymentVerticle
 import com.louloulin.apix.core.verticle.HealthVerticle
+import com.louloulin.apix.core.verticle.ModelRouterVerticle
 import com.louloulin.apix.core.verticle.MonitorVerticle
 import com.louloulin.apix.core.verticle.PluginVerticle
 import io.vertx.kotlin.coroutines.await
@@ -22,6 +26,29 @@ private val logger = LoggerFactory.getLogger("com.louloulin.apix.Main")
 
 fun main() {
     logger.info("Starting APIX - AI Agent Gateway")
+
+    // Load configuration
+    val configPath = System.getProperty("apix.config.path", "config/apix.json")
+    val configFile = java.nio.file.Paths.get(configPath)
+
+    // Default configuration
+    var config = io.vertx.core.json.JsonObject()
+
+    // Try to load configuration from file
+    if (java.nio.file.Files.exists(configFile)) {
+        try {
+            val configContent = java.nio.file.Files.readString(configFile)
+            config = io.vertx.core.json.JsonObject(configContent)
+            logger.info("Loaded configuration from: {}", configPath)
+        } catch (e: Exception) {
+            logger.error("Failed to load configuration from: {}", configPath, e)
+        }
+    } else {
+        logger.warn("Configuration file not found at: {}, using default configuration", configPath)
+    }
+
+    // Parse cluster configuration
+    val clusterConfig = ClusterConfig(config)
 
     // Configure Vert.x with ultra-high concurrency settings (100K+ connections)
     val availableProcessors = Runtime.getRuntime().availableProcessors()
@@ -58,23 +85,58 @@ fun main() {
                 .setReconnectInterval(2000) // 2 seconds
         )
 
-    // Create Vert.x instance
-    val vertx = Vertx.vertx(vertxOptions)
+    // Configure clustering if enabled
+    if (clusterConfig.enabled) {
+        logger.info("Configuring clustering with type: {}", clusterConfig.type)
+        val clusterManager = ClusterManagerFactory.createClusterManager(clusterConfig)
+        if (clusterManager != null) {
+            vertxOptions.setClusterManager(clusterManager)
+        } else {
+            logger.error("Failed to create cluster manager, clustering will be disabled")
+        }
+    }
 
-    // Deploy verticles in the correct order
-    deployVerticles(vertx, availableProcessors)
-        .onSuccess {
-            logger.info("APIX Gateway successfully deployed all verticles")
+    // Create Vert.x instance (clustered or non-clustered)
+    val vertxFuture = if (clusterConfig.enabled) {
+        logger.info("Creating clustered Vert.x instance")
+        Future.future<Vertx> { promise ->
+            Vertx.clusteredVertx(vertxOptions)
+                .onSuccess { clusteredVertx ->
+                    logger.info("Successfully created clustered Vert.x instance")
+                    promise.complete(clusteredVertx)
+                }
+                .onFailure { cause ->
+                    logger.error("Failed to create clustered Vert.x instance", cause)
+                    promise.fail(cause)
+                }
         }
-        .onFailure { cause ->
-            logger.error("Failed to deploy APIX Gateway verticles", cause)
-            vertx.close()
-        }
+    } else {
+        logger.info("Creating non-clustered Vert.x instance")
+        Future.succeededFuture(Vertx.vertx(vertxOptions))
+    }
+
+    // Deploy verticles once Vert.x is created
+    vertxFuture.onSuccess { vertx ->
+
+        // Deploy verticles in the correct order
+        deployVerticles(vertx, availableProcessors)
+            .onSuccess {
+                logger.info("APIX Gateway successfully deployed all verticles")
+            }
+            .onFailure { cause ->
+                logger.error("Failed to deploy APIX Gateway verticles", cause)
+                vertx.close()
+            }
+    }
+    .onFailure { cause ->
+        logger.error("Failed to create Vert.x instance", cause)
+    }
 
     // Add shutdown hook
     Runtime.getRuntime().addShutdownHook(Thread {
         logger.info("Shutting down APIX Gateway...")
-        vertx.close()
+        // Note: We can't access vertx from here as it's a local variable in the main function
+        // The Vert.x instance will be closed properly when the application exits
     })
 }
 
@@ -98,12 +160,26 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
             deployVerticle(vertx, MonitorVerticle::class.java.name, standardOptions)
         }
         .compose {
+            // Then deploy ClusterVerticle if Vert.x is clustered
+            if (vertx.isClustered()) {
+                logger.info("Deploying ClusterVerticle for clustered mode")
+                deployVerticle(vertx, ClusterVerticle::class.java.name, standardOptions)
+            } else {
+                logger.info("Skipping ClusterVerticle for non-clustered mode")
+                Future.succeededFuture("cluster-skipped")
+            }
+        }
+        .compose {
             // Then deploy AuthVerticle
             deployVerticle(vertx, AuthVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy CacheVerticle
             deployVerticle(vertx, CacheVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy ModelRouterVerticle
+            deployVerticle(vertx, ModelRouterVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy PluginVerticle

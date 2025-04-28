@@ -46,6 +46,11 @@ class AdminVerticle : BaseVerticle() {
         // 系统管理相关处理器
         vertx.eventBus().consumer<JsonObject>(EventBusAddresses.ADMIN_GET_SYSTEM_INFO, this::handleGetSystemInfo)
         vertx.eventBus().consumer<JsonObject>(EventBusAddresses.ADMIN_GET_METRICS, this::handleGetMetrics)
+
+        // 集群管理相关处理器
+        vertx.eventBus().consumer<JsonObject>("apix.admin.cluster.config.get", this::handleGetClusterConfig)
+        vertx.eventBus().consumer<JsonObject>("apix.admin.cluster.node.info", this::handleGetClusterNodeInfo)
+        vertx.eventBus().consumer<JsonObject>("apix.admin.cluster.nodes.get", this::handleGetClusterNodes)
     }
 
     override fun onStart(startPromise: Promise<Void>) {
@@ -111,6 +116,24 @@ class AdminVerticle : BaseVerticle() {
         // 系统管理 API
         router.get("/api/system/info").handler(this::getSystemInfo)
         router.get("/api/system/metrics").handler(this::getMetrics)
+
+        // 集群管理 API
+        router.get("/api/cluster/config").handler(this::getClusterConfig)
+        router.get("/api/cluster/node").handler(this::getClusterNodeInfo)
+        router.get("/api/cluster/nodes").handler(this::getClusterNodes)
+        router.get("/api/cluster/metrics").handler(this::getClusterMetrics)
+
+        // AI 管理 API
+        router.get("/api/ai/models").handler(this::getAIModels)
+        router.get("/api/ai/usage").handler(this::getAIUsage)
+        router.post("/api/ai/cache/clear").handler(this::clearAICache)
+
+        // AI 模型路由 API
+        router.get("/api/ai/model/rules").handler(this::getModelRules)
+        router.post("/api/ai/model/rules").handler(this::addModelRule)
+        router.delete("/api/ai/model/rules/:id").handler(this::removeModelRule)
+        router.post("/api/ai/model/rules/clear").handler(this::clearModelRules)
+        router.post("/api/ai/model/route").handler(this::routeToModel)
 
         // 健康检查 API
         router.get("/health").handler { ctx ->
@@ -791,6 +814,404 @@ class AdminVerticle : BaseVerticle() {
                 message.reply(ar.result().body())
             } else {
                 sendError(message, ar.cause())
+            }
+        }
+    }
+
+    /**
+     * 获取集群配置
+     */
+    private fun getClusterConfig(ctx: RoutingContext) {
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.CLUSTER_CONFIG_GET, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    ctx.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject().put("config", response.getValue("result")).encode())
+                } else {
+                    ctx.response()
+                        .setStatusCode(500)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to get cluster config: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 获取集群节点信息
+     */
+    private fun getClusterNodeInfo(ctx: RoutingContext) {
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.CLUSTER_NODE_INFO, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    ctx.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject().put("node", response.getValue("result")).encode())
+                } else {
+                    ctx.response()
+                        .setStatusCode(500)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to get cluster node info: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 获取集群节点列表
+     */
+    private fun getClusterNodes(ctx: RoutingContext) {
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.CLUSTER_NODES_GET, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    ctx.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject().put("nodes", response.getValue("result")).encode())
+                } else {
+                    ctx.response()
+                        .setStatusCode(500)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to get cluster nodes: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 获取集群指标
+     */
+    private fun getClusterMetrics(ctx: RoutingContext) {
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.CLUSTER_METRICS_GET, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    ctx.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject().put("metrics", response.getValue("result")).encode())
+                } else {
+                    ctx.response()
+                        .setStatusCode(500)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to get cluster metrics: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 处理获取集群配置请求
+     */
+    private fun handleGetClusterConfig(message: io.vertx.core.eventbus.Message<JsonObject>) {
+        // 转发到 ClusterVerticle
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.CLUSTER_CONFIG_GET, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                message.reply(ar.result().body())
+            } else {
+                sendError(message, ar.cause())
+            }
+        }
+    }
+
+    /**
+     * 处理获取集群节点信息请求
+     */
+    private fun handleGetClusterNodeInfo(message: io.vertx.core.eventbus.Message<JsonObject>) {
+        // 转发到 ClusterVerticle
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.CLUSTER_NODE_INFO, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                message.reply(ar.result().body())
+            } else {
+                sendError(message, ar.cause())
+            }
+        }
+    }
+
+    /**
+     * 处理获取集群节点列表请求
+     */
+    private fun handleGetClusterNodes(message: io.vertx.core.eventbus.Message<JsonObject>) {
+        // 转发到 ClusterVerticle
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.CLUSTER_NODES_GET, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                message.reply(ar.result().body())
+            } else {
+                sendError(message, ar.cause())
+            }
+        }
+    }
+
+    /**
+     * 获取模型路由规则
+     */
+    private fun getModelRules(ctx: RoutingContext) {
+        vertx.eventBus().request<JsonArray>(EventBusAddresses.AI_MODEL_RULES_GET, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val rules = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject().put("rules", rules).encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to get model rules: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 添加模型路由规则
+     */
+    private fun addModelRule(ctx: RoutingContext) {
+        val body = ctx.body().asJsonObject()
+
+        if (body == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject().put("error", "Request body is required").encode())
+            return
+        }
+
+        val rule = body.getJsonObject("rule")
+
+        if (rule == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject().put("error", "Rule is required").encode())
+            return
+        }
+
+        vertx.eventBus().request<JsonObject>(
+            EventBusAddresses.AI_MODEL_RULE_ADD,
+            JsonObject().put("rule", rule)
+        ) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject().put("rule", response).encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to add model rule: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 删除模型路由规则
+     */
+    private fun removeModelRule(ctx: RoutingContext) {
+        val ruleId = ctx.pathParam("id")
+
+        if (ruleId == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject().put("error", "Rule ID is required").encode())
+            return
+        }
+
+        vertx.eventBus().request<JsonObject>(
+            EventBusAddresses.AI_MODEL_RULE_REMOVE,
+            JsonObject().put("id", ruleId)
+        ) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to remove model rule: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 清空模型路由规则
+     */
+    private fun clearModelRules(ctx: RoutingContext) {
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.AI_MODEL_RULES_CLEAR, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to clear model rules: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 路由到模型
+     */
+    private fun routeToModel(ctx: RoutingContext) {
+        val body = ctx.body().asJsonObject()
+
+        if (body == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject().put("error", "Request body is required").encode())
+            return
+        }
+
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.AI_MODEL_ROUTE, body) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to route to model: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 获取 AI 模型列表
+     */
+    private fun getAIModels(ctx: RoutingContext) {
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.AI_MODEL_LIST, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to get AI models: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 获取 AI 使用情况
+     */
+    private fun getAIUsage(ctx: RoutingContext) {
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.AI_USAGE_GET, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to get AI usage: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 清空 AI 缓存
+     */
+    private fun clearAICache(ctx: RoutingContext) {
+        val body = ctx.body().asJsonObject() ?: JsonObject()
+
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.AI_CACHE_CLEAR, body) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to clear AI cache: ${ar.cause().message}")
+                        .encode()
+                    )
             }
         }
     }

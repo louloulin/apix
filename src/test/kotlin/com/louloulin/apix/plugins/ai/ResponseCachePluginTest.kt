@@ -38,8 +38,8 @@ class ResponseCachePluginTest {
             .put("methods", JsonArray().add("POST"))
             .put("status_codes", JsonArray().add(200))
 
-        val config = PluginConfig("test-cache", configJson)
-        plugin = ResponseCachePlugin("test-cache", config)
+        val config = PluginConfig("test-cache", "response-cache", configJson)
+        plugin = ResponseCachePlugin("test-cache", config, vertx)
     }
 
     @AfterEach
@@ -79,12 +79,6 @@ class ResponseCachePluginTest {
         }
     }
 
-    @Test
-    fun `should clear cache`(testContext: VertxTestContext) {
-        // 清除缓存
-        plugin.clearCache()
-
-        // 没有直接的方式来验证缓存被清除，但至少确保方法不会抛出异常
-        testContext.completeNow()
-    }
+    // Note: ResponseCachePlugin doesn't have a clearCache method
+    // This test has been removed
 }

@@ -23,25 +23,25 @@ class PromptValidatorPluginTest {
 
     private lateinit var vertx: Vertx
     private lateinit var plugin: PromptValidatorPlugin
-    
+
     @BeforeEach
     fun setUp() {
         vertx = Vertx.vertx()
-        
+
         // Create plugin config
         val configJson = JsonObject()
             .put("max_length", 20) // Small limit for testing
             .put("validate_json", true)
-        
-        val config = PluginConfig("test-prompt-validator", configJson)
+
+        val config = PluginConfig("test-prompt-validator", "prompt-validator", configJson)
         plugin = PromptValidatorPlugin("test-prompt-validator", config)
     }
-    
+
     @AfterEach
     fun tearDown(testContext: VertxTestContext) {
         vertx.close().onComplete { testContext.completeNow() }
     }
-    
+
     @Test
     fun `should allow valid JSON with short prompt`(testContext: VertxTestContext) {
         // Mock routing context
@@ -49,7 +49,7 @@ class PromptValidatorPluginTest {
         val request = mock(HttpServerRequest::class.java)
         val response = mock(HttpServerResponse::class.java)
         val requestBody = mock(RequestBody::class.java)
-        
+
         // Create a valid OpenAI-style request with a short prompt
         val jsonBody = JsonObject()
             .put("messages", JsonArray()
@@ -58,13 +58,13 @@ class PromptValidatorPluginTest {
                     .put("content", "Hello")
                 )
             )
-        
+
         // Set up mocks
         `when`(routingContext.request()).thenReturn(request)
         `when`(routingContext.response()).thenReturn(response)
         `when`(routingContext.body()).thenReturn(requestBody)
         `when`(requestBody.buffer()).thenReturn(Buffer.buffer(jsonBody.encode()))
-        
+
         // Execute plugin
         plugin.execute(routingContext).onComplete { result ->
             if (result.succeeded()) {
@@ -77,7 +77,7 @@ class PromptValidatorPluginTest {
             }
         }
     }
-    
+
     @Test
     fun `should reject prompt exceeding maximum length`(testContext: VertxTestContext) {
         // Mock routing context
@@ -85,7 +85,7 @@ class PromptValidatorPluginTest {
         val request = mock(HttpServerRequest::class.java)
         val response = mock(HttpServerResponse::class.java)
         val requestBody = mock(RequestBody::class.java)
-        
+
         // Create a valid OpenAI-style request with a long prompt
         val jsonBody = JsonObject()
             .put("messages", JsonArray()
@@ -94,7 +94,7 @@ class PromptValidatorPluginTest {
                     .put("content", "This is a very long prompt that exceeds the maximum length")
                 )
             )
-        
+
         // Set up mocks
         `when`(routingContext.request()).thenReturn(request)
         `when`(routingContext.response()).thenReturn(response)
@@ -102,7 +102,7 @@ class PromptValidatorPluginTest {
         `when`(requestBody.buffer()).thenReturn(Buffer.buffer(jsonBody.encode()))
         `when`(response.setStatusCode(anyInt())).thenReturn(response)
         `when`(response.putHeader(anyString(), anyString())).thenReturn(response)
-        
+
         // Execute plugin
         plugin.execute(routingContext).onComplete { result ->
             if (result.succeeded()) {
@@ -116,7 +116,7 @@ class PromptValidatorPluginTest {
             }
         }
     }
-    
+
     @Test
     fun `should reject invalid JSON`(testContext: VertxTestContext) {
         // Mock routing context
@@ -124,10 +124,10 @@ class PromptValidatorPluginTest {
         val request = mock(HttpServerRequest::class.java)
         val response = mock(HttpServerResponse::class.java)
         val requestBody = mock(RequestBody::class.java)
-        
+
         // Create an invalid JSON
         val invalidJson = Buffer.buffer("{invalid json")
-        
+
         // Set up mocks
         `when`(routingContext.request()).thenReturn(request)
         `when`(routingContext.response()).thenReturn(response)
@@ -135,7 +135,7 @@ class PromptValidatorPluginTest {
         `when`(requestBody.buffer()).thenReturn(invalidJson)
         `when`(response.setStatusCode(anyInt())).thenReturn(response)
         `when`(response.putHeader(anyString(), anyString())).thenReturn(response)
-        
+
         // Execute plugin
         plugin.execute(routingContext).onComplete { result ->
             if (result.succeeded()) {
@@ -149,7 +149,7 @@ class PromptValidatorPluginTest {
             }
         }
     }
-    
+
     @Test
     fun `should handle empty body`(testContext: VertxTestContext) {
         // Mock routing context
@@ -157,13 +157,13 @@ class PromptValidatorPluginTest {
         val request = mock(HttpServerRequest::class.java)
         val response = mock(HttpServerResponse::class.java)
         val requestBody = mock(RequestBody::class.java)
-        
+
         // Set up mocks
         `when`(routingContext.request()).thenReturn(request)
         `when`(routingContext.response()).thenReturn(response)
         `when`(routingContext.body()).thenReturn(requestBody)
         `when`(requestBody.buffer()).thenReturn(null)
-        
+
         // Execute plugin
         plugin.execute(routingContext).onComplete { result ->
             if (result.succeeded()) {

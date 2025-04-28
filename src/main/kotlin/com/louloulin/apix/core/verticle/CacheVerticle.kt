@@ -1,8 +1,11 @@
 package com.louloulin.apix.core.verticle
 
+import com.louloulin.apix.cluster.ClusterConfig
 import com.louloulin.apix.core.common.EventBusAddresses
+import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.json.JsonObject
+import io.vertx.core.shareddata.AsyncMap
 import io.vertx.core.shareddata.LocalMap
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
@@ -13,8 +16,14 @@ import java.util.concurrent.ConcurrentHashMap
 class CacheVerticle : BaseVerticle() {
     // 使用基类的 logger
 
-    // 缓存存储
-    private lateinit var aiResponseCache: LocalMap<String, String>
+    // 缓存存储 - 本地模式
+    private var localCache: LocalMap<String, String>? = null
+
+    // 缓存存储 - 集群模式
+    private var clusterCache: AsyncMap<String, String>? = null
+
+    // 是否使用集群模式
+    private var clustered = false
 
     // 缓存统计
     private val cacheStats = ConcurrentHashMap<String, CacheStats>()
@@ -29,11 +38,40 @@ class CacheVerticle : BaseVerticle() {
     }
 
     override fun onStart(startPromise: Promise<Void>) {
-        // 初始化缓存
-        aiResponseCache = vertx.sharedData().getLocalMap("ai-response-cache")
+        // 检查是否在集群模式
+        clustered = vertx.isClustered()
 
-        logger.info("CacheVerticle started successfully")
-        startPromise.complete()
+        if (clustered) {
+            // 集群模式 - 使用分布式缓存
+            logger.info("Initializing distributed cache in clustered mode")
+            initializeClusteredCache(startPromise)
+        } else {
+            // 非集群模式 - 使用本地缓存
+            logger.info("Initializing local cache in non-clustered mode")
+            localCache = vertx.sharedData().getLocalMap("ai-response-cache")
+            logger.info("CacheVerticle started successfully with local cache")
+            startPromise.complete()
+        }
+    }
+
+    /**
+     * 初始化集群缓存
+     */
+    private fun initializeClusteredCache(startPromise: Promise<Void>) {
+        vertx.sharedData().getAsyncMap<String, String>("ai-response-cache") { ar ->
+            if (ar.succeeded()) {
+                clusterCache = ar.result()
+                logger.info("CacheVerticle started successfully with distributed cache")
+                startPromise.complete()
+            } else {
+                logger.error("Failed to initialize distributed cache", ar.cause())
+                // 如果分布式缓存初始化失败，回退到本地缓存
+                logger.warn("Falling back to local cache")
+                localCache = vertx.sharedData().getLocalMap("ai-response-cache")
+                clustered = false
+                startPromise.complete()
+            }
+        }
     }
 
     /**
@@ -49,19 +87,45 @@ class CacheVerticle : BaseVerticle() {
         }
 
         val cacheKey = generateCacheKey(key, modelId)
-        val cachedValue = aiResponseCache.get(cacheKey)
 
-        if (cachedValue != null) {
-            // 缓存命中
-            updateCacheStats(modelId, true)
-            sendSuccess(message, JsonObject()
-                .put("cached", true)
-                .put("value", cachedValue)
-            )
+        if (clustered && clusterCache != null) {
+            // 使用分布式缓存
+            clusterCache!!.get(cacheKey) { ar ->
+                if (ar.succeeded()) {
+                    val cachedValue = ar.result()
+                    if (cachedValue != null) {
+                        // 缓存命中
+                        updateCacheStats(modelId, true)
+                        sendSuccess(message, JsonObject()
+                            .put("cached", true)
+                            .put("value", cachedValue)
+                        )
+                    } else {
+                        // 缓存未命中
+                        updateCacheStats(modelId, false)
+                        sendError(message, 404, "Cache miss")
+                    }
+                } else {
+                    logger.error("Failed to get from distributed cache", ar.cause())
+                    updateCacheStats(modelId, false)
+                    sendError(message, 500, "Failed to access cache: ${ar.cause().message}")
+                }
+            }
         } else {
-            // 缓存未命中
-            updateCacheStats(modelId, false)
-            sendError(message, 404, "Cache miss")
+            // 使用本地缓存
+            val cachedValue = localCache?.get(cacheKey)
+            if (cachedValue != null) {
+                // 缓存命中
+                updateCacheStats(modelId, true)
+                sendSuccess(message, JsonObject()
+                    .put("cached", true)
+                    .put("value", cachedValue)
+                )
+            } else {
+                // 缓存未命中
+                updateCacheStats(modelId, false)
+                sendError(message, 404, "Cache miss")
+            }
         }
     }
 
@@ -81,17 +145,35 @@ class CacheVerticle : BaseVerticle() {
 
         val cacheKey = generateCacheKey(key, modelId)
 
-        // 存储缓存
-        aiResponseCache.put(cacheKey, value)
-
-        // 设置 TTL
-        if (ttl > 0) {
-            vertx.setTimer(ttl) { _ ->
-                aiResponseCache.remove(cacheKey)
+        if (clustered && clusterCache != null) {
+            // 使用分布式缓存
+            clusterCache!!.put(cacheKey, value) { ar ->
+                if (ar.succeeded()) {
+                    // 设置 TTL
+                    if (ttl > 0) {
+                        vertx.setTimer(ttl) { _ ->
+                            clusterCache!!.remove(cacheKey) { _ -> }
+                        }
+                    }
+                    sendSuccess(message, true)
+                } else {
+                    logger.error("Failed to put to distributed cache", ar.cause())
+                    sendError(message, 500, "Failed to store in cache: ${ar.cause().message}")
+                }
             }
-        }
+        } else {
+            // 使用本地缓存
+            localCache?.put(cacheKey, value)
 
-        sendSuccess(message, true)
+            // 设置 TTL
+            if (ttl > 0) {
+                vertx.setTimer(ttl) { _ ->
+                    localCache?.remove(cacheKey)
+                }
+            }
+
+            sendSuccess(message, true)
+        }
     }
 
     /**
@@ -107,9 +189,22 @@ class CacheVerticle : BaseVerticle() {
         }
 
         val cacheKey = generateCacheKey(key, modelId)
-        val removed = aiResponseCache.remove(cacheKey) != null
 
-        sendSuccess(message, removed)
+        if (clustered && clusterCache != null) {
+            // 使用分布式缓存
+            clusterCache!!.remove(cacheKey) { ar ->
+                if (ar.succeeded()) {
+                    sendSuccess(message, ar.result() != null)
+                } else {
+                    logger.error("Failed to invalidate distributed cache", ar.cause())
+                    sendError(message, 500, "Failed to invalidate cache: ${ar.cause().message}")
+                }
+            }
+        } else {
+            // 使用本地缓存
+            val removed = localCache?.remove(cacheKey) != null
+            sendSuccess(message, removed)
+        }
     }
 
     /**
@@ -118,33 +213,81 @@ class CacheVerticle : BaseVerticle() {
     private fun handleClearCache(message: io.vertx.core.eventbus.Message<JsonObject>) {
         val modelId = message.body().getString("modelId")
 
-        if (modelId != null) {
-            // 清空特定模型的缓存
-            val keysToRemove = mutableListOf<String>()
+        if (clustered && clusterCache != null) {
+            // 集群模式
+            if (modelId != null) {
+                // 清空特定模型的缓存
+                // 获取所有键值对
+                clusterCache!!.entries { entriesAr ->
+                    if (entriesAr.succeeded()) {
+                        val entries = entriesAr.result()
+                        val keysToRemove = mutableListOf<String>()
 
-            aiResponseCache.keys.forEach { key ->
-                if (key.startsWith("$modelId:")) {
-                    keysToRemove.add(key)
+                        // 找出匹配的键
+                        entries.forEach { entry ->
+                            if (entry.key.startsWith("$modelId:")) {
+                                keysToRemove.add(entry.key)
+                            }
+                        }
+
+                        // 删除匹配的键
+                        var removedCount = 0
+                        for (key in keysToRemove) {
+                            clusterCache!!.remove(key) { _ -> removedCount++ }
+                        }
+
+                        // 重置统计信息
+                        cacheStats.remove(modelId)
+
+                        sendSuccess(message, keysToRemove.size)
+                    } else {
+                        logger.error("Failed to get entries from distributed cache", entriesAr.cause())
+                        sendError(message, 500, "Failed to clear cache: ${entriesAr.cause().message}")
+                    }
+                }
+            } else {
+                // 清空所有缓存
+                clusterCache!!.clear { clearAr ->
+                    if (clearAr.succeeded()) {
+                        // 重置所有统计信息
+                        cacheStats.clear()
+                        sendSuccess(message, true)
+                    } else {
+                        logger.error("Failed to clear distributed cache", clearAr.cause())
+                        sendError(message, 500, "Failed to clear cache: ${clearAr.cause().message}")
+                    }
                 }
             }
-
-            keysToRemove.forEach { key ->
-                aiResponseCache.remove(key)
-            }
-
-            // 重置统计信息
-            cacheStats.remove(modelId)
-
-            sendSuccess(message, keysToRemove.size)
         } else {
-            // 清空所有缓存
-            val size = aiResponseCache.size
-            aiResponseCache.clear()
+            // 本地模式
+            if (modelId != null) {
+                // 清空特定模型的缓存
+                val keysToRemove = mutableListOf<String>()
 
-            // 重置所有统计信息
-            cacheStats.clear()
+                localCache?.keys?.forEach { key ->
+                    if (key.startsWith("$modelId:")) {
+                        keysToRemove.add(key)
+                    }
+                }
 
-            sendSuccess(message, size)
+                keysToRemove.forEach { key ->
+                    localCache?.remove(key)
+                }
+
+                // 重置统计信息
+                cacheStats.remove(modelId)
+
+                sendSuccess(message, keysToRemove.size)
+            } else {
+                // 清空所有缓存
+                val size = localCache?.size ?: 0
+                localCache?.clear()
+
+                // 重置所有统计信息
+                cacheStats.clear()
+
+                sendSuccess(message, size)
+            }
         }
     }
 
@@ -188,7 +331,7 @@ class CacheVerticle : BaseVerticle() {
                 .put("hits", totalHits)
                 .put("misses", totalMisses)
                 .put("hitRate", totalHitRate)
-                .put("size", aiResponseCache.size)
+                .put("size", if (clustered && clusterCache != null) -1 else localCache?.size ?: 0)
 
             sendSuccess(message, JsonObject()
                 .put("total", totalStats)

@@ -35,7 +35,7 @@ class TokenUsagePluginTest {
             .put("track_by_user", true)
             .put("user_id_header", "X-User-ID")
 
-        val config = PluginConfig("test-token-usage", configJson)
+        val config = PluginConfig("test-token-usage", "token-usage", configJson)
         plugin = TokenUsagePlugin("test-token-usage", config)
     }
 

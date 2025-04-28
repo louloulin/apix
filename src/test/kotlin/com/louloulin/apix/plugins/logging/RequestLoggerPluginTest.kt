@@ -37,7 +37,7 @@ class RequestLoggerPluginTest {
             .put("include_body", false)
             .put("mask_headers", JsonArray().add("authorization").add("x-api-key"))
 
-        val config = PluginConfig("test-logger", configJson)
+        val config = PluginConfig("test-logger", "request-logger", configJson)
         plugin = RequestLoggerPlugin("test-logger", config)
     }
 

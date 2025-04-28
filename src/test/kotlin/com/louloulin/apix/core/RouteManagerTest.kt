@@ -2,8 +2,8 @@ package com.louloulin.apix.core
 
 import com.louloulin.apix.config.ConfigManager
 import com.louloulin.apix.models.Route
-import com.louloulin.apix.plugins.PluginChain
-import com.louloulin.apix.plugins.PluginManager
+import com.louloulin.apix.core.PluginChain
+import com.louloulin.apix.core.PluginManager
 import io.vertx.core.Vertx
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonArray

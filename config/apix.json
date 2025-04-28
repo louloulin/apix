@@ -5,8 +5,8 @@
   },
   "admin" : {
     "enabled" : true,
-    "host" : "0.0.0.0",
-    "port" : 8081
+    "port" : 8081,
+    "host" : "0.0.0.0"
   },
   "plugins" : [ {
     "id" : "rate-limiter",
@@ -70,6 +70,59 @@
         }
       }
     }
+  }, {
+    "id" : "test-plugin-update",
+    "type" : "response-cache",
+    "config" : {
+      "ttl_seconds" : 600,
+      "max_size" : 2000
+    },
+    "enabled" : false,
+    "dependencies" : [ ]
+  }, {
+    "id" : "test-plugin",
+    "type" : "response-cache",
+    "config" : {
+      "ttl_seconds" : 300,
+      "max_size" : 1000
+    },
+    "enabled" : true,
+    "dependencies" : [ ]
+  }, {
+    "id" : "test-plugin-enable-disable",
+    "type" : "response-cache",
+    "config" : {
+      "ttl_seconds" : 300,
+      "max_size" : 1000
+    },
+    "enabled" : false,
+    "dependencies" : [ ]
+  }, {
+    "id" : "test-plugin-reload",
+    "type" : "response-cache",
+    "config" : {
+      "ttl_seconds" : 300,
+      "max_size" : 1000
+    },
+    "enabled" : true,
+    "dependencies" : [ ]
+  } ],
+  "routes" : [ {
+    "id" : "openai-chat",
+    "name" : "OpenAI Chat Completions",
+    "path" : "/v1/chat/completions",
+    "methods" : [ "POST" ],
+    "targetUrl" : "https://api.openai.com/v1/chat/completions",
+    "plugins" : [ "rate-limiter", "auth", "prompt-validator", "request-logger", "response-cache", "token-usage", "header-transform" ],
+    "enabled" : true
+  }, {
+    "id" : "anthropic-messages",
+    "name" : "Anthropic Messages",
+    "path" : "/v1/messages",
+    "methods" : [ "POST" ],
+    "targetUrl" : "https://api.anthropic.com/v1/messages",
+    "plugins" : [ "rate-limiter", "auth", "prompt-validator", "request-logger", "response-cache", "token-usage", "header-transform" ],
+    "enabled" : true
   } ],
   "services" : [ {
     "id" : "openai",
@@ -96,22 +149,53 @@
     "readTimeout" : 60000,
     "enabled" : true
   } ],
-  "routes" : [ {
-    "id" : "openai-chat",
-    "name" : "OpenAI Chat Completions",
-    "path" : "/v1/chat/completions",
-    "methods" : [ "POST" ],
-    "targetUrl" : "https://api.openai.com/v1/chat/completions",
-    "plugins" : [ "rate-limiter", "auth", "prompt-validator", "request-logger", "response-cache", "token-usage", "header-transform" ],
-    "enabled" : true
+  "cluster" : {
+    "type" : "NONE",
+    "getConfigFromCluster" : false,
+    "config" : {
+      "zookeeperHosts" : "127.0.0.1",
+      "sessionTimeout" : 20000,
+      "connectTimeout" : 3000,
+      "rootPath" : "io.vertx",
+      "retry" : {
+        "initialSleepTime" : 100,
+        "intervalTimes" : 10000,
+        "maxTimes" : 5
+      }
+    },
+    "sync" : {
+      "syncInterval" : 5000,
+      "configPath" : "/apix/config",
+      "routesPath" : "/apix/routes",
+      "servicesPath" : "/apix/services",
+      "pluginsPath" : "/apix/plugins"
+    }
+  },
+  "apiKeys" : [ {
+    "id" : "8117557b-b602-4196-9ca1-bd77cfedbf28",
+    "key" : "d716275e92414601a274c10f3f625aca7e138cc62c66426f9a2185f85e0f0395",
+    "name" : "Test API Key",
+    "scopes" : [ "read", "write" ],
+    "enabled" : true,
+    "createdAt" : 1745848435526,
+    "expiresAt" : 0
   }, {
-    "id" : "anthropic-messages",
-    "name" : "Anthropic Messages",
-    "path" : "/v1/messages",
-    "methods" : [ "POST" ],
-    "targetUrl" : "https://api.anthropic.com/v1/messages",
-    "plugins" : [ "rate-limiter", "auth", "prompt-validator", "request-logger", "response-cache", "token-usage", "header-transform" ],
-    "enabled" : true
+    "id" : "384303f7-27e6-434c-8abf-faee1ed45a73",
+    "key" : "5ddd9fa087a24a8b88ed5637bed51009fb610a52b12d41b5aa9dba50916f963f",
+    "name" : "Test API Key",
+    "scopes" : [ "read", "write" ],
+    "enabled" : true,
+    "createdAt" : 1745848435538,
+    "expiresAt" : 0
+  }, {
+    "id" : "c2971dab-4f18-4fd2-9600-842c78bad2f1",
+    "key" : "c7610c5528444a8db6e845dcff5fcfe9dc83504de70d400cb3f608680d49f9d7",
+    "name" : "Test API Key",
+    "scopes" : [ "read", "write" ],
+    "enabled" : true,
+    "createdAt" : 1745848435533,
+    "expiresAt" : 0
   } ],
-  "apiKeys" : [ ]
+  "test.integration.key" : "test.integration.value",
+  "test.key" : "test.value"
 }

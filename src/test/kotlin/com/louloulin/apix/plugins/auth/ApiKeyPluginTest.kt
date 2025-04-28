@@ -28,37 +28,37 @@ class ApiKeyPluginTest {
 
     private lateinit var vertx: Vertx
     private lateinit var plugin: ApiKeyPlugin
-    
+
     @BeforeEach
     fun setUp() {
         vertx = Vertx.vertx()
-        
+
         // Create plugin config with test API keys
         val configJson = JsonObject()
             .put("header", "X-API-Key")
             .put("keys", JsonArray().add("valid-key"))
-        
-        val config = PluginConfig("test-api-key", configJson)
+
+        val config = PluginConfig("test-api-key", "api-key", configJson)
         plugin = ApiKeyPlugin("test-api-key", config)
     }
-    
+
     @AfterEach
     fun tearDown(testContext: VertxTestContext) {
         vertx.close().onComplete { testContext.completeNow() }
     }
-    
+
     @Test
     fun `should allow request with valid API key`(testContext: VertxTestContext) {
         // Mock routing context
         val routingContext = mock(RoutingContext::class.java)
         val request = mock(HttpServerRequest::class.java)
         val response = mock(HttpServerResponse::class.java)
-        
+
         // Set up mocks
         `when`(routingContext.request()).thenReturn(request)
         `when`(routingContext.response()).thenReturn(response)
         `when`(request.getHeader("X-API-Key")).thenReturn("valid-key")
-        
+
         // Execute plugin
         plugin.execute(routingContext).onComplete { result ->
             if (result.succeeded()) {
@@ -70,21 +70,21 @@ class ApiKeyPluginTest {
             }
         }
     }
-    
+
     @Test
     fun `should reject request with invalid API key`(testContext: VertxTestContext) {
         // Mock routing context
         val routingContext = mock(RoutingContext::class.java)
         val request = mock(HttpServerRequest::class.java)
         val response = mock(HttpServerResponse::class.java)
-        
+
         // Set up mocks
         `when`(routingContext.request()).thenReturn(request)
         `when`(routingContext.response()).thenReturn(response)
         `when`(request.getHeader("X-API-Key")).thenReturn("invalid-key")
         `when`(response.setStatusCode(anyInt())).thenReturn(response)
         `when`(response.putHeader(anyString(), anyString())).thenReturn(response)
-        
+
         // Execute plugin
         plugin.execute(routingContext).onComplete { result ->
             if (result.succeeded()) {
@@ -98,21 +98,21 @@ class ApiKeyPluginTest {
             }
         }
     }
-    
+
     @Test
     fun `should reject request with missing API key`(testContext: VertxTestContext) {
         // Mock routing context
         val routingContext = mock(RoutingContext::class.java)
         val request = mock(HttpServerRequest::class.java)
         val response = mock(HttpServerResponse::class.java)
-        
+
         // Set up mocks
         `when`(routingContext.request()).thenReturn(request)
         `when`(routingContext.response()).thenReturn(response)
         `when`(request.getHeader("X-API-Key")).thenReturn(null)
         `when`(response.setStatusCode(anyInt())).thenReturn(response)
         `when`(response.putHeader(anyString(), anyString())).thenReturn(response)
-        
+
         // Execute plugin
         plugin.execute(routingContext).onComplete { result ->
             if (result.succeeded()) {

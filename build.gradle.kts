@@ -27,6 +27,11 @@ dependencies {
     implementation("io.vertx:vertx-auth-common")
     implementation("io.vertx:vertx-auth-htpasswd")
 
+    // Cluster support
+    implementation("io.vertx:vertx-zookeeper")
+    implementation("io.vertx:vertx-hazelcast")
+    implementation("io.vertx:vertx-infinispan")
+
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.9")
     implementation("ch.qos.logback:logback-classic:1.4.11")

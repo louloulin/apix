@@ -38,6 +38,7 @@ object EventBusAddresses {
     const val PLUGIN_RELOAD = "apix.plugin.reload"
     const val PLUGIN_LOAD_JAR = "apix.plugin.load.jar"
     const val PLUGIN_SCAN_DIR = "apix.plugin.scan.dir"
+    const val PLUGIN_GET_TYPES = "apix.plugin.get.types"
 
     // 监控相关
     const val METRICS_GET = "apix.metrics.get"
@@ -91,4 +92,19 @@ object EventBusAddresses {
     const val AI_MODEL_LIST = "apix.ai.model.list"
     const val AI_USAGE_GET = "apix.ai.usage.get"
     const val AI_CACHE_CLEAR = "apix.ai.cache.clear"
+    const val AI_MODEL_ROUTE = "apix.ai.model.route"
+    const val AI_MODEL_RULES_GET = "apix.ai.model.rules.get"
+    const val AI_MODEL_RULE_ADD = "apix.ai.model.rule.add"
+    const val AI_MODEL_RULE_REMOVE = "apix.ai.model.rule.remove"
+    const val AI_MODEL_RULES_CLEAR = "apix.ai.model.rules.clear"
+
+    // 集群相关
+    const val CLUSTER_CONFIG_GET = "apix.cluster.config.get"
+    const val CLUSTER_NODE_INFO = "apix.cluster.node.info"
+    const val CLUSTER_NODES_GET = "apix.cluster.nodes.get"
+    const val CLUSTER_METRICS_GET = "apix.cluster.metrics.get"
+    const val CLUSTER_CONFIG_SYNC = "apix.cluster.config.sync"
+    const val CLUSTER_ROUTES_SYNC = "apix.cluster.routes.sync"
+    const val CLUSTER_SERVICES_SYNC = "apix.cluster.services.sync"
+    const val CLUSTER_PLUGINS_SYNC = "apix.cluster.plugins.sync"
 }
