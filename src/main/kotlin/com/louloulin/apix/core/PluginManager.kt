@@ -6,12 +6,14 @@ import com.louloulin.apix.plugins.PluginConfig
 import com.louloulin.apix.plugins.PluginFactory
 import com.louloulin.apix.plugins.auth.ApiKeyAuthPlugin
 import com.louloulin.apix.plugins.auth.ApiKeyPluginFactory
+import com.louloulin.apix.plugins.security.IpFilterPlugin
 import com.louloulin.apix.plugins.security.RateLimitPluginFactory
 import com.louloulin.apix.plugins.ai.PromptValidatorPluginFactory
 import com.louloulin.apix.plugins.ai.ResponseCachePluginFactory
 import com.louloulin.apix.plugins.ai.TokenUsagePluginFactory
 import com.louloulin.apix.plugins.transform.TransformPluginFactory
 import com.louloulin.apix.plugins.logging.RequestLoggerPluginFactory
+import com.louloulin.apix.plugins.validation.RequestValidatorPlugin
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import org.slf4j.LoggerFactory
@@ -48,6 +50,11 @@ class PluginManager(
 
         // Register security plugins
         pluginFactories["rate-limiter"] = RateLimitPluginFactory()
+        pluginFactories["ip-filter"] = IpFilterPlugin.Factory()
+
+        // Register validation plugins
+        pluginFactories["request-validator"] = RequestValidatorPlugin.Factory()
+        pluginFactories["prompt-validator"] = PromptValidatorPluginFactory()
 
         // Register transformation plugins
         pluginFactories["transform"] = TransformPluginFactory()

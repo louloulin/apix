@@ -49,7 +49,7 @@
   - OAuth2/OIDC 认证
   - API Key 认证 ✅
   - 基本认证
-- 添加 IP 黑白名单功能
+- 添加 IP 黑白名单功能 ✅
 - 实现请求签名验证
 - 添加 CSRF 保护
 - 支持 TLS/SSL 配置优化
@@ -59,7 +59,7 @@
 **当前状态**：基本的请求转发功能。
 
 **改进建议**：
-- 实现请求参数验证，参考 VX-API-Gateway 的 VxApiRouteHandlerParamCheck
+- 实现请求参数验证 ✅，参考 VX-API-Gateway 的 VxApiRouteHandlerParamCheck
 - 添加请求转换功能，支持请求格式转换
 - 实现请求聚合功能，支持多个后端服务的数据聚合
 - 添加请求缓存功能，减少对后端服务的请求
