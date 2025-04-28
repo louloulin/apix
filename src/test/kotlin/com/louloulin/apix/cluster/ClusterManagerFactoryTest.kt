@@ -18,11 +18,12 @@ class ClusterManagerFactoryTest {
 
     @Test
     fun `test create cluster manager with disabled clustering`() {
+        // Create a mock ClusterConfig with enabled=false
         val config = ClusterConfig(JsonObject().put("cluster", JsonObject().put("type", "NONE")))
         val manager = ClusterManagerFactory.createClusterManager(config)
 
+        // Even with disabled clustering, we now return a ZookeeperClusterManager
         assertNotNull(manager)
-        // Now returns a ZookeeperClusterManager with empty config when clustering is disabled
         assertTrue(manager is ZookeeperClusterManager)
     }
 
@@ -59,8 +60,8 @@ class ClusterManagerFactoryTest {
         val config = ClusterConfig(JsonObject().put("cluster", JsonObject().put("type", "UNKNOWN")))
         val manager = ClusterManagerFactory.createClusterManager(config)
 
+        // For unknown types, we now return a ZookeeperClusterManager
         assertNotNull(manager)
-        // Now returns a ZookeeperClusterManager with empty config for unknown types
         assertTrue(manager is ZookeeperClusterManager)
     }
 }
