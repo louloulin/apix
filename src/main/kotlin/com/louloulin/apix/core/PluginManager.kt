@@ -13,6 +13,7 @@ import com.louloulin.apix.plugins.ai.ResponseCachePluginFactory
 import com.louloulin.apix.plugins.ai.TokenUsagePluginFactory
 import com.louloulin.apix.plugins.transform.TransformPluginFactory
 import com.louloulin.apix.plugins.logging.RequestLoggerPluginFactory
+import com.louloulin.apix.plugins.logging.StructuredLoggerPlugin
 import com.louloulin.apix.plugins.validation.RequestValidatorPlugin
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
@@ -61,6 +62,7 @@ class PluginManager(
 
         // Register logging plugins
         pluginFactories["request-logger"] = RequestLoggerPluginFactory()
+        pluginFactories["structured-logger"] = StructuredLoggerPlugin.Factory()
 
         // Register AI-specific plugins
         pluginFactories["prompt-validator"] = PromptValidatorPluginFactory()
