@@ -15,6 +15,9 @@ import com.louloulin.apix.plugins.security.SignatureVerificationPlugin
 import com.louloulin.apix.plugins.ai.PromptValidatorPluginFactory
 import com.louloulin.apix.plugins.ai.ResponseCachePluginFactory
 import com.louloulin.apix.plugins.ai.TokenUsagePluginFactory
+import com.louloulin.apix.plugins.aggregation.RequestAggregationPlugin
+import com.louloulin.apix.plugins.cache.RequestCachePlugin
+import com.louloulin.apix.plugins.transform.RequestTransformerPlugin
 import com.louloulin.apix.plugins.transform.TransformPluginFactory
 import com.louloulin.apix.plugins.logging.RequestLoggerPluginFactory
 import com.louloulin.apix.plugins.logging.StructuredLoggerPlugin
@@ -67,6 +70,9 @@ class PluginManager(
 
         // Register transformation plugins
         pluginFactories["transform"] = TransformPluginFactory()
+        pluginFactories["requestTransformer"] = RequestTransformerPlugin.Factory()
+        pluginFactories["requestAggregation"] = RequestAggregationPlugin.Factory()
+        pluginFactories["requestCache"] = RequestCachePlugin.Factory()
 
         // Register logging plugins
         pluginFactories["request-logger"] = RequestLoggerPluginFactory()
