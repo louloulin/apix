@@ -1,0 +1,16 @@
+{
+  "server": {
+    "port": 8080,
+    "host": "0.0.0.0"
+  },
+  "admin": {
+    "port": 8081,
+    "host": "0.0.0.0"
+  },
+  "health": {
+    "port": 8086,
+    "host": "0.0.0.0"
+  },
+  "plugins": [],
+  "routes": []
+}

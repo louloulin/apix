@@ -49,6 +49,11 @@ object EventBusAddresses {
     const val SYSTEM_INFO_GET = "apix.system.info.get"
     const val SYSTEM_SHUTDOWN = "apix.system.shutdown"
 
+    // 健康检查相关
+    const val HEALTH_CHECK = "apix.health.check"
+    const val HEALTH_COMPONENT_STATUS = "apix.health.component.status"
+    const val HEALTH_SYSTEM_INFO = "apix.health.system.info"
+
     // 部署相关
     const val DEPLOYMENT_DEPLOY_API = "apix.deployment.deploy.api"
     const val DEPLOYMENT_UNDEPLOY_API = "apix.deployment.undeploy.api"

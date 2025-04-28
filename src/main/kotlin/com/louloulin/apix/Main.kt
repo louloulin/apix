@@ -6,6 +6,7 @@ import com.louloulin.apix.core.verticle.AuthVerticle
 import com.louloulin.apix.core.verticle.CacheVerticle
 import com.louloulin.apix.core.verticle.ConfigVerticle
 import com.louloulin.apix.core.verticle.DeploymentVerticle
+import com.louloulin.apix.core.verticle.HealthVerticle
 import com.louloulin.apix.core.verticle.MonitorVerticle
 import com.louloulin.apix.core.verticle.PluginVerticle
 import io.vertx.kotlin.coroutines.await
@@ -111,6 +112,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy AdminVerticle
             deployVerticle(vertx, AdminVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy HealthVerticle
+            deployVerticle(vertx, HealthVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy DeploymentVerticle
