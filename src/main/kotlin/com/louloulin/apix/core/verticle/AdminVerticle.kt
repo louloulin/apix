@@ -224,7 +224,7 @@ class AdminVerticle : BaseVerticle() {
             body.put("id", UUID.randomUUID().toString())
         }
 
-        vertx.eventBus().request<JsonObject>(EventBusAddresses.ADMIN_CREATE_ROUTE, body) { ar ->
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.ROUTE_CREATE, JsonObject().put("route", body)) { ar ->
             if (ar.succeeded()) {
                 val response = ar.result().body()
 

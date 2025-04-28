@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
  */
 abstract class BaseVerticle : AbstractVerticle() {
     protected val logger = LoggerFactory.getLogger(this.javaClass)
-    
+
     override fun start(startPromise: Promise<Void>) {
         logger.info("Starting ${this.javaClass.simpleName}...")
         try {
@@ -22,27 +22,32 @@ abstract class BaseVerticle : AbstractVerticle() {
             startPromise.fail(e)
         }
     }
-    
+
     /**
      * 注册 EventBus 处理器
      */
     protected abstract fun registerEventBusHandlers()
-    
+
     /**
      * Verticle 启动时的自定义逻辑
      */
     protected abstract fun onStart(startPromise: Promise<Void>)
-    
+
     /**
      * 发送成功响应
      */
-    protected fun <T> sendSuccess(message: Message<T>, result: Any) {
+    protected fun <T> sendSuccess(message: Message<T>, result: Any?, statusCode: Int = 200) {
         val response = JsonObject()
             .put("success", true)
-            .put("result", result)
+            .put("statusCode", statusCode)
+
+        if (result != null) {
+            response.put("result", result)
+        }
+
         message.reply(response)
     }
-    
+
     /**
      * 发送错误响应
      */
@@ -52,7 +57,7 @@ abstract class BaseVerticle : AbstractVerticle() {
             .put("error", error.message)
         message.reply(response)
     }
-    
+
     /**
      * 发送错误响应（带错误码）
      */

@@ -6,6 +6,7 @@ import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -18,10 +19,22 @@ class DeploymentVerticle : BaseVerticle() {
     // 存储部署 ID 与路由 ID 的映射
     private val deploymentIdMap = ConcurrentHashMap<String, String>()
 
+    // 存储所有路由信息
+    private val routes = ConcurrentHashMap<String, Route>()
+
     override fun registerEventBusHandlers() {
         vertx.eventBus().consumer<JsonObject>(EventBusAddresses.DEPLOYMENT_DEPLOY_API, this::handleDeployApi)
         vertx.eventBus().consumer<JsonObject>(EventBusAddresses.DEPLOYMENT_UNDEPLOY_API, this::handleUndeployApi)
         vertx.eventBus().consumer<JsonObject>(EventBusAddresses.DEPLOYMENT_GET_STATUS, this::handleGetStatus)
+
+        // 路由管理相关处理器
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.ROUTE_GET_ALL, this::handleGetAllRoutes)
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.ROUTE_GET_BY_ID, this::handleGetRouteById)
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.ROUTE_CREATE, this::handleCreateRoute)
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.ROUTE_UPDATE, this::handleUpdateRoute)
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.ROUTE_DELETE, this::handleDeleteRoute)
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.ROUTE_DEPLOY, this::handleDeployRoute)
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.ROUTE_UNDEPLOY, this::handleUndeployRoute)
     }
 
     override fun onStart(startPromise: Promise<Void>) {
@@ -195,5 +208,256 @@ class DeploymentVerticle : BaseVerticle() {
                 promise.fail("Deployment ID not found")
             }
         }
+    }
+
+    /**
+     * 处理获取所有路由请求
+     */
+    private fun handleGetAllRoutes(message: io.vertx.core.eventbus.Message<JsonObject>) {
+        val routesArray = JsonArray()
+        routes.values.forEach { route ->
+            routesArray.add(JsonObject.mapFrom(route))
+        }
+
+        val result = JsonObject()
+            .put("routes", routesArray)
+
+        sendSuccess(message, result)
+    }
+
+    /**
+     * 处理获取路由请求
+     */
+    private fun handleGetRouteById(message: io.vertx.core.eventbus.Message<JsonObject>) {
+        val routeId = message.body().getString("routeId")
+        if (routeId == null) {
+            sendError(message, 400, "Route ID is required")
+            return
+        }
+
+        val route = routes[routeId]
+        if (route == null) {
+            sendError(message, 404, "Route not found")
+            return
+        }
+
+        val result = JsonObject()
+            .put("route", JsonObject.mapFrom(route))
+
+        sendSuccess(message, result)
+    }
+
+    /**
+     * 处理创建路由请求
+     */
+    private fun handleCreateRoute(message: io.vertx.core.eventbus.Message<JsonObject>) {
+        val routeJson = message.body().getJsonObject("route")
+        if (routeJson == null) {
+            sendError(message, 400, "Route configuration is required")
+            return
+        }
+
+        try {
+            // 生成路由 ID
+            if (!routeJson.containsKey("id")) {
+                routeJson.put("id", UUID.randomUUID().toString())
+            }
+
+            val route = Route.fromJson(routeJson)
+
+            // 检查路由是否已存在
+            if (routes.containsKey(route.id)) {
+                sendError(message, 409, "Route with ID ${route.id} already exists")
+                return
+            }
+
+            // 存储路由
+            routes[route.id] = route
+
+            // 如果路由启用，则部署路由
+            if (route.enabled) {
+                deployRoute(route).onComplete { ar ->
+                    if (ar.succeeded()) {
+                        val deploymentId = ar.result()
+                        deployedRoutes[route.id] = route
+                        deploymentIdMap[deploymentId] = route.id
+                    } else {
+                        logger.error("Failed to deploy route ${route.id}", ar.cause())
+                    }
+                }
+            }
+
+            val result = JsonObject()
+                .put("route", JsonObject.mapFrom(route))
+
+            sendSuccess(message, result, 201)
+        } catch (e: Exception) {
+            sendError(message, e)
+        }
+    }
+
+    /**
+     * 处理更新路由请求
+     */
+    private fun handleUpdateRoute(message: io.vertx.core.eventbus.Message<JsonObject>) {
+        val routeId = message.body().getString("routeId")
+        val routeJson = message.body().getJsonObject("route")
+
+        if (routeId == null) {
+            sendError(message, 400, "Route ID is required")
+            return
+        }
+
+        if (routeJson == null) {
+            sendError(message, 400, "Route configuration is required")
+            return
+        }
+
+        // 检查路由是否存在
+        if (!routes.containsKey(routeId)) {
+            sendError(message, 404, "Route not found")
+            return
+        }
+
+        try {
+            // 确保路由 ID 不变
+            routeJson.put("id", routeId)
+
+            val updatedRoute = Route.fromJson(routeJson)
+
+            // 检查路由是否已部署
+            val isDeployed = deployedRoutes.containsKey(routeId)
+
+            // 如果路由已部署，则先卸载
+            if (isDeployed) {
+                val deploymentId = deploymentIdMap.entries.find { it.value == routeId }?.key
+                if (deploymentId != null) {
+                    undeployRoute(deploymentId).onComplete { ar ->
+                        if (ar.succeeded()) {
+                            deployedRoutes.remove(routeId)
+                            deploymentIdMap.remove(deploymentId)
+
+                            // 更新路由
+                            updateRouteAndDeploy(updatedRoute, message)
+                        } else {
+                            sendError(message, ar.cause())
+                        }
+                    }
+                } else {
+                    sendError(message, 500, "Deployment ID for route $routeId not found")
+                }
+            } else {
+                // 直接更新路由
+                updateRouteAndDeploy(updatedRoute, message)
+            }
+        } catch (e: Exception) {
+            sendError(message, e)
+        }
+    }
+
+    /**
+     * 更新路由并部署
+     */
+    private fun updateRouteAndDeploy(route: Route, message: io.vertx.core.eventbus.Message<JsonObject>) {
+        // 更新路由
+        routes[route.id] = route
+
+        // 如果路由启用，则部署路由
+        if (route.enabled) {
+            deployRoute(route).onComplete { ar ->
+                if (ar.succeeded()) {
+                    val deploymentId = ar.result()
+                    deployedRoutes[route.id] = route
+                    deploymentIdMap[deploymentId] = route.id
+                } else {
+                    logger.error("Failed to deploy route ${route.id}", ar.cause())
+                }
+            }
+        }
+
+        val result = JsonObject()
+            .put("route", JsonObject.mapFrom(route))
+
+        sendSuccess(message, result)
+    }
+
+    /**
+     * 处理删除路由请求
+     */
+    private fun handleDeleteRoute(message: io.vertx.core.eventbus.Message<JsonObject>) {
+        val routeId = message.body().getString("routeId")
+        if (routeId == null) {
+            sendError(message, 400, "Route ID is required")
+            return
+        }
+
+        // 检查路由是否存在
+        if (!routes.containsKey(routeId)) {
+            sendError(message, 404, "Route not found")
+            return
+        }
+
+        // 检查路由是否已部署
+        val isDeployed = deployedRoutes.containsKey(routeId)
+
+        // 如果路由已部署，则先卸载
+        if (isDeployed) {
+            val deploymentId = deploymentIdMap.entries.find { it.value == routeId }?.key
+            if (deploymentId != null) {
+                undeployRoute(deploymentId).onComplete { ar ->
+                    if (ar.succeeded()) {
+                        deployedRoutes.remove(routeId)
+                        deploymentIdMap.remove(deploymentId)
+
+                        // 删除路由
+                        routes.remove(routeId)
+
+                        sendSuccess(message, null, 204)
+                    } else {
+                        sendError(message, ar.cause())
+                    }
+                }
+            } else {
+                sendError(message, 500, "Deployment ID for route $routeId not found")
+            }
+        } else {
+            // 直接删除路由
+            routes.remove(routeId)
+
+            sendSuccess(message, null, 204)
+        }
+    }
+
+    /**
+     * 处理部署路由请求
+     */
+    private fun handleDeployRoute(message: io.vertx.core.eventbus.Message<JsonObject>) {
+        val routeJson = message.body()
+
+        try {
+            val route = Route.fromJson(routeJson)
+
+            // 模拟部署过程
+            val deploymentId = "deployment-" + route.id
+
+            sendSuccess(message, JsonObject().put("deploymentId", deploymentId))
+        } catch (e: Exception) {
+            sendError(message, e)
+        }
+    }
+
+    /**
+     * 处理卸载路由请求
+     */
+    private fun handleUndeployRoute(message: io.vertx.core.eventbus.Message<JsonObject>) {
+        val routeId = message.body().getString("routeId")
+
+        if (routeId == null) {
+            sendError(message, 400, "Route ID is required")
+            return
+        }
+
+        // 模拟卸载过程
+        sendSuccess(message, null)
     }
 }
