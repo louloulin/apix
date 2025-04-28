@@ -31,6 +31,11 @@ object EventBusAddresses {
     const val PLUGIN_CREATE = "apix.plugin.create"
     const val PLUGIN_UPDATE = "apix.plugin.update"
     const val PLUGIN_DELETE = "apix.plugin.delete"
+    const val PLUGIN_ENABLE = "apix.plugin.enable"
+    const val PLUGIN_DISABLE = "apix.plugin.disable"
+    const val PLUGIN_RELOAD = "apix.plugin.reload"
+    const val PLUGIN_LOAD_JAR = "apix.plugin.load.jar"
+    const val PLUGIN_SCAN_DIR = "apix.plugin.scan.dir"
 
     // 监控相关
     const val METRICS_GET = "apix.metrics.get"
