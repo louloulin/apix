@@ -17,6 +17,7 @@ import com.louloulin.apix.plugins.ai.ResponseCachePluginFactory
 import com.louloulin.apix.plugins.ai.TokenUsagePluginFactory
 import com.louloulin.apix.plugins.aggregation.RequestAggregationPlugin
 import com.louloulin.apix.plugins.cache.RequestCachePlugin
+import com.louloulin.apix.plugins.resilience.ResiliencePlugin
 import com.louloulin.apix.plugins.transform.RequestTransformerPlugin
 import com.louloulin.apix.plugins.transform.TransformPluginFactory
 import com.louloulin.apix.plugins.logging.RequestLoggerPluginFactory
@@ -73,6 +74,7 @@ class PluginManager(
         pluginFactories["requestTransformer"] = RequestTransformerPlugin.Factory()
         pluginFactories["requestAggregation"] = RequestAggregationPlugin.Factory()
         pluginFactories["requestCache"] = RequestCachePlugin.Factory()
+        pluginFactories["resilience"] = ResiliencePlugin.Factory()
 
         // Register logging plugins
         pluginFactories["request-logger"] = RequestLoggerPluginFactory()
