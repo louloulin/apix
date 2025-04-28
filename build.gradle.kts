@@ -23,6 +23,9 @@ dependencies {
     implementation("io.vertx:vertx-lang-kotlin-coroutines")
     implementation("io.vertx:vertx-health-check")
     implementation("io.vertx:vertx-micrometer-metrics")
+    implementation("io.vertx:vertx-auth-jwt")
+    implementation("io.vertx:vertx-auth-common")
+    implementation("io.vertx:vertx-auth-htpasswd")
 
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.9")

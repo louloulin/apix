@@ -16,6 +16,7 @@
   - `GatewayVerticle`：负责请求转发和处理
   - `PluginVerticle`：负责插件系统 ✅
   - `MonitorVerticle`：负责监控和指标收集 ✅
+  - `HealthVerticle`：负责健康检查和就绪探针 ✅
 
 ### 1.2 集群支持
 
@@ -45,7 +46,7 @@
 
 **改进建议**：
 - 实现更完善的认证机制，参考 VX-API-Gateway 的 VxApiAuth 系统：
-  - JWT 认证
+  - JWT 认证 ✅
   - OAuth2/OIDC 认证
   - API Key 认证 ✅
   - 基本认证
@@ -197,7 +198,7 @@
 **改进建议**：
 - 优化 Docker 镜像构建
 - 添加 Kubernetes 部署支持
-- 实现健康检查和就绪探针
+- 实现健康检查和就绪探针 ✅
 - 添加资源限制和请求配置
 - 实现自动扩缩容支持
 
