@@ -6,7 +6,9 @@ package com.louloulin.apix.core.common
 object EventBusAddresses {
     // 配置相关
     const val CONFIG_GET = "apix.config.get"
+    const val CONFIG_GET_ALL = "apix.config.get.all"
     const val CONFIG_SET = "apix.config.set"
+    const val CONFIG_UPDATE = "apix.config.update"
     const val CONFIG_RELOAD = "apix.config.reload"
 
     // 路由相关
@@ -44,6 +46,8 @@ object EventBusAddresses {
     // 系统相关
     const val SYSTEM_HEALTH = "apix.system.health"
     const val SYSTEM_INFO = "apix.system.info"
+    const val SYSTEM_INFO_GET = "apix.system.info.get"
+    const val SYSTEM_SHUTDOWN = "apix.system.shutdown"
 
     // 部署相关
     const val DEPLOYMENT_DEPLOY_API = "apix.deployment.deploy.api"
@@ -64,6 +68,19 @@ object EventBusAddresses {
     const val CACHE_INVALIDATE = "apix.cache.invalidate"
     const val CACHE_CLEAR = "apix.cache.clear"
     const val CACHE_STATS = "apix.cache.stats"
+
+    // 管理 API 相关
+    const val ADMIN_GET_ROUTES = "apix.admin.routes.get"
+    const val ADMIN_GET_ROUTE_BY_ID = "apix.admin.routes.get.byId"
+    const val ADMIN_CREATE_ROUTE = "apix.admin.routes.create"
+    const val ADMIN_UPDATE_ROUTE = "apix.admin.routes.update"
+    const val ADMIN_DELETE_ROUTE = "apix.admin.routes.delete"
+    const val ADMIN_GET_PLUGINS = "apix.admin.plugins.get"
+    const val ADMIN_GET_PLUGIN_BY_ID = "apix.admin.plugins.get.byId"
+    const val ADMIN_GET_CONFIG = "apix.admin.config.get"
+    const val ADMIN_UPDATE_CONFIG = "apix.admin.config.update"
+    const val ADMIN_GET_SYSTEM_INFO = "apix.admin.system.info.get"
+    const val ADMIN_GET_METRICS = "apix.admin.metrics.get"
 
     // AI 特定功能
     const val AI_MODEL_LIST = "apix.ai.model.list"

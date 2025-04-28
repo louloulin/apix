@@ -52,6 +52,15 @@ class AdminApiHandler(
 
         // Plugins endpoints
         router.get("/plugins").handler(this::getPlugins)
+        router.get("/plugins/:id").handler(this::getPluginById)
+        router.post("/plugins").handler(this::createPlugin)
+        router.put("/plugins/:id").handler(this::updatePlugin)
+        router.delete("/plugins/:id").handler(this::deletePlugin)
+        router.post("/plugins/:id/enable").handler(this::enablePlugin)
+        router.post("/plugins/:id/disable").handler(this::disablePlugin)
+        router.post("/plugins/:id/reload").handler(this::reloadPlugin)
+        router.post("/plugins/load-jar").handler(this::loadPluginJar)
+        router.post("/plugins/scan-dir").handler(this::scanPluginDir)
 
         // API Key endpoints
         router.get("/auth/api-keys").handler(this::getApiKeys)
@@ -325,19 +334,513 @@ class AdminApiHandler(
      * Gets all plugins.
      */
     private fun getPlugins(context: RoutingContext) {
-        val plugins = pluginManager.getAllPlugins()
-        val pluginsArray = JsonArray()
+        context.vertx().eventBus().request<JsonObject>(EventBusAddresses.PLUGIN_GET_ALL, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
 
-        plugins.forEach { plugin ->
-            pluginsArray.add(JsonObject()
-                .put("id", plugin.id)
-                .put("type", plugin.type)
-            )
+                if (response.getBoolean("success", false)) {
+                    context.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject().put("plugins", response.getValue("result")).encode())
+                } else {
+                    context.response()
+                        .setStatusCode(500)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                context.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to get plugins: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * Gets a plugin by ID.
+     */
+    private fun getPluginById(context: RoutingContext) {
+        val id = context.pathParam("id")
+
+        if (id == null) {
+            context.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject()
+                    .put("error", "Plugin ID is required")
+                    .encode()
+                )
+            return
         }
 
-        context.response()
-            .putHeader("Content-Type", "application/json")
-            .end(JsonObject().put("plugins", pluginsArray).encode())
+        val message = JsonObject().put("id", id)
+
+        context.vertx().eventBus().request<JsonObject>(EventBusAddresses.PLUGIN_GET_BY_ID, message) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    context.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject().put("plugin", response.getValue("result")).encode())
+                } else {
+                    val errorCode = response.getInteger("errorCode", 500)
+                    context.response()
+                        .setStatusCode(errorCode)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                context.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to get plugin: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * Creates a new plugin.
+     */
+    private fun createPlugin(context: RoutingContext) {
+        val body = context.body().asJsonObject()
+
+        if (body == null) {
+            context.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject()
+                    .put("error", "Request body is required")
+                    .encode()
+                )
+            return
+        }
+
+        context.vertx().eventBus().request<JsonObject>(EventBusAddresses.PLUGIN_CREATE, body) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    context.response()
+                        .setStatusCode(201)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject().put("plugin", response.getValue("result")).encode())
+                } else {
+                    val errorCode = response.getInteger("errorCode", 500)
+                    context.response()
+                        .setStatusCode(errorCode)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                context.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to create plugin: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * Updates a plugin.
+     */
+    private fun updatePlugin(context: RoutingContext) {
+        val id = context.pathParam("id")
+        val body = context.body().asJsonObject()
+
+        if (id == null) {
+            context.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject()
+                    .put("error", "Plugin ID is required")
+                    .encode()
+                )
+            return
+        }
+
+        if (body == null) {
+            context.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject()
+                    .put("error", "Request body is required")
+                    .encode()
+                )
+            return
+        }
+
+        // 添加 ID 到请求体
+        body.put("id", id)
+
+        context.vertx().eventBus().request<JsonObject>(EventBusAddresses.PLUGIN_UPDATE, body) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    context.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject().put("plugin", response.getValue("result")).encode())
+                } else {
+                    val errorCode = response.getInteger("errorCode", 500)
+                    context.response()
+                        .setStatusCode(errorCode)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                context.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to update plugin: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * Deletes a plugin.
+     */
+    private fun deletePlugin(context: RoutingContext) {
+        val id = context.pathParam("id")
+
+        if (id == null) {
+            context.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject()
+                    .put("error", "Plugin ID is required")
+                    .encode()
+                )
+            return
+        }
+
+        val message = JsonObject().put("id", id)
+
+        context.vertx().eventBus().request<JsonObject>(EventBusAddresses.PLUGIN_DELETE, message) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    context.response()
+                        .setStatusCode(204)
+                        .end()
+                } else {
+                    val errorCode = response.getInteger("errorCode", 500)
+                    context.response()
+                        .setStatusCode(errorCode)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                context.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to delete plugin: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * Enables a plugin.
+     */
+    private fun enablePlugin(context: RoutingContext) {
+        val id = context.pathParam("id")
+
+        if (id == null) {
+            context.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject()
+                    .put("error", "Plugin ID is required")
+                    .encode()
+                )
+            return
+        }
+
+        val message = JsonObject().put("id", id)
+
+        context.vertx().eventBus().request<JsonObject>(EventBusAddresses.PLUGIN_ENABLE, message) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    context.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("success", true)
+                            .put("message", "Plugin enabled: $id")
+                            .encode()
+                        )
+                } else {
+                    val errorCode = response.getInteger("errorCode", 500)
+                    context.response()
+                        .setStatusCode(errorCode)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                context.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to enable plugin: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * Disables a plugin.
+     */
+    private fun disablePlugin(context: RoutingContext) {
+        val id = context.pathParam("id")
+
+        if (id == null) {
+            context.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject()
+                    .put("error", "Plugin ID is required")
+                    .encode()
+                )
+            return
+        }
+
+        val message = JsonObject().put("id", id)
+
+        context.vertx().eventBus().request<JsonObject>(EventBusAddresses.PLUGIN_DISABLE, message) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    context.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("success", true)
+                            .put("message", "Plugin disabled: $id")
+                            .encode()
+                        )
+                } else {
+                    val errorCode = response.getInteger("errorCode", 500)
+                    context.response()
+                        .setStatusCode(errorCode)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                context.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to disable plugin: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * Reloads a plugin.
+     */
+    private fun reloadPlugin(context: RoutingContext) {
+        val id = context.pathParam("id")
+
+        if (id == null) {
+            context.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject()
+                    .put("error", "Plugin ID is required")
+                    .encode()
+                )
+            return
+        }
+
+        val message = JsonObject().put("id", id)
+
+        context.vertx().eventBus().request<JsonObject>(EventBusAddresses.PLUGIN_RELOAD, message) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    context.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("success", true)
+                            .put("message", "Plugin reloaded: $id")
+                            .put("plugin", response.getValue("result"))
+                            .encode()
+                        )
+                } else {
+                    val errorCode = response.getInteger("errorCode", 500)
+                    context.response()
+                        .setStatusCode(errorCode)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                context.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to reload plugin: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * Loads a plugin JAR file.
+     */
+    private fun loadPluginJar(context: RoutingContext) {
+        val body = context.body().asJsonObject()
+
+        if (body == null) {
+            context.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject()
+                    .put("error", "Request body is required")
+                    .encode()
+                )
+            return
+        }
+
+        val jarPath = body.getString("jarPath")
+
+        if (jarPath == null) {
+            context.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject()
+                    .put("error", "JAR path is required")
+                    .encode()
+                )
+            return
+        }
+
+        val message = JsonObject().put("jarPath", jarPath)
+
+        context.vertx().eventBus().request<JsonObject>(EventBusAddresses.PLUGIN_LOAD_JAR, message) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    context.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("success", true)
+                            .put("result", response.getValue("result"))
+                            .encode()
+                        )
+                } else {
+                    val errorCode = response.getInteger("errorCode", 500)
+                    context.response()
+                        .setStatusCode(errorCode)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                context.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to load plugin JAR: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * Scans a directory for plugin JAR files.
+     */
+    private fun scanPluginDir(context: RoutingContext) {
+        val body = context.body().asJsonObject()
+        val dirPath = body?.getString("dirPath")
+
+        val message = JsonObject()
+        if (dirPath != null) {
+            message.put("dirPath", dirPath)
+        }
+
+        context.vertx().eventBus().request<JsonObject>(EventBusAddresses.PLUGIN_SCAN_DIR, message) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    context.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("success", true)
+                            .put("result", response.getValue("result"))
+                            .encode()
+                        )
+                } else {
+                    val errorCode = response.getInteger("errorCode", 500)
+                    context.response()
+                        .setStatusCode(errorCode)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                context.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to scan plugin directory: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
     }
 
     /**
