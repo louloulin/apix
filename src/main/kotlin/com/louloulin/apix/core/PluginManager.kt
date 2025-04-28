@@ -10,6 +10,7 @@ import com.louloulin.apix.plugins.auth.BasicAuthPlugin
 import com.louloulin.apix.plugins.auth.JwtAuthPlugin
 import com.louloulin.apix.plugins.security.IpFilterPlugin
 import com.louloulin.apix.plugins.security.RateLimitPluginFactory
+import com.louloulin.apix.plugins.security.SignatureVerificationPlugin
 import com.louloulin.apix.plugins.ai.PromptValidatorPluginFactory
 import com.louloulin.apix.plugins.ai.ResponseCachePluginFactory
 import com.louloulin.apix.plugins.ai.TokenUsagePluginFactory
@@ -56,6 +57,7 @@ class PluginManager(
         // Register security plugins
         pluginFactories["rate-limiter"] = RateLimitPluginFactory()
         pluginFactories["ip-filter"] = IpFilterPlugin.Factory()
+        pluginFactories["signatureVerification"] = SignatureVerificationPlugin.Factory()
 
         // Register validation plugins
         pluginFactories["request-validator"] = RequestValidatorPlugin.Factory()
