@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.assertNotNull
 
 /**
  * Tests for ModelRouterVerticle.
@@ -47,8 +48,11 @@ class ModelRouterVerticleTest {
         vertx.eventBus().request<JsonObject>(EventBusAddresses.AI_MODEL_RULES_GET, JsonObject()) { ar ->
             if (ar.succeeded()) {
                 testContext.verify {
-                    val rules = ar.result().body()
-                    assertTrue(rules is JsonArray)
+                    val response = ar.result().body()
+                    assertTrue(response is JsonObject)
+                    assertTrue(response.getBoolean("success", false))
+                    val rules = response.getJsonArray("result")
+                    assertNotNull(rules)
                     assertEquals(0, rules.size())
                     testContext.completeNow()
                 }
@@ -82,8 +86,11 @@ class ModelRouterVerticleTest {
                 vertx.eventBus().request<JsonObject>(EventBusAddresses.AI_MODEL_RULES_GET, JsonObject()) { getRulesAr ->
                     if (getRulesAr.succeeded()) {
                         testContext.verify {
-                            val rules = getRulesAr.result().body()
-                            assertTrue(rules is JsonArray)
+                            val response = getRulesAr.result().body()
+                            assertTrue(response is JsonObject)
+                            assertTrue(response.getBoolean("success", false))
+                            val rules = response.getJsonArray("result")
+                            assertNotNull(rules)
                             assertEquals(1, rules.size())
 
                             val addedRule = rules.getJsonObject(0)
@@ -175,8 +182,11 @@ class ModelRouterVerticleTest {
                         vertx.eventBus().request<JsonObject>(EventBusAddresses.AI_MODEL_RULES_GET, JsonObject()) { getRulesAr ->
                             if (getRulesAr.succeeded()) {
                                 testContext.verify {
-                                    val rules = getRulesAr.result().body()
-                                    assertTrue(rules is JsonArray)
+                                    val response = getRulesAr.result().body()
+                                    assertTrue(response is JsonObject)
+                                    assertTrue(response.getBoolean("success", false))
+                                    val rules = response.getJsonArray("result")
+                                    assertNotNull(rules)
                                     assertEquals(0, rules.size())
                                     testContext.completeNow()
                                 }

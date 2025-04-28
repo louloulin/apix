@@ -49,7 +49,7 @@ class RouteManagerTest {
 
         // Mock plugin manager
         pluginManager = mock(PluginManager::class.java)
-        `when`(pluginManager.createPluginChain(anyList())).thenReturn(PluginChain(emptyList()))
+        `when`(pluginManager.createPluginChain(any())).thenReturn(PluginChain(emptyList()))
 
         // Create route manager
         routeManager = RouteManager(vertx, Router.router(vertx), configManager, pluginManager)

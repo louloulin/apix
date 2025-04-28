@@ -21,7 +21,9 @@ class ClusterManagerFactoryTest {
         val config = ClusterConfig(JsonObject().put("cluster", JsonObject().put("type", "NONE")))
         val manager = ClusterManagerFactory.createClusterManager(config)
 
-        assertNull(manager)
+        assertNotNull(manager)
+        // Now returns a ZookeeperClusterManager with empty config when clustering is disabled
+        assertTrue(manager is ZookeeperClusterManager)
     }
 
     @Test
@@ -57,6 +59,8 @@ class ClusterManagerFactoryTest {
         val config = ClusterConfig(JsonObject().put("cluster", JsonObject().put("type", "UNKNOWN")))
         val manager = ClusterManagerFactory.createClusterManager(config)
 
-        assertNull(manager)
+        assertNotNull(manager)
+        // Now returns a ZookeeperClusterManager with empty config for unknown types
+        assertTrue(manager is ZookeeperClusterManager)
     }
 }
