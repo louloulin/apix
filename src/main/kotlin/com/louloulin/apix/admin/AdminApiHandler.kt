@@ -4,6 +4,7 @@ import com.louloulin.apix.config.ConfigManager
 import com.louloulin.apix.core.PluginManager
 import com.louloulin.apix.core.RouteManager
 import com.louloulin.apix.core.ServiceManager
+import com.louloulin.apix.core.common.EventBusAddresses
 import com.louloulin.apix.models.Route
 import com.louloulin.apix.models.Service
 import com.louloulin.apix.plugins.ai.ResponseCachePlugin
@@ -52,6 +53,11 @@ class AdminApiHandler(
 
         // Plugins endpoints
         router.get("/plugins").handler(this::getPlugins)
+
+        // API Key endpoints
+        router.get("/auth/api-keys").handler(this::getApiKeys)
+        router.post("/auth/api-keys").handler(this::createApiKey)
+        router.delete("/auth/api-keys/:id").handler(this::deleteApiKey)
 
         // AI-specific endpoints
         router.get("/ai/models").handler(this::getAiModels)
@@ -332,6 +338,161 @@ class AdminApiHandler(
         context.response()
             .putHeader("Content-Type", "application/json")
             .end(JsonObject().put("plugins", pluginsArray).encode())
+    }
+
+    /**
+     * Gets all API Keys.
+     */
+    private fun getApiKeys(ctx: RoutingContext) {
+        logger.info("Getting all API Keys")
+
+        ctx.vertx().eventBus().request<JsonObject>(EventBusAddresses.AUTH_GET_API_KEYS, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    ctx.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject().put("apiKeys", response.getValue("result")).encode())
+                } else {
+                    ctx.response()
+                        .setStatusCode(500)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to get API Keys: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * Creates a new API Key.
+     */
+    private fun createApiKey(ctx: RoutingContext) {
+        logger.info("Creating new API Key")
+
+        val body = ctx.body().asJsonObject()
+
+        if (body == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject()
+                    .put("error", "Request body is required")
+                    .encode()
+                )
+            return
+        }
+
+        val name = body.getString("name")
+        val scopes = body.getJsonArray("scopes", JsonArray())
+        val expiresAt = body.getLong("expiresAt", 0L)
+
+        if (name.isNullOrBlank()) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject()
+                    .put("error", "Name is required")
+                    .encode()
+                )
+            return
+        }
+
+        val message = JsonObject()
+            .put("name", name)
+            .put("scopes", scopes)
+            .put("expiresAt", expiresAt)
+
+        ctx.vertx().eventBus().request<JsonObject>(EventBusAddresses.AUTH_CREATE_API_KEY, message) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    ctx.response()
+                        .setStatusCode(201)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject().put("apiKey", response.getValue("result")).encode())
+                } else {
+                    ctx.response()
+                        .setStatusCode(500)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to create API Key: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * Deletes an API Key.
+     */
+    private fun deleteApiKey(ctx: RoutingContext) {
+        val id = ctx.pathParam("id")
+
+        if (id.isNullOrBlank()) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject()
+                    .put("error", "API Key ID is required")
+                    .encode()
+                )
+            return
+        }
+
+        logger.info("Deleting API Key: {}", id)
+
+        val message = JsonObject().put("id", id)
+
+        ctx.vertx().eventBus().request<JsonObject>(EventBusAddresses.AUTH_DELETE_API_KEY, message) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    ctx.response()
+                        .setStatusCode(204)
+                        .end()
+                } else {
+                    val errorCode = response.getInteger("errorCode", 500)
+                    ctx.response()
+                        .setStatusCode(errorCode)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to delete API Key: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
     }
 
     /**

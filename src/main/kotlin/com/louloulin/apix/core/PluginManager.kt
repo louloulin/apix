@@ -4,6 +4,7 @@ import com.louloulin.apix.config.ConfigManager
 import com.louloulin.apix.plugins.Plugin
 import com.louloulin.apix.plugins.PluginConfig
 import com.louloulin.apix.plugins.PluginFactory
+import com.louloulin.apix.plugins.auth.ApiKeyAuthPlugin
 import com.louloulin.apix.plugins.auth.ApiKeyPluginFactory
 import com.louloulin.apix.plugins.security.RateLimitPluginFactory
 import com.louloulin.apix.plugins.ai.PromptValidatorPluginFactory
@@ -43,6 +44,7 @@ class PluginManager(
 
         // Register authentication plugins
         pluginFactories["api-key"] = ApiKeyPluginFactory()
+        pluginFactories["apiKeyAuth"] = ApiKeyAuthPlugin.Factory()
 
         // Register security plugins
         pluginFactories["rate-limiter"] = RateLimitPluginFactory()
@@ -80,7 +82,7 @@ class PluginManager(
 
                     if (factory != null) {
                         try {
-                            val plugin = factory.create(PluginConfig(pluginId, pluginConfig))
+                            val plugin = factory.create(PluginConfig(pluginId, pluginType, pluginConfig))
                             plugins[pluginId] = plugin
                             logger.info("Loaded plugin: {}", pluginId)
                         } catch (e: Exception) {

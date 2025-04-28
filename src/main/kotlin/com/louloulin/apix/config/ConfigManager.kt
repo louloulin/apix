@@ -196,4 +196,47 @@ class ConfigManager(private val vertx: Vertx) {
             logger.error("Failed to save configuration to file: {}", configPath, e)
         }
     }
+
+    /**
+     * Saves the configuration to file asynchronously.
+     */
+    fun saveConfig(configToSave: JsonObject): io.vertx.core.Future<Void> {
+        return vertx.executeBlocking<Void> { promise ->
+            try {
+                // Update the configuration
+                config = configToSave.copy()
+
+                // Save to file
+                val configPath = System.getProperty("apix.config.path", "config/apix.json")
+                val configFile = Paths.get(configPath)
+
+                // Create parent directories if they don't exist
+                Files.createDirectories(configFile.parent)
+
+                // Write configuration to file
+                Files.writeString(configFile, config.encodePrettily())
+
+                logger.info("Saved configuration to file: {}", configPath)
+                promise.complete()
+            } catch (e: Exception) {
+                logger.error("Failed to save configuration to file", e)
+                promise.fail(e)
+            }
+        }
+    }
+
+    /**
+     * Loads the configuration from file asynchronously.
+     */
+    fun loadConfig(): io.vertx.core.Future<JsonObject> {
+        return vertx.executeBlocking { promise ->
+            try {
+                loadDefaultConfig()
+                promise.complete(config)
+            } catch (e: Exception) {
+                logger.error("Failed to load configuration", e)
+                promise.fail(e)
+            }
+        }
+    }
 }

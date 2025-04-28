@@ -2,6 +2,8 @@ package com.louloulin.apix.core
 
 import com.louloulin.apix.config.ConfigManager
 import com.louloulin.apix.models.Route
+import com.louloulin.apix.plugins.PluginChain
+import com.louloulin.apix.plugins.PluginManager
 import io.vertx.core.Vertx
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonArray
@@ -26,11 +28,11 @@ class RouteManagerTest {
     private lateinit var configManager: ConfigManager
     private lateinit var pluginManager: PluginManager
     private lateinit var routeManager: RouteManager
-    
+
     @BeforeEach
     fun setUp() {
         vertx = Vertx.vertx()
-        
+
         // Mock config manager
         configManager = mock(ConfigManager::class.java)
         `when`(configManager.getRoutesConfig()).thenReturn(JsonArray()
@@ -44,20 +46,20 @@ class RouteManagerTest {
                 .put("enabled", true)
             )
         )
-        
+
         // Mock plugin manager
         pluginManager = mock(PluginManager::class.java)
         `when`(pluginManager.createPluginChain(anyList())).thenReturn(PluginChain(emptyList()))
-        
+
         // Create route manager
-        routeManager = RouteManager(vertx, configManager, pluginManager)
+        routeManager = RouteManager(vertx, Router.router(vertx), configManager, pluginManager)
     }
-    
+
     @AfterEach
     fun tearDown(testContext: VertxTestContext) {
         vertx.close().onComplete { testContext.completeNow() }
     }
-    
+
     @Test
     fun `should load routes from configuration`() {
         // Verify that the route was loaded
@@ -70,19 +72,27 @@ class RouteManagerTest {
         assertEquals(listOf("test-plugin"), route.plugins)
         assertEquals(true, route.enabled)
     }
-    
+
     @Test
     fun `should set up routes on router`() {
         // Create mock router
         val router = mock(Router::class.java)
-        
+
         // Set up routes
-        routeManager.setupRoutes(router)
-        
+        routeManager.addRoute(Route(
+            id = "test-route",
+            name = "Test Route",
+            path = "/test",
+            methods = listOf("GET"),
+            targetUrl = "http://example.com",
+            plugins = listOf("test-plugin"),
+            enabled = true
+        ))
+
         // Verify that the route was added to the router
         verify(router).route(HttpMethod.GET, "/test")
     }
-    
+
     @Test
     fun `should update route`() {
         // Create a new route
@@ -95,32 +105,32 @@ class RouteManagerTest {
             plugins = listOf("new-plugin"),
             enabled = true
         )
-        
-        // Update the route
-        routeManager.updateRoute(newRoute)
-        
+
+        // Add the route
+        routeManager.addRoute(newRoute)
+
         // Verify that the route was added
         val route = routeManager.getRoute("new-route")
         assertNotNull(route)
         assertEquals("new-route", route.id)
         assertEquals("/new", route.path)
     }
-    
+
     @Test
     fun `should remove route`() {
         // Remove the route
         routeManager.removeRoute("test-route")
-        
+
         // Verify that the route was removed
         val route = routeManager.getRoute("test-route")
         assertNull(route)
     }
-    
+
     @Test
     fun `should get all routes`() {
         // Get all routes
         val routes = routeManager.getAllRoutes()
-        
+
         // Verify that the route is in the list
         assertEquals(1, routes.size)
         assertEquals("test-route", routes.first().id)
