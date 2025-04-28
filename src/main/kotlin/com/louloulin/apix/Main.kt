@@ -2,6 +2,7 @@ package com.louloulin.apix
 
 import com.louloulin.apix.core.ApixVerticle
 import com.louloulin.apix.core.verticle.AuthVerticle
+import com.louloulin.apix.core.verticle.CacheVerticle
 import com.louloulin.apix.core.verticle.ConfigVerticle
 import com.louloulin.apix.core.verticle.DeploymentVerticle
 import com.louloulin.apix.core.verticle.MonitorVerticle
@@ -96,6 +97,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy AuthVerticle
             deployVerticle(vertx, AuthVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy CacheVerticle
+            deployVerticle(vertx, CacheVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy DeploymentVerticle

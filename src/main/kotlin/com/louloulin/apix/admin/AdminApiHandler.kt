@@ -7,7 +7,6 @@ import com.louloulin.apix.core.ServiceManager
 import com.louloulin.apix.core.common.EventBusAddresses
 import com.louloulin.apix.models.Route
 import com.louloulin.apix.models.Service
-import com.louloulin.apix.plugins.ai.ResponseCachePlugin
 import com.louloulin.apix.plugins.ai.TokenUsagePlugin
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonArray
@@ -63,6 +62,7 @@ class AdminApiHandler(
         router.get("/ai/models").handler(this::getAiModels)
         router.get("/ai/usage").handler(this::getAiUsage)
         router.post("/ai/cache/clear").handler(this::clearAiCache)
+        router.get("/ai/cache/stats").handler(this::getAiCacheStats)
 
         // Config endpoints
         router.get("/config").handler(this::getConfig)
@@ -557,23 +557,104 @@ class AdminApiHandler(
      * Clears the AI response cache.
      */
     private fun clearAiCache(context: RoutingContext) {
-        // 查找所有响应缓存插件并清除缓存
-        var cacheCleared = false
+        val modelId = context.request().getParam("modelId")
 
-        pluginManager.getAllPlugins().forEach { plugin ->
-            if (plugin.type == "response-cache" && plugin is ResponseCachePlugin) {
-                plugin.clearCache()
-                cacheCleared = true
-            }
+        // 创建清除缓存的消息
+        val message = JsonObject()
+        if (modelId != null) {
+            message.put("modelId", modelId)
         }
 
-        context.response()
-            .putHeader("Content-Type", "application/json")
-            .end(JsonObject()
-                .put("success", true)
-                .put("cache_cleared", cacheCleared)
-                .encode()
-            )
+        // 通过 EventBus 清除缓存
+        context.vertx().eventBus().request<JsonObject>(EventBusAddresses.CACHE_CLEAR, message) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    val clearedCount = response.getInteger("result", 0)
+                    val responseMessage = if (modelId != null) {
+                        "Cleared $clearedCount cache entries for model: $modelId"
+                    } else {
+                        "Cleared $clearedCount cache entries"
+                    }
+
+                    context.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("success", true)
+                            .put("message", responseMessage)
+                            .put("count", clearedCount)
+                            .encode()
+                        )
+                } else {
+                    context.response()
+                        .setStatusCode(500)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("success", false)
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                context.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("success", false)
+                        .put("error", "Failed to clear cache: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * Gets AI cache statistics.
+     */
+    private fun getAiCacheStats(context: RoutingContext) {
+        val modelId = context.request().getParam("modelId")
+
+        // 创建获取缓存统计信息的消息
+        val message = JsonObject()
+        if (modelId != null) {
+            message.put("modelId", modelId)
+        }
+
+        // 通过 EventBus 获取缓存统计信息
+        context.vertx().eventBus().request<JsonObject>(EventBusAddresses.CACHE_STATS, message) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+
+                if (response.getBoolean("success", false)) {
+                    context.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("success", true)
+                            .put("stats", response.getValue("result"))
+                            .encode()
+                        )
+                } else {
+                    context.response()
+                        .setStatusCode(500)
+                        .putHeader("Content-Type", "application/json")
+                        .end(JsonObject()
+                            .put("success", false)
+                            .put("error", response.getString("error", "Unknown error"))
+                            .encode()
+                        )
+                }
+            } else {
+                context.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("success", false)
+                        .put("error", "Failed to get cache stats: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
     }
 
     /**
