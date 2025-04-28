@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "2.1.20"
     id("application")
     id("org.graalvm.buildtools.native") version "0.9.28"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "com.louloulin"
@@ -65,4 +66,17 @@ graalvmNative {
 // Configure application
 application {
     mainClass.set("com.louloulin.apix.MainKt")
+}
+
+// Configure shadowJar
+tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+    archiveBaseName.set("apix")
+    archiveClassifier.set("fat")
+    archiveVersion.set("1.0.0")
+    manifest {
+        attributes(mapOf(
+            "Main-Class" to "com.louloulin.apix.MainKt"
+        ))
+    }
+    mergeServiceFiles()
 }

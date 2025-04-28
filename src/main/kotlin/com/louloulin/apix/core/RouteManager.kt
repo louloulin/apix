@@ -31,12 +31,51 @@ class RouteManager(
     private val httpClient: HttpClient
 
     init {
-        // Create HTTP client for forwarding requests
+        // Create HTTP client for forwarding requests with ultra-high concurrency settings (100K+ connections)
+        val availableProcessors = Runtime.getRuntime().availableProcessors()
         val options = HttpClientOptions()
-            .setKeepAlive(true)
-            .setMaxPoolSize(50)
-            .setConnectTimeout(5000) // 5 seconds
-            .setIdleTimeout(60) // 60 seconds
+            // Connection pooling - critical for high concurrency
+            .setKeepAlive(true)                      // Enable keep-alive
+            .setMaxPoolSize(availableProcessors * 200)  // 200 connections per core (for 100K+ connections)
+            .setMaxWaitQueueSize(availableProcessors * 5000) // 5000 waiting requests per core
+            .setPoolCleanerPeriod(30000)            // Clean idle connections every 30 seconds
+
+            // Timeouts
+            .setConnectTimeout(10000)                // 10 seconds connect timeout
+            .setIdleTimeout(300)                     // 5 minutes idle timeout
+            .setKeepAliveTimeout(300)                // 5 minutes keep-alive timeout
+
+            // TCP optimizations
+            .setTcpNoDelay(true)                     // Disable Nagle's algorithm for lower latency
+            .setTcpFastOpen(true)                    // Enable TCP Fast Open for faster connections
+            .setTcpQuickAck(true)                    // Enable TCP Quick ACK for better responsiveness
+            .setTcpCork(true)                        // Enable TCP Cork for better throughput
+
+            // Socket reuse
+            .setReusePort(true)                      // Enable port reuse for better load distribution
+            .setReuseAddress(true)                   // Enable address reuse for faster restarts
+
+            // HTTP optimizations
+            .setPipelining(true)                     // Enable HTTP pipelining
+            .setPipeliningLimit(32)                  // Increase pipelined requests limit
+
+            // HTTP/2 settings - critical for high concurrency
+            .setUseAlpn(true)                        // Enable ALPN for HTTP/2 support
+            .setHttp2ClearTextUpgrade(true)          // Enable HTTP/2 clear text upgrade
+            .setHttp2MaxPoolSize(availableProcessors * 200) // 200 HTTP/2 connections per core
+            .setHttp2MultiplexingLimit(1000)         // 1000 streams per connection (for 100K+ connections)
+            .setHttp2KeepAliveTimeout(300)           // 5 minutes HTTP/2 keep-alive timeout
+
+            // Compression
+            .setTryUseCompression(true)              // Try to use compression
+            .setDecompressionSupported(true)         // Support decompression
+
+            // Connection limits
+            .setMaxChunkSize(16384)                  // 16KB chunk size
+            .setMaxInitialLineLength(10000)          // Increase max initial line length
+            .setMaxHeaderSize(16384)                 // 16KB max header size
+            .setMaxWebSocketFrameSize(65536)         // 64KB max WebSocket frame size
+            .setMaxWebSocketMessageSize(262144)      // 256KB max WebSocket message size
 
         httpClient = vertx.createHttpClient(options)
 
