@@ -1,0 +1,37 @@
+{
+  "eventLoopPoolSize": 32,
+  "workerPoolSize": 128,
+  "internalBlockingPoolSize": 64,
+  "eventBus": {
+    "acceptBacklog": 200000,
+    "clientAuth": "NONE",
+    "connectTimeout": 60000,
+    "idleTimeout": 0,
+    "receiveBufferSize": 65536,
+    "reconnectAttempts": 0,
+    "reconnectInterval": 1000,
+    "reuseAddress": true,
+    "reusePort": true,
+    "sendBufferSize": 65536,
+    "soLinger": -1,
+    "ssl": false,
+    "tcpKeepAlive": true,
+    "tcpNoDelay": true,
+    "trafficClass": -1,
+    "trustAll": true
+  },
+  "blockedThreadCheckInterval": 10000,
+  "maxEventLoopExecuteTime": 10000000000,
+  "maxWorkerExecuteTime": 120000000000,
+  "warningExceptionTime": 10000000000,
+  "fileResolverCachingEnabled": true,
+  "preferNativeTransport": true,
+  "haEnabled": false,
+  "quorumSize": 1,
+  "haGroup": "__DEFAULT__",
+  "metrics": {
+    "enabled": true,
+    "jmxEnabled": true,
+    "jmxDomain": "vertx"
+  }
+}

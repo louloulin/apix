@@ -4,6 +4,7 @@ import com.louloulin.apix.config.ConfigManager
 import com.louloulin.apix.core.common.EventBusAddresses
 import io.vertx.core.Promise
 import io.vertx.core.http.HttpServer
+import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.healthchecks.HealthCheckHandler
@@ -59,10 +60,32 @@ class HealthVerticle : BaseVerticle() {
         // 设置路由处理器
         setupRoutes()
 
-        // 创建 HTTP 服务器
-        httpServer = vertx.createHttpServer()
+        // 创建 HTTP 服务器与高并发优化设置
+        val serverOptions = HttpServerOptions()
+            // 基本设置
+            .setPort(healthPort)
+            .setHost(healthHost)
+
+            // TCP 优化
+            .setTcpNoDelay(true)              // 禁用 Nagle 算法以降低延迟
+            .setTcpFastOpen(true)             // 启用 TCP Fast Open 以加快连接
+            .setTcpQuickAck(true)             // 启用 TCP Quick ACK 以提高响应性
+
+            // 套接字重用
+            .setReusePort(true)               // 启用端口重用以提高负载分配
+            .setReuseAddress(true)            // 启用地址重用以加快重启
+
+            // 连接处理
+            .setAcceptBacklog(10000)          // 增加接受队列大小
+            .setIdleTimeout(0)                // 禁用空闲超时
+
+            // 性能优化
+            .setHandle100ContinueAutomatically(true) // 自动处理 100-Continue
+            .setCompressionSupported(true)     // 启用压缩
+
+        httpServer = vertx.createHttpServer(serverOptions)
             .requestHandler(router)
-            .listen(healthPort, healthHost) { ar ->
+            .listen() { ar ->
                 if (ar.succeeded()) {
                     logger.info("HealthVerticle started on {}:{}", healthHost, healthPort)
                     startPromise.complete()

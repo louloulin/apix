@@ -1,0 +1,27 @@
+    /**
+     * Hello World 端点
+     */
+    private fun helloWorld(ctx: RoutingContext) {
+        ctx.response()
+            .putHeader("Content-Type", "application/json")
+            .end(JsonObject()
+                .put("message", "Hello, World!")
+                .put("timestamp", System.currentTimeMillis())
+                .encode()
+            )
+    }
+    
+    /**
+     * Hello Name 端点
+     */
+    private fun helloName(ctx: RoutingContext) {
+        val name = ctx.pathParam("name") ?: "World"
+        
+        ctx.response()
+            .putHeader("Content-Type", "application/json")
+            .end(JsonObject()
+                .put("message", "Hello, $name!")
+                .put("timestamp", System.currentTimeMillis())
+                .encode()
+            )
+    }

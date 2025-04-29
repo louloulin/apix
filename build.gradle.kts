@@ -30,7 +30,6 @@ dependencies {
     // Cluster support
     implementation("io.vertx:vertx-zookeeper")
     implementation("io.vertx:vertx-hazelcast")
-    implementation("io.vertx:vertx-infinispan")
 
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.9")

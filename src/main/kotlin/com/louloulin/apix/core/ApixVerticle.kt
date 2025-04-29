@@ -78,12 +78,19 @@ class ApixVerticle : BaseVerticle() {
                                 .end(JsonObject().put("message", "Hello, World!").encode())
                         }
 
+                        // Add API Hello endpoint for k6 testing
+                        mainRouter.get("/api/hello").handler { ctx ->
+                            ctx.response()
+                                .putHeader("content-type", "application/json")
+                                .end(JsonObject().put("message", "Hello from API!").encode())
+                        }
+
                         // Add a super lightweight endpoint for maximum performance testing
                         mainRouter.get("/ping").handler { ctx ->
                             ctx.response().end("pong")
                         }
 
-                        // Create HTTP server with ultra-high concurrency settings (100K+ connections)
+                        // Create HTTP server with ultra-high concurrency settings (200K+ connections)
                         val serverOptions = HttpServerOptions()
                             // Basic settings
                             .setPort(configManager.getGatewayPort())
@@ -99,9 +106,10 @@ class ApixVerticle : BaseVerticle() {
                             .setReusePort(true)               // Enable port reuse for better load distribution
                             .setReuseAddress(true)            // Enable address reuse for faster restarts
 
-                            // Connection handling
-                            .setAcceptBacklog(65536)          // Increase accept backlog to handle more pending connections
-                            .setIdleTimeout(300)              // 5 minutes idle timeout
+                            // Connection handling - optimized for high concurrency
+                            .setAcceptBacklog(150000)         // Increase accept backlog to handle pending connections
+                            .setIdleTimeout(300)              // Set idle timeout to 5 minutes (300 seconds)
+                            .setSoLinger(-1)                  // Disable SO_LINGER to prevent connection reset
 
                             // Performance optimizations
                             .setHandle100ContinueAutomatically(true) // Handle 100-Continue automatically
@@ -109,13 +117,24 @@ class ApixVerticle : BaseVerticle() {
                             .setCompressionSupported(true)    // Enable compression
                             .setDecompressionSupported(true)  // Enable decompression
 
+                            // Buffer sizes - optimized for high throughput
+                            .setReceiveBufferSize(65536)      // 64KB receive buffer
+                            .setSendBufferSize(65536)         // 64KB send buffer
+
+                            // HTTP settings
+                            .setMaxHeaderSize(16384)           // 16KB max header size
+                            .setMaxChunkSize(65536)           // 64KB max chunk size
+                            .setMaxInitialLineLength(8192)    // 8KB max initial line length
+                            .setMaxFormAttributeSize(65536)   // 64KB max form attribute size
+
                             // HTTP/2 settings
                             .setUseAlpn(true)                 // Enable ALPN for HTTP/2 support
                             .setInitialSettings(
                                 io.vertx.core.http.Http2Settings()
-                                    .setMaxConcurrentStreams(10000) // Allow 10K concurrent streams per connection
-                                    .setInitialWindowSize(65535 * 2) // Increase initial window size
-                                    .setHeaderTableSize(4096 * 2)   // Increase header table size
+                                    .setMaxConcurrentStreams(20000) // Allow 20K concurrent streams per connection
+                                    .setInitialWindowSize(65535 * 4) // Increase initial window size to 256KB
+                                    .setHeaderTableSize(4096 * 4)   // Increase header table size to 16KB
+                                    .setMaxHeaderListSize(16384)    // 16KB max header list size
                             )
 
                             // Keep-alive settings are enabled by default in HTTP server

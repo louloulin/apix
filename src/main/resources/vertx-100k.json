@@ -1,0 +1,45 @@
+{
+  "eventLoopPoolSize": 32,
+  "workerPoolSize": 128,
+  "internalBlockingPoolSize": 64,
+  "eventBus": {
+    "acceptBacklog": 150000,
+    "clientAuth": "NONE",
+    "connectTimeout": 120000,
+    "idleTimeout": 0,
+    "receiveBufferSize": 65536,
+    "reconnectAttempts": 0,
+    "reconnectInterval": 1000,
+    "reuseAddress": true,
+    "reusePort": true,
+    "sendBufferSize": 65536,
+    "soLinger": -1,
+    "ssl": false,
+    "tcpKeepAlive": true,
+    "tcpNoDelay": true,
+    "trafficClass": -1
+  },
+  "blockedThreadCheckInterval": 5000,
+  "maxEventLoopExecuteTime": 5000000000,
+  "maxWorkerExecuteTime": 60000000000,
+  "warningExceptionTime": 5000000000,
+  "fileResolverCachingEnabled": true,
+  "preferNativeTransport": true,
+  "haEnabled": false,
+  "metrics": {
+    "enabled": true,
+    "jmxEnabled": true,
+    "jmxDomain": "vertx"
+  },
+  "httpServerOptions": {
+    "maxInitialLineLength": 4096,
+    "maxHeaderSize": 8192,
+    "maxChunkSize": 32768,
+    "maxFormAttributeSize": 32768,
+    "compressionSupported": true,
+    "compressionLevel": 6,
+    "handle100ContinueAutomatically": true,
+    "maxWebSocketMessageSize": 32768,
+    "maxWebSocketFrameSize": 32768
+  }
+}
