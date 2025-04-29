@@ -22,23 +22,23 @@ class AdminVerticle : BaseVerticle() {
     private lateinit var httpServer: HttpServer
     private lateinit var router: Router
     private lateinit var configManager: ConfigManager
-
+    
     override fun registerEventBusHandlers() {
         // 不需要注册 EventBus 处理器
     }
-
+    
     override fun onStart(startPromise: Promise<Void>) {
         logger.info("Starting AdminVerticle...")
-
+        
         // 初始化配置管理器
         configManager = ConfigManager(vertx)
-
+        
         // 创建 HTTP 服务器
         httpServer = vertx.createHttpServer()
-
+        
         // 创建路由器
         router = Router.router(vertx)
-
+        
         // 添加 CORS 处理器
         val corsHandler = CorsHandler.create("*")
             .allowedMethods(setOf(
@@ -54,20 +54,20 @@ class AdminVerticle : BaseVerticle() {
                 "X-Requested-With",
                 "X-API-Key"
             ))
-
+        
         router.route().handler(corsHandler)
-
+        
         // 添加日志处理器
         router.route().handler(LoggerHandler.create())
-
+        
         // 添加请求体处理器
         router.route().handler(BodyHandler.create())
-
+        
         // 设置 API 路由
         setupRoutes()
-
+        
         // 启动 HTTP 服务器
-        val port = config().getInteger("admin.port", 8080)
+        val port = config.getInteger("admin.port", 8080)
         httpServer.requestHandler(router).listen(port) { ar ->
             if (ar.succeeded()) {
                 logger.info("AdminVerticle HTTP server started on port $port")
@@ -78,7 +78,7 @@ class AdminVerticle : BaseVerticle() {
             }
         }
     }
-
+    
     /**
      * 设置 API 路由
      */
@@ -89,18 +89,18 @@ class AdminVerticle : BaseVerticle() {
         router.post("/api/concurrency/limits").handler(this::setConcurrencyLimit)
         router.post("/api/concurrency/reset").handler(this::resetConcurrencyMetrics)
     }
-
+    
     /**
      * 获取并发控制指标
      */
     private fun getConcurrencyMetrics(ctx: RoutingContext) {
         val serviceId = ctx.pathParam("serviceId")
-
+        
         val request = JsonObject()
         if (serviceId != null) {
             request.put("serviceId", serviceId)
         }
-
+        
         vertx.eventBus().request<JsonObject>(EventBusAddresses.CONCURRENCY_GET_METRICS, request) { ar ->
             if (ar.succeeded()) {
                 val response = ar.result().body()
@@ -118,13 +118,13 @@ class AdminVerticle : BaseVerticle() {
             }
         }
     }
-
+    
     /**
      * 设置并发限制
      */
     private fun setConcurrencyLimit(ctx: RoutingContext) {
         val body = ctx.body().asJsonObject()
-
+        
         if (body == null) {
             ctx.response()
                 .setStatusCode(400)
@@ -132,10 +132,10 @@ class AdminVerticle : BaseVerticle() {
                 .end(JsonObject().put("error", "Request body is required").encode())
             return
         }
-
+        
         val serviceId = body.getString("serviceId")
         val limit = body.getInteger("limit")
-
+        
         if (serviceId == null || limit == null) {
             ctx.response()
                 .setStatusCode(400)
@@ -146,11 +146,11 @@ class AdminVerticle : BaseVerticle() {
                 )
             return
         }
-
+        
         val request = JsonObject()
             .put("serviceId", serviceId)
             .put("limit", limit)
-
+        
         vertx.eventBus().request<JsonObject>(EventBusAddresses.CONCURRENCY_SET_LIMIT, request) { ar ->
             if (ar.succeeded()) {
                 val response = ar.result().body()
@@ -168,20 +168,20 @@ class AdminVerticle : BaseVerticle() {
             }
         }
     }
-
+    
     /**
      * 重置并发控制指标
      */
     private fun resetConcurrencyMetrics(ctx: RoutingContext) {
         val body = ctx.body().asJsonObject()
-
+        
         val serviceId = if (body != null) body.getString("serviceId") else null
-
+        
         val request = JsonObject()
         if (serviceId != null) {
             request.put("serviceId", serviceId)
         }
-
+        
         vertx.eventBus().request<JsonObject>(EventBusAddresses.CONCURRENCY_RESET_METRICS, request) { ar ->
             if (ar.succeeded()) {
                 val response = ar.result().body()
@@ -199,10 +199,10 @@ class AdminVerticle : BaseVerticle() {
             }
         }
     }
-
+    
     override fun stop(stopPromise: Promise<Void>) {
         logger.info("Stopping AdminVerticle...")
-
+        
         // 关闭 HTTP 服务器
         httpServer.close { ar ->
             if (ar.succeeded()) {

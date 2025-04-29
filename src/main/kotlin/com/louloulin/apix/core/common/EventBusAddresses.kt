@@ -120,4 +120,11 @@ object EventBusAddresses {
     const val CLUSTER_ROUTES_SYNC = "apix.cluster.routes.sync"
     const val CLUSTER_SERVICES_SYNC = "apix.cluster.services.sync"
     const val CLUSTER_PLUGINS_SYNC = "apix.cluster.plugins.sync"
+
+    // 并发控制相关
+    const val CONCURRENCY_TRY_ACQUIRE = "apix.concurrency.try.acquire"
+    const val CONCURRENCY_RELEASE = "apix.concurrency.release"
+    const val CONCURRENCY_GET_METRICS = "apix.concurrency.get.metrics"
+    const val CONCURRENCY_SET_LIMIT = "apix.concurrency.set.limit"
+    const val CONCURRENCY_RESET_METRICS = "apix.concurrency.reset.metrics"
 }

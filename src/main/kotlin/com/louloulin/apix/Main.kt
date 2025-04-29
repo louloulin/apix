@@ -14,6 +14,7 @@ import com.louloulin.apix.core.verticle.ModelRouterVerticle
 import com.louloulin.apix.core.verticle.MonitorVerticle
 import com.louloulin.apix.core.verticle.PluginVerticle
 import com.louloulin.apix.core.verticle.PromptEnhancerVerticle
+import com.louloulin.apix.core.verticle.ConcurrencyControlVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.core.CompositeFuture
 import io.vertx.core.DeploymentOptions
@@ -185,6 +186,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy PromptEnhancerVerticle
             deployVerticle(vertx, PromptEnhancerVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy ConcurrencyControlVerticle
+            deployVerticle(vertx, ConcurrencyControlVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy PluginVerticle
