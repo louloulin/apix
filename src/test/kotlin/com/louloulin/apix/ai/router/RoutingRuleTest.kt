@@ -77,12 +77,16 @@ class RoutingRuleTest {
 
         // Test TOKEN_COUNT condition
         // "This is a long message with many tokens" has 40 chars, which is about 10 tokens (40/4)
-        val tokenCountCondition = RuleCondition(ConditionType.TOKEN_COUNT, "10")
+        val longText = "This is a long message with many tokens that should be well over the threshold"
+        val shortText = "Short"
+
+        // The long text has 69 chars, which is about 17 tokens (69/4)
+        val tokenCountCondition = RuleCondition(ConditionType.TOKEN_COUNT, "15")
         val tokenCountRule = RoutingRule("test-id", "Test Rule", 1, tokenCountCondition, "gpt-4")
 
-        assertTrue(tokenCountRule.matches("This is a long message with many tokens", "text", "completion"))
+        assertTrue(tokenCountRule.matches(longText, "text", "completion"))
         // "Short" has 5 chars, which is about 1 token (5/4)
-        assertFalse(tokenCountRule.matches("Short", "text", "completion"))
+        assertFalse(tokenCountRule.matches(shortText, "text", "completion"))
 
         // Test LANGUAGE condition
         val languageCondition = RuleCondition(ConditionType.LANGUAGE, "zh")

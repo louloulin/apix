@@ -135,6 +135,17 @@ class AdminVerticle : BaseVerticle() {
         router.post("/api/ai/model/rules/clear").handler(this::clearModelRules)
         router.post("/api/ai/model/route").handler(this::routeToModel)
 
+        // AI 提示词增强 API
+        router.post("/api/ai/prompt/enhance").handler(this::enhancePrompt)
+        router.get("/api/ai/prompt/templates").handler(this::getPromptTemplates)
+        router.get("/api/ai/prompt/templates/:id").handler(this::getPromptTemplate)
+        router.post("/api/ai/prompt/templates").handler(this::addPromptTemplate)
+        router.delete("/api/ai/prompt/templates/:id").handler(this::removePromptTemplate)
+        router.get("/api/ai/prompt/rules").handler(this::getPromptRules)
+        router.post("/api/ai/prompt/rules").handler(this::addPromptRule)
+        router.delete("/api/ai/prompt/rules/:id").handler(this::removePromptRule)
+        router.post("/api/ai/prompt/rules/clear").handler(this::clearPromptRules)
+
         // 健康检查 API
         router.get("/health").handler { ctx ->
             ctx.response()
@@ -1227,6 +1238,299 @@ class AdminVerticle : BaseVerticle() {
             } else {
                 logger.error("Failed to close AdminVerticle HTTP server", ar.cause())
                 stopPromise.fail(ar.cause())
+            }
+        }
+    }
+
+    /**
+     * 增强提示词
+     */
+    private fun enhancePrompt(ctx: RoutingContext) {
+        val body = ctx.body().asJsonObject()
+
+        if (body == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject().put("error", "Request body is required").encode())
+            return
+        }
+
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.AI_PROMPT_ENHANCE, body) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to enhance prompt: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 获取提示词模板列表
+     */
+    private fun getPromptTemplates(ctx: RoutingContext) {
+        vertx.eventBus().request<JsonArray>(EventBusAddresses.AI_PROMPT_TEMPLATES_GET, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val templates = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject().put("templates", templates).encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to get prompt templates: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 获取指定ID的提示词模板
+     */
+    private fun getPromptTemplate(ctx: RoutingContext) {
+        val templateId = ctx.pathParam("id")
+
+        if (templateId == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject().put("error", "Template ID is required").encode())
+            return
+        }
+
+        vertx.eventBus().request<JsonObject>(
+            EventBusAddresses.AI_PROMPT_TEMPLATE_GET,
+            JsonObject().put("id", templateId)
+        ) { ar ->
+            if (ar.succeeded()) {
+                val template = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(template.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to get prompt template: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 添加提示词模板
+     */
+    private fun addPromptTemplate(ctx: RoutingContext) {
+        val body = ctx.body().asJsonObject()
+
+        if (body == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject().put("error", "Request body is required").encode())
+            return
+        }
+
+        val template = body.getJsonObject("template")
+
+        if (template == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject().put("error", "Template is required").encode())
+            return
+        }
+
+        vertx.eventBus().request<JsonObject>(
+            EventBusAddresses.AI_PROMPT_TEMPLATE_ADD,
+            JsonObject().put("template", template)
+        ) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject().put("template", response).encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to add prompt template: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 删除提示词模板
+     */
+    private fun removePromptTemplate(ctx: RoutingContext) {
+        val templateId = ctx.pathParam("id")
+
+        if (templateId == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject().put("error", "Template ID is required").encode())
+            return
+        }
+
+        vertx.eventBus().request<JsonObject>(
+            EventBusAddresses.AI_PROMPT_TEMPLATE_REMOVE,
+            JsonObject().put("id", templateId)
+        ) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to remove prompt template: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 获取提示词增强规则列表
+     */
+    private fun getPromptRules(ctx: RoutingContext) {
+        vertx.eventBus().request<JsonArray>(EventBusAddresses.AI_PROMPT_RULES_GET, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val rules = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject().put("rules", rules).encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to get prompt rules: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 添加提示词增强规则
+     */
+    private fun addPromptRule(ctx: RoutingContext) {
+        val body = ctx.body().asJsonObject()
+
+        if (body == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject().put("error", "Request body is required").encode())
+            return
+        }
+
+        val rule = body.getJsonObject("rule")
+
+        if (rule == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject().put("error", "Rule is required").encode())
+            return
+        }
+
+        vertx.eventBus().request<JsonObject>(
+            EventBusAddresses.AI_PROMPT_RULE_ADD,
+            JsonObject().put("rule", rule)
+        ) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject().put("rule", response).encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to add prompt rule: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 删除提示词增强规则
+     */
+    private fun removePromptRule(ctx: RoutingContext) {
+        val ruleId = ctx.pathParam("id")
+
+        if (ruleId == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject().put("error", "Rule ID is required").encode())
+            return
+        }
+
+        vertx.eventBus().request<JsonObject>(
+            EventBusAddresses.AI_PROMPT_RULE_REMOVE,
+            JsonObject().put("id", ruleId)
+        ) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to remove prompt rule: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+
+    /**
+     * 清空提示词增强规则
+     */
+    private fun clearPromptRules(ctx: RoutingContext) {
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.AI_PROMPT_RULES_CLEAR, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to clear prompt rules: ${ar.cause().message}")
+                        .encode()
+                    )
             }
         }
     }

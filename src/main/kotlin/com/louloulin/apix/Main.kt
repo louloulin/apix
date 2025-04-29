@@ -13,6 +13,7 @@ import com.louloulin.apix.core.verticle.HealthVerticle
 import com.louloulin.apix.core.verticle.ModelRouterVerticle
 import com.louloulin.apix.core.verticle.MonitorVerticle
 import com.louloulin.apix.core.verticle.PluginVerticle
+import com.louloulin.apix.core.verticle.PromptEnhancerVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.core.CompositeFuture
 import io.vertx.core.DeploymentOptions
@@ -180,6 +181,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy ModelRouterVerticle
             deployVerticle(vertx, ModelRouterVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy PromptEnhancerVerticle
+            deployVerticle(vertx, PromptEnhancerVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy PluginVerticle

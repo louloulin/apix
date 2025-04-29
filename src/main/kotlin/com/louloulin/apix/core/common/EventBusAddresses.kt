@@ -92,11 +92,24 @@ object EventBusAddresses {
     const val AI_MODEL_LIST = "apix.ai.model.list"
     const val AI_USAGE_GET = "apix.ai.usage.get"
     const val AI_CACHE_CLEAR = "apix.ai.cache.clear"
+
+    // AI 模型路由
     const val AI_MODEL_ROUTE = "apix.ai.model.route"
     const val AI_MODEL_RULES_GET = "apix.ai.model.rules.get"
     const val AI_MODEL_RULE_ADD = "apix.ai.model.rule.add"
     const val AI_MODEL_RULE_REMOVE = "apix.ai.model.rule.remove"
     const val AI_MODEL_RULES_CLEAR = "apix.ai.model.rules.clear"
+
+    // AI 提示词增强
+    const val AI_PROMPT_ENHANCE = "apix.ai.prompt.enhance"
+    const val AI_PROMPT_TEMPLATES_GET = "apix.ai.prompt.templates.get"
+    const val AI_PROMPT_TEMPLATE_GET = "apix.ai.prompt.template.get"
+    const val AI_PROMPT_TEMPLATE_ADD = "apix.ai.prompt.template.add"
+    const val AI_PROMPT_TEMPLATE_REMOVE = "apix.ai.prompt.template.remove"
+    const val AI_PROMPT_RULES_GET = "apix.ai.prompt.rules.get"
+    const val AI_PROMPT_RULE_ADD = "apix.ai.prompt.rule.add"
+    const val AI_PROMPT_RULE_REMOVE = "apix.ai.prompt.rule.remove"
+    const val AI_PROMPT_RULES_CLEAR = "apix.ai.prompt.rules.clear"
 
     // 集群相关
     const val CLUSTER_CONFIG_GET = "apix.cluster.config.get"
