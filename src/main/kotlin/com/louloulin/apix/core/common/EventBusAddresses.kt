@@ -127,4 +127,17 @@ object EventBusAddresses {
     const val CONCURRENCY_GET_METRICS = "apix.concurrency.get.metrics"
     const val CONCURRENCY_SET_LIMIT = "apix.concurrency.set.limit"
     const val CONCURRENCY_RESET_METRICS = "apix.concurrency.reset.metrics"
+
+    // 内存管理相关
+    const val MEMORY_USAGE_GET = "apix.memory.usage.get"
+    const val MEMORY_GC_TRIGGER = "apix.memory.gc.trigger"
+    const val MEMORY_CACHE_CLEAR = "apix.memory.cache.clear"
+    const val MEMORY_LOW_NOTIFY = "apix.memory.low.notify"
+    const val MEMORY_CRITICAL_NOTIFY = "apix.memory.critical.notify"
+    const val MEMORY_RESTORED_NOTIFY = "apix.memory.restored.notify"
+
+    // 对象池管理相关
+    const val OBJECT_POOL_CREATE = "apix.memory.object.pool.create"
+    const val OBJECT_POOL_REMOVE = "apix.memory.object.pool.remove"
+    const val OBJECT_POOL_GET_STATS = "apix.memory.object.pool.stats.get"
 }

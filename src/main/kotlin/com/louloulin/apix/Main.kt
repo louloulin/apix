@@ -15,8 +15,10 @@ import com.louloulin.apix.core.verticle.MonitorVerticle
 import com.louloulin.apix.core.verticle.PluginVerticle
 import com.louloulin.apix.core.verticle.PromptEnhancerVerticle
 import com.louloulin.apix.core.verticle.ConcurrencyControlVerticle
+import com.louloulin.apix.core.verticle.MemoryManagerVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.core.CompositeFuture
+import io.vertx.core.metrics.MetricsOptions
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Future
 import io.vertx.core.Vertx
@@ -27,6 +29,11 @@ import org.slf4j.LoggerFactory
 private val logger = LoggerFactory.getLogger("com.louloulin.apix.Main")
 
 fun main() {
+    // 设置事件循环亲和性相关的系统属性
+    System.setProperty("vertx.disableThreadChecks", "true")
+    System.setProperty("vertx.threadChecks", "false")
+    System.setProperty("vertx.preferNativeTransport", "true")
+
     logger.info("Starting APIX - AI Agent Gateway")
 
     // Load configuration
@@ -52,40 +59,52 @@ fun main() {
     // Parse cluster configuration
     val clusterConfig = ClusterConfig(config)
 
-    // Configure Vert.x with ultra-high concurrency settings (100K+ connections)
+    // Load optimized Vert.x configuration for high concurrency
+    val vertxConfigPath = System.getProperty("apix.vertx.config.path", "src/main/resources/vertx-high-concurrency.json")
+    val vertxConfigFile = java.nio.file.Paths.get(vertxConfigPath)
+
+    // Default Vert.x configuration for ultra-high concurrency (100K+ connections)
     val availableProcessors = Runtime.getRuntime().availableProcessors()
-    val vertxOptions = VertxOptions()
+    var vertxOptions = VertxOptions()
         // Event loop pool - critical for handling many concurrent connections
         .setEventLoopPoolSize(availableProcessors * 4) // 4 event loop threads per core
-
         // Worker pool - for handling blocking operations
         .setWorkerPoolSize(availableProcessors * 16)   // 16 worker threads per core
-
         // Internal blocking pool - for internal Vert.x operations
         .setInternalBlockingPoolSize(availableProcessors * 8) // 8 internal blocking threads per core
-
         // Increase event loop execute time for high load scenarios
         .setMaxEventLoopExecuteTime(5000000000L)  // 5 seconds in nanoseconds
+        // Enable native transport for better performance
+        .setPreferNativeTransport(true)
+        // Enable metrics
+        .setMetricsOptions(MetricsOptions().setEnabled(true))
 
-        // Increase worker execute time for complex operations
-        .setMaxWorkerExecuteTime(120000000000L)   // 120 seconds in nanoseconds
+    // Try to load Vert.x configuration from file
+    if (java.nio.file.Files.exists(vertxConfigFile)) {
+        try {
+            val vertxConfigContent = java.nio.file.Files.readString(vertxConfigFile)
+            val vertxConfig = io.vertx.core.json.JsonObject(vertxConfigContent)
+            vertxOptions = VertxOptions(vertxConfig)
+            logger.info("Loaded Vert.x configuration from: {}", vertxConfigPath)
+        } catch (e: Exception) {
+            logger.error("Failed to load Vert.x configuration from: {}", vertxConfigPath, e)
+        }
+    } else {
+        logger.warn("Vert.x configuration file not found at: {}, using default configuration", vertxConfigPath)
+    }
 
-        // Warning exception time
-        .setWarningExceptionTime(10000000000L)    // 10 seconds in nanoseconds
+    // Add additional configuration
+    vertxOptions.setMaxWorkerExecuteTime(120000000000L)   // 120 seconds in nanoseconds
+    vertxOptions.setWarningExceptionTime(5000000000L)    // 5 seconds in nanoseconds
+    vertxOptions.setBlockedThreadCheckInterval(2000)     // 2 seconds
 
-        // Blocked thread check interval
-        .setBlockedThreadCheckInterval(5000)     // 5 seconds
-
-        // Use native transport for better performance
-        .setPreferNativeTransport(true)          // Use native transport if available
-
-        // Increase event bus options for better internal communication
-        .setEventBusOptions(
-            EventBusOptions()
-                .setConnectTimeout(30000) // 30 seconds
-                .setReconnectAttempts(10)
-                .setReconnectInterval(2000) // 2 seconds
-        )
+    // Increase event bus options for better internal communication
+    vertxOptions.setEventBusOptions(
+        EventBusOptions()
+            .setConnectTimeout(30000) // 30 seconds
+            .setReconnectAttempts(10)
+            .setReconnectInterval(2000) // 2 seconds
+    )
 
     // Configure clustering if enabled
     if (clusterConfig.enabled) {
@@ -190,6 +209,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy ConcurrencyControlVerticle
             deployVerticle(vertx, ConcurrencyControlVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy MemoryManagerVerticle
+            deployVerticle(vertx, MemoryManagerVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy PluginVerticle

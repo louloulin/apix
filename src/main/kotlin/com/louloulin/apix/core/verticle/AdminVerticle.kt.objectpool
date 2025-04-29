@@ -1,0 +1,107 @@
+    /**
+     * 获取对象池统计信息
+     */
+    private fun getObjectPoolStats(ctx: RoutingContext) {
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.OBJECT_POOL_GET_STATS, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to get object pool stats: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+    
+    /**
+     * 创建对象池
+     */
+    private fun createObjectPool(ctx: RoutingContext) {
+        val body = ctx.body().asJsonObject()
+        
+        if (body == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject().put("error", "Request body is required").encode())
+            return
+        }
+        
+        val name = body.getString("name")
+        val initialSize = body.getInteger("initialSize", 10)
+        val maxSize = body.getInteger("maxSize", 100)
+        
+        if (name == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject()
+                    .put("error", "Pool name is required")
+                    .encode()
+                )
+            return
+        }
+        
+        val request = JsonObject()
+            .put("name", name)
+            .put("initialSize", initialSize)
+            .put("maxSize", maxSize)
+        
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.OBJECT_POOL_CREATE, request) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to create object pool: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+    
+    /**
+     * 移除对象池
+     */
+    private fun removeObjectPool(ctx: RoutingContext) {
+        val poolName = ctx.pathParam("name")
+        
+        if (poolName == null) {
+            ctx.response()
+                .setStatusCode(400)
+                .putHeader("Content-Type", "application/json")
+                .end(JsonObject().put("error", "Pool name is required").encode())
+            return
+        }
+        
+        val request = JsonObject().put("name", poolName)
+        
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.OBJECT_POOL_REMOVE, request) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to remove object pool: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }

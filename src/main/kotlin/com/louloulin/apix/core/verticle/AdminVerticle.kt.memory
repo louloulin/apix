@@ -1,0 +1,65 @@
+    /**
+     * 获取内存使用情况
+     */
+    private fun getMemoryUsage(ctx: RoutingContext) {
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.MEMORY_USAGE_GET, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to get memory usage: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+    
+    /**
+     * 触发垃圾回收
+     */
+    private fun triggerGC(ctx: RoutingContext) {
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.MEMORY_GC_TRIGGER, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to trigger garbage collection: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
+    
+    /**
+     * 清理内存缓存
+     */
+    private fun clearMemoryCache(ctx: RoutingContext) {
+        vertx.eventBus().request<JsonObject>(EventBusAddresses.MEMORY_CACHE_CLEAR, JsonObject()) { ar ->
+            if (ar.succeeded()) {
+                val response = ar.result().body()
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(500)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Failed to clear memory cache: ${ar.cause().message}")
+                        .encode()
+                    )
+            }
+        }
+    }
