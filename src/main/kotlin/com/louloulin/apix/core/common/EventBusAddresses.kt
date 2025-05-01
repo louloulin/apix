@@ -140,4 +140,12 @@ object EventBusAddresses {
     const val OBJECT_POOL_CREATE = "apix.memory.object.pool.create"
     const val OBJECT_POOL_REMOVE = "apix.memory.object.pool.remove"
     const val OBJECT_POOL_GET_STATS = "apix.memory.object.pool.stats.get"
+
+    // 请求队列相关
+    const val QUEUE_ENQUEUE = "apix.queue.enqueue"
+    const val QUEUE_STATUS = "apix.queue.status"
+    const val QUEUE_CONTROL = "apix.queue.control"
+    const val QUEUE_CONFIG = "apix.queue.config"
+    const val QUEUE_UPDATE = "apix.queue.update"
+    const val QUEUE_STATS = "apix.queue.stats"
 }
