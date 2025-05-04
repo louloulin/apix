@@ -1,0 +1,164 @@
+{
+    "metrics": {
+        "data_received": {
+            "count": 0,
+            "rate": 0
+        },
+        "iterations": {
+            "count": 254571,
+            "rate": 17279.53676334784
+        },
+        "http_req_blocked": {
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0
+        },
+        "http_req_waiting": {
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0
+        },
+        "http_req_connecting": {
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0
+        },
+        "http_req_failed": {
+            "passes": 254764,
+            "fails": 0,
+            "value": 1
+        },
+        "checks": {
+            "passes": 254571,
+            "fails": 509142,
+            "value": 0.3333333333333333
+        },
+        "vus": {
+            "value": 179,
+            "min": 10,
+            "max": 179
+        },
+        "error_rate": {
+            "passes": 254571,
+            "fails": 0,
+            "thresholds": {
+                "rate<0.01": true
+            },
+            "value": 1
+        },
+        "http_req_receiving": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "iteration_duration": {
+            "avg": 4.67856132075931,
+            "min": 0.0435,
+            "med": 3.790166,
+            "max": 284.312708,
+            "p(90)": 9.650208,
+            "p(95)": 10.966333499999998
+        },
+        "http_reqs": {
+            "rate": 17292.637040265974,
+            "count": 254764
+        },
+        "data_sent": {
+            "count": 0,
+            "rate": 0
+        },
+        "http_req_duration": {
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "thresholds": {
+                "p(95)<50": false
+            }
+        },
+        "success_rate": {
+            "passes": 0,
+            "fails": 254571,
+            "thresholds": {
+                "rate>0.99": true
+            },
+            "value": 0
+        },
+        "vus_max": {
+            "value": 1000,
+            "min": 1000,
+            "max": 1000
+        },
+        "http_req_sending": {
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0
+        },
+        "response_time": {
+            "max": 284,
+            "p(90)": 10,
+            "p(95)": 11,
+            "avg": 4.6587081796434004,
+            "min": 0,
+            "med": 4
+        },
+        "http_req_tls_handshaking": {
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0
+        },
+        "requests_per_second": {
+            "rate": 17279.53676334784,
+            "count": 254571
+        }
+    },
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "status is 200": {
+                    "name": "status is 200",
+                    "path": "::status is 200",
+                    "id": "6210a8cd14cd70477eba5c5e4cb3fb5f",
+                    "passes": 0,
+                    "fails": 254571
+                },
+                "response is valid JSON": {
+                    "name": "response is valid JSON",
+                    "path": "::response is valid JSON",
+                    "id": "8b6b928f224c87f832d9e61432879c78",
+                    "passes": 254571,
+                    "fails": 0
+                },
+                "response contains message": {
+                    "name": "response contains message",
+                    "path": "::response contains message",
+                    "id": "5aa605ff86c6ded7963eae8dadcd1686",
+                    "passes": 0,
+                    "fails": 254571
+                }
+            }
+    }
+}
