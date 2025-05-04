@@ -15,31 +15,31 @@ import java.util.concurrent.atomic.AtomicLong
  */
 class RateLimiter(private val vertx: Vertx) {
     private val logger = LoggerFactory.getLogger(RateLimiter::class.java)
-    
+
     // 限流器配置
     private var cleanupInterval = 60000L // 清理间隔（毫秒）
-    
+
     // 限流器实例
     private val tokenBucketLimiters = ConcurrentHashMap<String, TokenBucketLimiter>()
     private val slidingWindowLimiters = ConcurrentHashMap<String, SlidingWindowLimiter>()
     private val leakyBucketLimiters = ConcurrentHashMap<String, LeakyBucketLimiter>()
-    
+
     /**
      * 初始化限流器
      */
     fun initialize(config: JsonObject) {
         // 加载配置
         cleanupInterval = config.getLong("cleanupInterval", cleanupInterval)
-        
+
         // 启动清理任务
         startCleanupTask()
-        
+
         // 注册事件总线处理器
         registerEventBusHandlers()
-        
+
         logger.info("初始化限流器完成，清理间隔: ${cleanupInterval}ms")
     }
-    
+
     /**
      * 启动清理任务
      */
@@ -49,7 +49,7 @@ class RateLimiter(private val vertx: Vertx) {
                 try {
                     // 清理过期的限流器
                     cleanupExpiredLimiters()
-                    
+
                     delay(cleanupInterval)
                 } catch (e: Exception) {
                     logger.error("清理过期限流器异常", e)
@@ -58,13 +58,13 @@ class RateLimiter(private val vertx: Vertx) {
             }
         }
     }
-    
+
     /**
      * 清理过期的限流器
      */
     private fun cleanupExpiredLimiters() {
         val now = System.currentTimeMillis()
-        
+
         // 清理令牌桶限流器
         tokenBucketLimiters.entries.removeIf { (_, limiter) ->
             val expired = limiter.isExpired(now)
@@ -73,7 +73,7 @@ class RateLimiter(private val vertx: Vertx) {
             }
             expired
         }
-        
+
         // 清理滑动窗口限流器
         slidingWindowLimiters.entries.removeIf { (_, limiter) ->
             val expired = limiter.isExpired(now)
@@ -82,7 +82,7 @@ class RateLimiter(private val vertx: Vertx) {
             }
             expired
         }
-        
+
         // 清理漏桶限流器
         leakyBucketLimiters.entries.removeIf { (_, limiter) ->
             val expired = limiter.isExpired(now)
@@ -92,7 +92,7 @@ class RateLimiter(private val vertx: Vertx) {
             expired
         }
     }
-    
+
     /**
      * 注册事件总线处理器
      */
@@ -103,12 +103,12 @@ class RateLimiter(private val vertx: Vertx) {
             val key = body.getString("key")
             val type = body.getString("type", "token_bucket")
             val tokens = body.getInteger("tokens", 1)
-            
+
             if (key == null) {
                 message.fail(400, "Missing required field: key")
                 return@consumer
             }
-            
+
             // 检查是否允许通过
             val allowed = when (type) {
                 "token_bucket" -> checkTokenBucket(key, tokens, body)
@@ -119,7 +119,7 @@ class RateLimiter(private val vertx: Vertx) {
                     return@consumer
                 }
             }
-            
+
             // 返回结果
             message.reply(JsonObject()
                 .put("allowed", allowed)
@@ -129,18 +129,18 @@ class RateLimiter(private val vertx: Vertx) {
                 .put("timestamp", System.currentTimeMillis())
             )
         }
-        
+
         // 注册限流器创建处理器
         vertx.eventBus().consumer<JsonObject>("apix.ratelimit.create") { message ->
             val body = message.body()
             val key = body.getString("key")
             val type = body.getString("type", "token_bucket")
-            
+
             if (key == null) {
                 message.fail(400, "Missing required field: key")
                 return@consumer
             }
-            
+
             // 创建限流器
             val created = when (type) {
                 "token_bucket" -> createTokenBucket(key, body)
@@ -151,7 +151,7 @@ class RateLimiter(private val vertx: Vertx) {
                     return@consumer
                 }
             }
-            
+
             // 返回结果
             message.reply(JsonObject()
                 .put("created", created)
@@ -160,18 +160,18 @@ class RateLimiter(private val vertx: Vertx) {
                 .put("timestamp", System.currentTimeMillis())
             )
         }
-        
+
         // 注册限流器删除处理器
         vertx.eventBus().consumer<JsonObject>("apix.ratelimit.delete") { message ->
             val body = message.body()
             val key = body.getString("key")
             val type = body.getString("type")
-            
+
             if (key == null) {
                 message.fail(400, "Missing required field: key")
                 return@consumer
             }
-            
+
             // 删除限流器
             val deleted = if (type == null) {
                 // 删除所有类型的限流器
@@ -188,7 +188,7 @@ class RateLimiter(private val vertx: Vertx) {
                     }
                 }
             }
-            
+
             // 返回结果
             message.reply(JsonObject()
                 .put("deleted", deleted)
@@ -197,18 +197,18 @@ class RateLimiter(private val vertx: Vertx) {
                 .put("timestamp", System.currentTimeMillis())
             )
         }
-        
+
         // 注册限流器状态查询处理器
         vertx.eventBus().consumer<JsonObject>("apix.ratelimit.status") { message ->
             val body = message.body()
             val key = body.getString("key")
             val type = body.getString("type")
-            
+
             if (key == null) {
                 message.fail(400, "Missing required field: key")
                 return@consumer
             }
-            
+
             // 获取限流器状态
             val status = if (type == null) {
                 // 获取所有类型的限流器状态
@@ -228,33 +228,33 @@ class RateLimiter(private val vertx: Vertx) {
                     }
                 }
             }
-            
+
             // 返回结果
             message.reply(status)
         }
     }
-    
+
     /**
      * 检查令牌桶限流器
      */
-    private fun checkTokenBucket(key: String, tokens: Int, config: JsonObject): Boolean {
+    fun checkTokenBucket(key: String, tokens: Int, config: JsonObject): Boolean {
         // 获取或创建令牌桶限流器
         val limiter = tokenBucketLimiters[key] ?: createTokenBucket(key, config)
-        
+
         // 检查是否允许通过
         return limiter.tryAcquire(tokens)
     }
-    
+
     /**
      * 创建令牌桶限流器
      */
-    private fun createTokenBucket(key: String, config: JsonObject): TokenBucketLimiter {
+    fun createTokenBucket(key: String, config: JsonObject): TokenBucketLimiter {
         val capacity = config.getInteger("capacity", 100)
         val refillRate = config.getDouble("refillRate", 1.0)
         val refillInterval = config.getLong("refillInterval", 1000L)
         val initialTokens = config.getInteger("initialTokens", capacity)
         val ttl = config.getLong("ttl", 3600000L)
-        
+
         val limiter = TokenBucketLimiter(
             id = key,
             capacity = capacity,
@@ -263,30 +263,30 @@ class RateLimiter(private val vertx: Vertx) {
             initialTokens = initialTokens,
             ttl = ttl
         )
-        
+
         tokenBucketLimiters[key] = limiter
         logger.debug("创建令牌桶限流器: $key, 容量: $capacity, 填充速率: $refillRate, 填充间隔: ${refillInterval}ms")
-        
+
         return limiter
     }
-    
+
     /**
      * 删除令牌桶限流器
      */
-    private fun deleteTokenBucket(key: String): Boolean {
+    fun deleteTokenBucket(key: String): Boolean {
         val removed = tokenBucketLimiters.remove(key) != null
         if (removed) {
             logger.debug("删除令牌桶限流器: $key")
         }
         return removed
     }
-    
+
     /**
      * 获取令牌桶限流器状态
      */
-    private fun getTokenBucketStatus(key: String): JsonObject {
+    fun getTokenBucketStatus(key: String): JsonObject {
         val limiter = tokenBucketLimiters[key]
-        
+
         return if (limiter != null) {
             JsonObject()
                 .put("exists", true)
@@ -303,27 +303,27 @@ class RateLimiter(private val vertx: Vertx) {
                 .put("exists", false)
         }
     }
-    
+
     /**
      * 检查滑动窗口限流器
      */
-    private fun checkSlidingWindow(key: String, tokens: Int, config: JsonObject): Boolean {
+    fun checkSlidingWindow(key: String, tokens: Int, config: JsonObject): Boolean {
         // 获取或创建滑动窗口限流器
         val limiter = slidingWindowLimiters[key] ?: createSlidingWindow(key, config)
-        
+
         // 检查是否允许通过
         return limiter.tryAcquire(tokens)
     }
-    
+
     /**
      * 创建滑动窗口限流器
      */
-    private fun createSlidingWindow(key: String, config: JsonObject): SlidingWindowLimiter {
+    fun createSlidingWindow(key: String, config: JsonObject): SlidingWindowLimiter {
         val limit = config.getInteger("limit", 100)
         val windowSize = config.getLong("windowSize", 60000L)
         val precision = config.getInteger("precision", 10)
         val ttl = config.getLong("ttl", 3600000L)
-        
+
         val limiter = SlidingWindowLimiter(
             id = key,
             limit = limit,
@@ -331,30 +331,30 @@ class RateLimiter(private val vertx: Vertx) {
             precision = precision,
             ttl = ttl
         )
-        
+
         slidingWindowLimiters[key] = limiter
         logger.debug("创建滑动窗口限流器: $key, 限制: $limit, 窗口大小: ${windowSize}ms, 精度: $precision")
-        
+
         return limiter
     }
-    
+
     /**
      * 删除滑动窗口限流器
      */
-    private fun deleteSlidingWindow(key: String): Boolean {
+    fun deleteSlidingWindow(key: String): Boolean {
         val removed = slidingWindowLimiters.remove(key) != null
         if (removed) {
             logger.debug("删除滑动窗口限流器: $key")
         }
         return removed
     }
-    
+
     /**
      * 获取滑动窗口限流器状态
      */
-    private fun getSlidingWindowStatus(key: String): JsonObject {
+    fun getSlidingWindowStatus(key: String): JsonObject {
         val limiter = slidingWindowLimiters[key]
-        
+
         return if (limiter != null) {
             JsonObject()
                 .put("exists", true)
@@ -370,27 +370,27 @@ class RateLimiter(private val vertx: Vertx) {
                 .put("exists", false)
         }
     }
-    
+
     /**
      * 检查漏桶限流器
      */
-    private fun checkLeakyBucket(key: String, tokens: Int, config: JsonObject): Boolean {
+    fun checkLeakyBucket(key: String, tokens: Int, config: JsonObject): Boolean {
         // 获取或创建漏桶限流器
         val limiter = leakyBucketLimiters[key] ?: createLeakyBucket(key, config)
-        
+
         // 检查是否允许通过
         return limiter.tryAcquire(tokens)
     }
-    
+
     /**
      * 创建漏桶限流器
      */
-    private fun createLeakyBucket(key: String, config: JsonObject): LeakyBucketLimiter {
+    fun createLeakyBucket(key: String, config: JsonObject): LeakyBucketLimiter {
         val capacity = config.getInteger("capacity", 100)
         val leakRate = config.getDouble("leakRate", 1.0)
         val leakInterval = config.getLong("leakInterval", 1000L)
         val ttl = config.getLong("ttl", 3600000L)
-        
+
         val limiter = LeakyBucketLimiter(
             id = key,
             capacity = capacity,
@@ -398,30 +398,30 @@ class RateLimiter(private val vertx: Vertx) {
             leakInterval = leakInterval,
             ttl = ttl
         )
-        
+
         leakyBucketLimiters[key] = limiter
         logger.debug("创建漏桶限流器: $key, 容量: $capacity, 漏出速率: $leakRate, 漏出间隔: ${leakInterval}ms")
-        
+
         return limiter
     }
-    
+
     /**
      * 删除漏桶限流器
      */
-    private fun deleteLeakyBucket(key: String): Boolean {
+    fun deleteLeakyBucket(key: String): Boolean {
         val removed = leakyBucketLimiters.remove(key) != null
         if (removed) {
             logger.debug("删除漏桶限流器: $key")
         }
         return removed
     }
-    
+
     /**
      * 获取漏桶限流器状态
      */
-    private fun getLeakyBucketStatus(key: String): JsonObject {
+    fun getLeakyBucketStatus(key: String): JsonObject {
         val limiter = leakyBucketLimiters[key]
-        
+
         return if (limiter != null) {
             JsonObject()
                 .put("exists", true)
@@ -438,7 +438,7 @@ class RateLimiter(private val vertx: Vertx) {
                 .put("exists", false)
         }
     }
-    
+
     /**
      * 令牌桶限流器
      */
@@ -454,34 +454,34 @@ class RateLimiter(private val vertx: Vertx) {
         var lastRefillTime = System.currentTimeMillis()
             private set
         val creationTime = System.currentTimeMillis()
-        
+
         /**
          * 尝试获取令牌
          */
         @Synchronized
         fun tryAcquire(numTokens: Int): Boolean {
             refill()
-            
+
             val currentTokens = tokens.get()
             if (currentTokens >= numTokens) {
-                tokens.addAndGet(-numTokens)
+                tokens.addAndGet(-numTokens.toLong())
                 return true
             }
-            
+
             return false
         }
-        
+
         /**
          * 填充令牌
          */
         private fun refill() {
             val now = System.currentTimeMillis()
             val elapsed = now - lastRefillTime
-            
+
             if (elapsed >= refillInterval) {
                 val intervalsElapsed = elapsed / refillInterval
                 val tokensToAdd = (intervalsElapsed * refillRate).toLong()
-                
+
                 if (tokensToAdd > 0) {
                     val newTokens = Math.min(capacity.toLong(), tokens.get() + tokensToAdd)
                     tokens.set(newTokens)
@@ -489,7 +489,7 @@ class RateLimiter(private val vertx: Vertx) {
                 }
             }
         }
-        
+
         /**
          * 获取当前令牌数
          */
@@ -497,7 +497,7 @@ class RateLimiter(private val vertx: Vertx) {
             refill()
             return tokens.get()
         }
-        
+
         /**
          * 检查是否过期
          */
@@ -505,7 +505,7 @@ class RateLimiter(private val vertx: Vertx) {
             return now - creationTime > ttl
         }
     }
-    
+
     /**
      * 滑动窗口限流器
      */
@@ -518,40 +518,40 @@ class RateLimiter(private val vertx: Vertx) {
     ) {
         private val buckets = ConcurrentHashMap<Long, AtomicLong>()
         val creationTime = System.currentTimeMillis()
-        
+
         /**
          * 尝试获取令牌
          */
         @Synchronized
         fun tryAcquire(numTokens: Int): Boolean {
             cleanup()
-            
+
             val currentCount = getCount()
             if (currentCount + numTokens <= limit) {
                 val now = System.currentTimeMillis()
                 val bucketKey = now / (windowSize / precision)
-                
+
                 buckets.computeIfAbsent(bucketKey) { AtomicLong(0) }
                     .addAndGet(numTokens.toLong())
-                
+
                 return true
             }
-            
+
             return false
         }
-        
+
         /**
          * 清理过期的桶
          */
         private fun cleanup() {
             val now = System.currentTimeMillis()
             val cutoff = now - windowSize
-            
+
             buckets.entries.removeIf { (timestamp, _) ->
                 timestamp * (windowSize / precision) < cutoff
             }
         }
-        
+
         /**
          * 获取当前计数
          */
@@ -559,7 +559,7 @@ class RateLimiter(private val vertx: Vertx) {
             cleanup()
             return buckets.values.sumOf { it.get() }.toInt()
         }
-        
+
         /**
          * 检查是否过期
          */
@@ -567,7 +567,7 @@ class RateLimiter(private val vertx: Vertx) {
             return now - creationTime > ttl
         }
     }
-    
+
     /**
      * 漏桶限流器
      */
@@ -582,34 +582,34 @@ class RateLimiter(private val vertx: Vertx) {
         var lastLeakTime = System.currentTimeMillis()
             private set
         val creationTime = System.currentTimeMillis()
-        
+
         /**
          * 尝试获取令牌
          */
         @Synchronized
         fun tryAcquire(numTokens: Int): Boolean {
             leak()
-            
+
             val currentWater = water.get()
             if (currentWater + numTokens <= capacity) {
                 water.addAndGet(numTokens.toLong())
                 return true
             }
-            
+
             return false
         }
-        
+
         /**
          * 漏水
          */
         private fun leak() {
             val now = System.currentTimeMillis()
             val elapsed = now - lastLeakTime
-            
+
             if (elapsed >= leakInterval) {
                 val intervalsElapsed = elapsed / leakInterval
                 val waterToLeak = (intervalsElapsed * leakRate).toLong()
-                
+
                 if (waterToLeak > 0) {
                     val newWater = Math.max(0, water.get() - waterToLeak)
                     water.set(newWater)
@@ -617,7 +617,7 @@ class RateLimiter(private val vertx: Vertx) {
                 }
             }
         }
-        
+
         /**
          * 获取当前水量
          */
@@ -625,7 +625,7 @@ class RateLimiter(private val vertx: Vertx) {
             leak()
             return water.get()
         }
-        
+
         /**
          * 检查是否过期
          */

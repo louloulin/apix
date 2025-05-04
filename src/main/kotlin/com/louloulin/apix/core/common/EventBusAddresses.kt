@@ -148,4 +148,10 @@ object EventBusAddresses {
     const val QUEUE_CONFIG = "apix.queue.config"
     const val QUEUE_UPDATE = "apix.queue.update"
     const val QUEUE_STATS = "apix.queue.stats"
+
+    // 限流相关
+    const val RATE_LIMIT_CHECK = "apix.ratelimit.check"
+    const val RATE_LIMIT_CREATE = "apix.ratelimit.create"
+    const val RATE_LIMIT_DELETE = "apix.ratelimit.delete"
+    const val RATE_LIMIT_STATUS = "apix.ratelimit.status"
 }
