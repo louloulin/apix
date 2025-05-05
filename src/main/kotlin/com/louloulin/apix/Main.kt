@@ -140,6 +140,8 @@ fun main() {
 
     // Deploy verticles once Vert.x is created
     vertxFuture.onSuccess { vertx ->
+        // 注册EventBus本地消息编解码器
+        com.louloulin.apix.core.eventbus.EventBusCodecRegistry.registerLocalCodecs(vertx)
 
         // Deploy verticles in the correct order
         deployVerticles(vertx, availableProcessors)

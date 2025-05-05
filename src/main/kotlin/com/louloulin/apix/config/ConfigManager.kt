@@ -81,32 +81,54 @@ class ConfigManager(private val vertx: Vertx) {
 
     /**
      * Sets up the config retriever for dynamic configuration updates.
+     * Only sets up the retriever if the configuration file exists.
+     */
+    private var configRetriever: ConfigRetriever? = null
+
+    /**
+     * Sets up the config retriever for dynamic configuration updates.
+     * Only sets up the retriever if the configuration file exists.
      */
     private fun setupConfigRetriever() {
         logger.info("Setting up configuration retriever...")
 
-        // Create config store options
-        val fileStore = ConfigStoreOptions()
-            .setType("file")
-            .setFormat("json")
-            .setConfig(JsonObject().put("path", System.getProperty("apix.config.path", "config/apix.json")))
+        // Clean up existing retriever if any
+        configRetriever?.close()
+        configRetriever = null
 
-        // Create config retriever
-        val retrieverOptions = ConfigRetrieverOptions()
-            .addStore(fileStore)
-            .setScanPeriod(5000) // Check for changes every 5 seconds
+        // Get the config file path
+        val configPath = System.getProperty("apix.config.path", "config/apix.json")
+        val configFile = Paths.get(configPath)
 
-        val retriever = ConfigRetriever.create(vertx, retrieverOptions)
+        // Only set up the retriever if the file exists
+        if (Files.exists(configFile)) {
+            // Create config store options
+            val fileStore = ConfigStoreOptions()
+                .setType("file")
+                .setFormat("json")
+                .setConfig(JsonObject().put("path", configPath))
 
-        // Set up config change listener
-        retriever.listen { change ->
-            logger.info("Configuration changed")
+            // Create config retriever
+            val retrieverOptions = ConfigRetrieverOptions()
+                .addStore(fileStore)
+                .setScanPeriod(0) // Disable automatic scanning, we'll manually reload when needed
 
-            // Update configuration
-            config = change.newConfiguration
+            configRetriever = ConfigRetriever.create(vertx, retrieverOptions)
 
-            // Notify listeners
-            // In a real implementation, we would notify components that depend on configuration
+            // Set up config change listener
+            configRetriever?.listen { change ->
+                logger.info("Configuration changed")
+
+                // Update configuration
+                config = change.newConfiguration
+
+                // Notify listeners
+                // In a real implementation, we would notify components that depend on configuration
+            }
+
+            logger.info("Configuration retriever set up successfully for file: {}", configPath)
+        } else {
+            logger.info("Configuration file does not exist: {}, skipping retriever setup", configPath)
         }
     }
 
@@ -227,14 +249,54 @@ class ConfigManager(private val vertx: Vertx) {
 
     /**
      * Loads the configuration from file asynchronously.
+     * Also resets the config retriever to ensure it's properly set up.
      */
     fun loadConfig(): io.vertx.core.Future<JsonObject> {
         return vertx.executeBlocking { promise ->
             try {
+                // Load the configuration
                 loadDefaultConfig()
+
+                // Reset the config retriever
+                setupConfigRetriever()
+
                 promise.complete(config)
             } catch (e: Exception) {
                 logger.error("Failed to load configuration", e)
+                promise.fail(e)
+            }
+        }
+    }
+
+    /**
+     * Manually triggers a configuration reload from the file.
+     * This is an alternative to automatic scanning.
+     */
+    fun manualReload(): io.vertx.core.Future<JsonObject> {
+        return vertx.executeBlocking { promise ->
+            try {
+                logger.info("Manually reloading configuration...")
+
+                // If we have a retriever, use it to reload
+                if (configRetriever != null) {
+                    configRetriever?.getConfig { ar ->
+                        if (ar.succeeded()) {
+                            config = ar.result()
+                            logger.info("Configuration manually reloaded successfully")
+                            promise.complete(config)
+                        } else {
+                            logger.error("Failed to manually reload configuration", ar.cause())
+                            promise.fail(ar.cause())
+                        }
+                    }
+                } else {
+                    // Otherwise, just reload from file
+                    loadDefaultConfig()
+                    logger.info("Configuration manually reloaded successfully (from file)")
+                    promise.complete(config)
+                }
+            } catch (e: Exception) {
+                logger.error("Failed to manually reload configuration", e)
                 promise.fail(e)
             }
         }
