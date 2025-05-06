@@ -194,7 +194,31 @@ fun main() {
  * Deploy all verticles in the correct order
  */
 private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void> {
-    // Standard deployment options
+    // 检查是否在Native Image模式下运行
+    val isNativeImage = System.getProperty("org.graalvm.nativeimage.imagecode") != null
+
+    if (isNativeImage) {
+        logger.info("Running in Native Image mode, using simplified deployment strategy")
+        // 在Native Image模式下，我们使用简化的部署策略
+        val options = DeploymentOptions()
+            .setInstances(availableProcessors) // 每个核心一个实例
+            .setWorkerPoolSize(availableProcessors * 2) // 每个核心2个工作线程
+
+        // 直接部署所有必要的Verticle，不使用链式部署
+        val futures = mutableListOf<Future<String>>()
+
+        // 添加必要的Verticle
+        futures.add(vertx.deployVerticle(ConfigVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(MonitorVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(HealthVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(ConcurrencyControlVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(ApixVerticle::class.java.name, options))
+
+        // 等待所有Verticle部署完成
+        return Future.all(futures).mapEmpty()
+    }
+
+    // 非Native Image模式下的标准部署选项
     val standardOptions = DeploymentOptions()
         .setInstances(1) // Single instance for service verticles
 
