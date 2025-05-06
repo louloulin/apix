@@ -3,6 +3,8 @@ package com.louloulin.apix.core
 import com.louloulin.apix.admin.AdminApiHandler
 import com.louloulin.apix.config.ConfigManager
 import com.louloulin.apix.core.common.EventBusAddresses
+import com.louloulin.apix.core.monitoring.PerformanceMonitor
+import com.louloulin.apix.core.network.NetworkOptimizer
 import com.louloulin.apix.core.tracing.TracingManager
 import com.louloulin.apix.core.verticle.BaseVerticle
 import com.louloulin.apix.plugins.PluginManager
@@ -53,12 +55,19 @@ class ApixVerticle : BaseVerticle() {
                         // 初始化追踪管理器
                         val tracingManager = TracingManager.getInstance(vertx)
 
+                        // 初始化性能监控器
+                        val performanceMonitor = PerformanceMonitor.getInstance(vertx)
+
+                        // 初始化网络优化器
+                        val networkOptimizer = NetworkOptimizer.getInstance(vertx)
+
                         // Add common handlers
                         mainRouter.route().handler(tracingManager.createTracingHandler()) // 添加追踪中间件
+                        mainRouter.route().handler(performanceMonitor.createPerformanceMonitorHandler()) // 添加性能监控中间件
                         mainRouter.route().handler(LoggerHandler.create())
                         mainRouter.route().handler(BodyHandler.create())
                         mainRouter.route().handler(CorsHandler.create("*")
-                            .allowedHeaders(setOf("Content-Type", "Authorization", "X-Trace-ID")) // 添加追踪ID头
+                            .allowedHeaders(setOf("Content-Type", "Authorization", "X-Trace-ID", "X-Response-Time")) // 添加追踪ID和响应时间头
                             .allowedMethods(setOf(
                                 io.vertx.core.http.HttpMethod.GET,
                                 io.vertx.core.http.HttpMethod.POST,
@@ -96,54 +105,16 @@ class ApixVerticle : BaseVerticle() {
                         }
 
                         // Create HTTP server with ultra-high concurrency settings (200K+ connections)
-                        val serverOptions = HttpServerOptions()
+                        val baseOptions = HttpServerOptions()
                             // Basic settings
                             .setPort(configManager.getGatewayPort())
                             .setHost(configManager.getGatewayHost())
+                            .setCompressionSupported(true)
+                            .setDecompressionSupported(true)
+                            .setIdleTimeout(configManager.getGatewayIdleTimeout())
 
-                            // TCP optimizations
-                            .setTcpNoDelay(true)              // Disable Nagle's algorithm for lower latency
-                            .setTcpFastOpen(true)             // Enable TCP Fast Open for faster connections
-                            .setTcpQuickAck(true)             // Enable TCP Quick ACK for better responsiveness
-                            .setTcpCork(true)                 // Enable TCP Cork for better throughput
-
-                            // Socket reuse
-                            .setReusePort(true)               // Enable port reuse for better load distribution
-                            .setReuseAddress(true)            // Enable address reuse for faster restarts
-
-                            // Connection handling - optimized for high concurrency
-                            .setAcceptBacklog(150000)         // Increase accept backlog to handle pending connections
-                            .setIdleTimeout(300)              // Set idle timeout to 5 minutes (300 seconds)
-                            .setSoLinger(-1)                  // Disable SO_LINGER to prevent connection reset
-
-                            // Performance optimizations
-                            .setHandle100ContinueAutomatically(true) // Handle 100-Continue automatically
-                            .setCompressionLevel(1)           // Set compression level to 1 (fastest)
-                            .setCompressionSupported(true)    // Enable compression
-                            .setDecompressionSupported(true)  // Enable decompression
-
-                            // Buffer sizes - optimized for high throughput
-                            .setReceiveBufferSize(65536)      // 64KB receive buffer
-                            .setSendBufferSize(65536)         // 64KB send buffer
-
-                            // HTTP settings
-                            .setMaxHeaderSize(16384)           // 16KB max header size
-                            .setMaxChunkSize(65536)           // 64KB max chunk size
-                            .setMaxInitialLineLength(8192)    // 8KB max initial line length
-                            .setMaxFormAttributeSize(65536)   // 64KB max form attribute size
-
-                            // HTTP/2 settings
-                            .setUseAlpn(true)                 // Enable ALPN for HTTP/2 support
-                            .setInitialSettings(
-                                io.vertx.core.http.Http2Settings()
-                                    .setMaxConcurrentStreams(20000) // Allow 20K concurrent streams per connection
-                                    .setInitialWindowSize(65535 * 4) // Increase initial window size to 256KB
-                                    .setHeaderTableSize(4096 * 4)   // Increase header table size to 16KB
-                                    .setMaxHeaderListSize(16384)    // 16KB max header list size
-                            )
-
-                            // Keep-alive settings are enabled by default in HTTP server
-                            // We'll use the default timeout settings
+                        // 使用网络优化器创建优化的服务器选项
+                        val serverOptions = networkOptimizer.createOptimizedHttpServerOptions(baseOptions)
 
                         // 启动服务器
                         vertx.createHttpServer(serverOptions)

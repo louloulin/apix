@@ -8,6 +8,12 @@ import com.louloulin.apix.core.http.Http2Optimizer
 import com.louloulin.apix.core.io.ZeroCopyHandler
 import com.louloulin.apix.core.logging.LoggingManager
 import com.louloulin.apix.core.metrics.MetricsManager
+import com.louloulin.apix.core.monitoring.PerformanceMonitor
+import com.louloulin.apix.core.monitoring.SystemMonitor
+import com.louloulin.apix.core.network.NetworkOptimizer
+import com.louloulin.apix.core.network.TcpTuner
+import com.louloulin.apix.core.plugin.PluginLoader
+import com.louloulin.apix.core.plugin.PluginOptimizer
 import com.louloulin.apix.core.tracing.TracingManager
 import com.louloulin.apix.core.verticle.AdminVerticle
 import com.louloulin.apix.core.verticle.AuthVerticle
@@ -305,6 +311,31 @@ private fun initializePerformanceComponents(vertx: Vertx) {
         val tracingManager = TracingManager.getInstance(vertx)
         logger.info("Tracing Manager initialized")
 
+        // 初始化网络优化器
+        val networkOptimizer = NetworkOptimizer.getInstance(vertx)
+        logger.info("Network Optimizer initialized")
+
+        // 初始化TCP调优器
+        val tcpTuner = TcpTuner.getInstance(vertx)
+        logger.info("TCP Tuner initialized")
+
+        // 初始化插件优化器
+        val pluginOptimizer = PluginOptimizer.getInstance(vertx)
+        logger.info("Plugin Optimizer initialized")
+
+        // 初始化插件加载器
+        val pluginLoader = PluginLoader.getInstance(vertx)
+        pluginLoader.registerBuiltInFactories()
+        logger.info("Plugin Loader initialized")
+
+        // 初始化系统监控器
+        val systemMonitor = SystemMonitor.getInstance(vertx)
+        logger.info("System Monitor initialized")
+
+        // 初始化性能监控器
+        val performanceMonitor = PerformanceMonitor.getInstance(vertx)
+        logger.info("Performance Monitor initialized")
+
         // 加载 HTTP/2 设置
         val http2ConfigPath = System.getProperty("apix.http2.config.path", "src/main/resources/vertx-high-performance.json")
         http2Optimizer.loadHttp2SettingsFromConfig(http2ConfigPath)
@@ -322,6 +353,10 @@ private fun initializePerformanceComponents(vertx: Vertx) {
         // 配置追踪
         tracingManager.configureTracing(true, 0.1) // 启用追踪，采样率10%
         logger.info("Tracing configured with 10% sampling rate")
+
+        // 设置慢请求阈值
+        performanceMonitor.setSlowRequestThreshold(1000) // 1秒
+        logger.info("Slow request threshold set to 1000ms")
     } catch (e: Exception) {
         logger.error("Failed to initialize performance components", e)
     }
