@@ -3,6 +3,9 @@ package com.louloulin.apix
 import com.louloulin.apix.cluster.ClusterConfig
 import com.louloulin.apix.cluster.ClusterManagerFactory
 import com.louloulin.apix.core.ApixVerticle
+import com.louloulin.apix.core.eventbus.BatchMessageProcessor
+import com.louloulin.apix.core.http.Http2Optimizer
+import com.louloulin.apix.core.io.ZeroCopyHandler
 import com.louloulin.apix.core.verticle.AdminVerticle
 import com.louloulin.apix.core.verticle.AuthVerticle
 import com.louloulin.apix.core.verticle.CacheVerticle
@@ -143,6 +146,9 @@ fun main() {
         // 注册EventBus本地消息编解码器
         com.louloulin.apix.core.eventbus.EventBusCodecRegistry.registerLocalCodecs(vertx)
 
+        // 初始化性能优化组件
+        initializePerformanceComponents(vertx)
+
         // Deploy verticles in the correct order
         deployVerticles(vertx, availableProcessors)
             .onSuccess {
@@ -264,5 +270,36 @@ private fun deployVerticle(vertx: Vertx, verticleName: String, options: Deployme
                 logger.error("Failed to deploy {}", verticleName, cause)
                 promise.fail(cause)
             }
+    }
+}
+
+/**
+ * 初始化性能优化组件
+ */
+private fun initializePerformanceComponents(vertx: Vertx) {
+    try {
+        // 初始化 HTTP/2 优化器
+        val http2Optimizer = Http2Optimizer.getInstance(vertx)
+        logger.info("HTTP/2 Optimizer initialized")
+
+        // 初始化批量消息处理器
+        val batchProcessor = BatchMessageProcessor.getInstance(vertx)
+        logger.info("Batch Message Processor initialized")
+
+        // 初始化零拷贝处理器
+        val zeroCopyHandler = ZeroCopyHandler.getInstance(vertx)
+        logger.info("Zero Copy Handler initialized")
+
+        // 加载 HTTP/2 设置
+        val http2ConfigPath = System.getProperty("apix.http2.config.path", "src/main/resources/vertx-high-performance.json")
+        http2Optimizer.loadHttp2SettingsFromConfig(http2ConfigPath)
+            .onSuccess { settings ->
+                logger.info("HTTP/2 settings loaded from: {}", http2ConfigPath)
+            }
+            .onFailure { cause ->
+                logger.warn("Failed to load HTTP/2 settings from: {}, using defaults", http2ConfigPath)
+            }
+    } catch (e: Exception) {
+        logger.error("Failed to initialize performance components", e)
     }
 }

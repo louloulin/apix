@@ -26,6 +26,7 @@ dependencies {
     implementation("io.vertx:vertx-auth-jwt")
     implementation("io.vertx:vertx-auth-common")
     implementation("io.vertx:vertx-auth-htpasswd")
+    implementation("io.vertx:vertx-circuit-breaker")
 
     // Cluster support
     implementation("io.vertx:vertx-zookeeper")
