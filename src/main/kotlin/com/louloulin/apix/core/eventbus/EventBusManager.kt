@@ -18,8 +18,8 @@ class EventBusManager(private val vertx: Vertx) {
     // 当前EventBus类型
     private val currentType = AtomicReference(EventBusType.VERTX)
 
-    // JCToolsEventBus实例
-    private val jcToolsEventBus = JCToolsEventBus.getInstance(vertx)
+    // SimpleEventBus实例
+    private val simpleEventBus = SimpleEventBus.getInstance(vertx)
 
     // 性能统计
     private val messagesSent = AtomicLong(0)
@@ -32,7 +32,7 @@ class EventBusManager(private val vertx: Vertx) {
      */
     enum class EventBusType {
         VERTX,      // 原生Vert.x EventBus
-        JCTOOLS     // 基于JCTools的EventBus
+        SIMPLE      // 简化版EventBus
     }
 
     /**
@@ -48,7 +48,7 @@ class EventBusManager(private val vertx: Vertx) {
     fun getEventBus(): EventBus {
         return when (currentType.get()) {
             EventBusType.VERTX -> vertx.eventBus()
-            EventBusType.JCTOOLS -> jcToolsEventBus.getOriginalEventBus()
+            EventBusType.SIMPLE -> simpleEventBus.getOriginalEventBus()
         }
     }
 
@@ -61,7 +61,7 @@ class EventBusManager(private val vertx: Vertx) {
 
         when (currentType.get()) {
             EventBusType.VERTX -> vertx.eventBus().send(address, message)
-            EventBusType.JCTOOLS -> jcToolsEventBus.sendToQueue(address, message)
+            EventBusType.SIMPLE -> simpleEventBus.sendToQueue(address, message)
         }
     }
 
@@ -103,11 +103,11 @@ class EventBusManager(private val vertx: Vertx) {
                     logger.info("Switched to VERTX EventBus")
                     promise.complete(true)
                 }
-                EventBusType.JCTOOLS -> {
-                    // 切换到JCToolsEventBus
-                    jcToolsEventBus.start()
-                    currentType.set(EventBusType.JCTOOLS)
-                    logger.info("Switched to JCToolsEventBus")
+                EventBusType.SIMPLE -> {
+                    // 切换到SimpleEventBus
+                    simpleEventBus.start()
+                    currentType.set(EventBusType.SIMPLE)
+                    logger.info("Switched to SimpleEventBus")
                     promise.complete(true)
                 }
             }
@@ -135,9 +135,9 @@ class EventBusManager(private val vertx: Vertx) {
             .put("uptime_ms", uptime)
             .put("timestamp", currentTimeMillis)
 
-        // 添加JCToolsEventBus统计信息
-        if (currentType.get() == EventBusType.JCTOOLS) {
-            stats.put("jctools", jcToolsEventBus.getStats())
+        // 添加SimpleEventBus统计信息
+        if (currentType.get() == EventBusType.SIMPLE) {
+            stats.put("simple", simpleEventBus.getStats())
         }
 
         return stats
@@ -149,8 +149,8 @@ class EventBusManager(private val vertx: Vertx) {
     fun resetStats() {
         messagesSent.set(0)
 
-        // 重置JCToolsEventBus统计信息
-        jcToolsEventBus.resetStats()
+        // 重置SimpleEventBus统计信息
+        simpleEventBus.resetStats()
 
         logger.info("Statistics reset")
     }

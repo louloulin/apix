@@ -341,7 +341,7 @@ private fun initializePerformanceComponents(vertx: Vertx) {
         // 注意：以下组件已集成到主代码库中
         // 初始化SimpleEventBus
         val jcToolsEventBus = SimpleEventBus.getInstance(vertx)
-        logger.info("Simple EventBus initialized")
+        logger.info("JCTools EventBus initialized")
 
         // 初始化EventBus管理器
         val eventBusManager = EventBusManager.getInstance(vertx)

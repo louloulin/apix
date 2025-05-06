@@ -1,4 +1,4 @@
-Args = --initialize-at-build-time=ch.qos,org.slf4j \
+Args = --initialize-at-build-time=ch.qos,org.slf4j,org.jctools \
        --initialize-at-run-time=io.vertx.ext.web.client.WebClientOptions,io.netty.channel.epoll,io.netty.channel.unix,io.netty.handler.ssl \
        --no-fallback \
        --enable-http \
@@ -17,12 +17,12 @@ Args = --initialize-at-build-time=ch.qos,org.slf4j \
        -H:IncludeResources=.*/logback.xml \
        -H:IncludeResources=.*/apix.json \
        -H:+UseServiceLoaderFeature \
-
+       --features=io.vertx.core.spi.VertxServiceProvider \
        --allow-incomplete-classpath \
        --install-exit-handlers \
        --enable-https \
        --enable-url-protocols=http,https,unix \
-
+       --enable-native-access=ALL_UNNAMED \
        --gc=G1 \
        -Dio.netty.noUnsafe=false \
        -Dio.netty.leakDetection.level=disabled \
