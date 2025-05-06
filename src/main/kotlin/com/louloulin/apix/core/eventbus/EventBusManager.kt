@@ -13,13 +13,13 @@ import java.util.concurrent.atomic.AtomicReference
  */
 class EventBusManager(private val vertx: Vertx) {
     private val logger = LoggerFactory.getLogger(EventBusManager::class.java)
-    
+
     // 当前EventBus类型
     private val currentType = AtomicReference(EventBusType.VERTX)
-    
+
     // JCToolsEventBus实例
     private val jcToolsEventBus = JCToolsEventBus.getInstance(vertx)
-    
+
     /**
      * EventBus类型
      */
@@ -27,14 +27,14 @@ class EventBusManager(private val vertx: Vertx) {
         VERTX,      // 原生Vert.x EventBus
         JCTOOLS     // 基于JCTools的EventBus
     }
-    
+
     /**
      * 获取当前EventBus类型
      */
     fun getCurrentType(): EventBusType {
         return currentType.get()
     }
-    
+
     /**
      * 获取EventBus实例
      */
@@ -44,22 +44,32 @@ class EventBusManager(private val vertx: Vertx) {
             EventBusType.JCTOOLS -> jcToolsEventBus.getOriginalEventBus()
         }
     }
-    
+
+    /**
+     * 发送消息
+     */
+    fun send(address: String, message: Any) {
+        when (currentType.get()) {
+            EventBusType.VERTX -> vertx.eventBus().send(address, message)
+            EventBusType.JCTOOLS -> jcToolsEventBus.sendToQueue(address, message)
+        }
+    }
+
     /**
      * 切换EventBus类型
      */
     fun switchType(type: EventBusType): Future<Boolean> {
         val promise = Promise.promise<Boolean>()
-        
+
         try {
             // 如果类型相同，直接返回成功
             if (currentType.get() == type) {
                 promise.complete(true)
                 return promise.future()
             }
-            
+
             logger.info("Switching EventBus type from {} to {}", currentType.get(), type)
-            
+
             // 切换类型
             when (type) {
                 EventBusType.VERTX -> {
@@ -78,25 +88,25 @@ class EventBusManager(private val vertx: Vertx) {
             logger.error("Error switching EventBus type", e)
             promise.fail(e)
         }
-        
+
         return promise.future()
     }
-    
+
     /**
      * 获取统计信息
      */
     fun getStats(): JsonObject {
         val stats = JsonObject()
             .put("type", currentType.get().name)
-        
+
         return stats
     }
-    
+
     companion object {
         // 单例实例
         @Volatile
         private var INSTANCE: EventBusManager? = null
-        
+
         /**
          * 获取EventBusManager的单例实例
          */
