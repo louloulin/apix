@@ -9,48 +9,40 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * EventBus管理器，用于管理EventBus的切换和监控。
- * 提供了在原生Vert.x EventBus和优化的JCToolsEventBus之间切换的功能。
+ * EventBus管理器，用于管理EventBus实例
  */
 class EventBusManager(private val vertx: Vertx) {
     private val logger = LoggerFactory.getLogger(EventBusManager::class.java)
     
-    // 当前使用的EventBus类型
+    // 当前EventBus类型
     private val currentType = AtomicReference(EventBusType.VERTX)
     
-    // 当前使用的EventBus实例
-    private val currentEventBus = AtomicReference<EventBus>(vertx.eventBus())
-    
     // JCToolsEventBus实例
-    private val jcToolsEventBus by lazy { JCToolsEventBus.getInstance(vertx) }
-    
-    // 原生Vert.x EventBus实例
-    private val vertxEventBus = vertx.eventBus()
+    private val jcToolsEventBus = JCToolsEventBus.getInstance(vertx)
     
     /**
-     * EventBus类型枚举
+     * EventBus类型
      */
     enum class EventBusType {
         VERTX,      // 原生Vert.x EventBus
-        JCTOOLS     // 优化的JCToolsEventBus
-    }
-    
-    init {
-        logger.info("初始化EventBusManager，当前类型: {}", currentType.get())
+        JCTOOLS     // 基于JCTools的EventBus
     }
     
     /**
-     * 获取当前使用的EventBus类型
+     * 获取当前EventBus类型
      */
     fun getCurrentType(): EventBusType {
         return currentType.get()
     }
     
     /**
-     * 获取当前使用的EventBus实例
+     * 获取EventBus实例
      */
     fun getEventBus(): EventBus {
-        return currentEventBus.get()
+        return when (currentType.get()) {
+            EventBusType.VERTX -> vertx.eventBus()
+            EventBusType.JCTOOLS -> jcToolsEventBus.getOriginalEventBus()
+        }
     }
     
     /**
@@ -60,34 +52,30 @@ class EventBusManager(private val vertx: Vertx) {
         val promise = Promise.promise<Boolean>()
         
         try {
-            val oldType = currentType.get()
-            
-            if (oldType == type) {
-                // 类型相同，无需切换
-                promise.complete(false)
+            // 如果类型相同，直接返回成功
+            if (currentType.get() == type) {
+                promise.complete(true)
                 return promise.future()
             }
             
-            // 切换类型
-            currentType.set(type)
+            logger.info("Switching EventBus type from {} to {}", currentType.get(), type)
             
-            // 切换EventBus实例
+            // 切换类型
             when (type) {
                 EventBusType.VERTX -> {
-                    currentEventBus.set(vertxEventBus)
-                    logger.info("已切换到原生Vert.x EventBus")
+                    // 切换到原生EventBus
+                    currentType.set(EventBusType.VERTX)
+                    promise.complete(true)
                 }
                 EventBusType.JCTOOLS -> {
-                    // 确保JCToolsEventBus已启动
+                    // 切换到JCToolsEventBus
                     jcToolsEventBus.start()
-                    currentEventBus.set(jcToolsEventBus)
-                    logger.info("已切换到优化的JCToolsEventBus")
+                    currentType.set(EventBusType.JCTOOLS)
+                    promise.complete(true)
                 }
             }
-            
-            promise.complete(true)
         } catch (e: Exception) {
-            logger.error("切换EventBus类型失败", e)
+            logger.error("Error switching EventBus type", e)
             promise.fail(e)
         }
         
@@ -95,16 +83,11 @@ class EventBusManager(private val vertx: Vertx) {
     }
     
     /**
-     * 获取EventBus统计信息
+     * 获取统计信息
      */
     fun getStats(): JsonObject {
         val stats = JsonObject()
-            .put("currentType", currentType.get().name)
-        
-        // 添加JCToolsEventBus统计信息（如果可用）
-        if (currentType.get() == EventBusType.JCTOOLS) {
-            stats.put("jctools", jcToolsEventBus.getStats())
-        }
+            .put("type", currentType.get().name)
         
         return stats
     }

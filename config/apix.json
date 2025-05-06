@@ -95,7 +95,7 @@
       "ttl_seconds" : 300,
       "max_size" : 1000
     },
-    "enabled" : true,
+    "enabled" : false,
     "dependencies" : [ ]
   }, {
     "id" : "test-plugin-reload",
@@ -252,12 +252,36 @@
     "createdAt" : 1745848435538,
     "expiresAt" : 0
   }, {
+    "id" : "56378b2f-7d08-4b4a-bd83-a40315a58b5c",
+    "key" : "667b99fd6bc948b4941434a274cf9c035041912879744309a0a0e7804f384322",
+    "name" : "Test API Key",
+    "scopes" : [ "read", "write" ],
+    "enabled" : true,
+    "createdAt" : 1746519755993,
+    "expiresAt" : 0
+  }, {
+    "id" : "a4f11d58-dd34-47df-b52e-1088f614190d",
+    "key" : "4e47b82df1964ed8ace5e79b58a94fa36bc05a84e0764e4dad7c57eb937b22f2",
+    "name" : "Test API Key",
+    "scopes" : [ "read", "write" ],
+    "enabled" : true,
+    "createdAt" : 1746519756024,
+    "expiresAt" : 0
+  }, {
     "id" : "0c91562a-664e-4055-b9ad-4840fd7a27b9",
     "key" : "203af850b43e4098adbef17c3747e1c824553283563342de806c2006cc49a128",
     "name" : "Test API Key",
     "scopes" : [ "read", "write" ],
     "enabled" : true,
     "createdAt" : 1745883037332,
+    "expiresAt" : 0
+  }, {
+    "id" : "0f2cd3c9-18ef-41b9-a093-6c8fd1421d9b",
+    "key" : "aef01f510ff84198baa3d60a55dc6ff1a662228f3f5a468da673c6c68490d138",
+    "name" : "Test API Key",
+    "scopes" : [ "read", "write" ],
+    "enabled" : true,
+    "createdAt" : 1746519756038,
     "expiresAt" : 0
   }, {
     "id" : "3fff3b62-59f0-4cbf-987c-fbe7d1d0fdb1",
