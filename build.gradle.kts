@@ -48,6 +48,14 @@ dependencies {
     // HdrHistogram - high dynamic range histogram
     implementation("org.hdrhistogram:HdrHistogram:2.1.12")
 
+    // OpenTelemetry
+    implementation("io.opentelemetry:opentelemetry-api:1.24.0")
+    implementation("io.opentelemetry:opentelemetry-sdk:1.24.0")
+    implementation("io.opentelemetry:opentelemetry-exporter-otlp:1.24.0")
+    implementation("io.opentelemetry:opentelemetry-semconv:1.24.0-alpha")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:1.24.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-vertx-4.0:1.24.0-alpha")
+
     // Testing
     testImplementation(kotlin("test"))
     testImplementation("io.vertx:vertx-junit5")

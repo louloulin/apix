@@ -11,6 +11,7 @@ import com.louloulin.apix.core.eventbus.JCToolsEventBus
 import com.louloulin.apix.core.metrics.LatencyRecorder
 import com.louloulin.apix.core.metrics.PerformanceMonitor
 import com.louloulin.apix.core.resource.ResourceManager
+import com.louloulin.apix.core.telemetry.OpenTelemetryTracer
 import com.louloulin.apix.core.http.Http2Optimizer
 import com.louloulin.apix.core.io.ZeroCopyHandler
 import com.louloulin.apix.core.logging.LoggingManager
@@ -346,6 +347,10 @@ private fun initializePerformanceComponents(vertx: Vertx) {
         // 初始化资源管理器
         val resourceManager = ResourceManager.getInstance(vertx)
         logger.info("Resource Manager initialized")
+
+        // 初始化OpenTelemetry追踪器
+        val openTelemetryTracer = OpenTelemetryTracer.getInstance(vertx)
+        logger.info("OpenTelemetry Tracer initialized")
 
         // 初始化零拷贝处理器
         val zeroCopyHandler = ZeroCopyHandler.getInstance(vertx)
