@@ -6,6 +6,9 @@ import com.louloulin.apix.core.ApixVerticle
 import com.louloulin.apix.core.eventbus.BatchMessageProcessor
 import com.louloulin.apix.core.http.Http2Optimizer
 import com.louloulin.apix.core.io.ZeroCopyHandler
+import com.louloulin.apix.core.logging.LoggingManager
+import com.louloulin.apix.core.metrics.MetricsManager
+import com.louloulin.apix.core.tracing.TracingManager
 import com.louloulin.apix.core.verticle.AdminVerticle
 import com.louloulin.apix.core.verticle.AuthVerticle
 import com.louloulin.apix.core.verticle.CacheVerticle
@@ -82,7 +85,7 @@ fun main() {
         // Enable native transport for better performance
         .setPreferNativeTransport(true)
         // Enable metrics
-        .setMetricsOptions(MetricsOptions().setEnabled(true))
+        .setMetricsOptions(MetricsManager.configureVertxOptions(VertxOptions()).metricsOptions)
 
     // Try to load Vert.x configuration from file
     if (java.nio.file.Files.exists(vertxConfigFile)) {
@@ -290,6 +293,18 @@ private fun initializePerformanceComponents(vertx: Vertx) {
         val zeroCopyHandler = ZeroCopyHandler.getInstance(vertx)
         logger.info("Zero Copy Handler initialized")
 
+        // 初始化日志管理器
+        val loggingManager = LoggingManager.getInstance(vertx)
+        logger.info("Logging Manager initialized")
+
+        // 初始化指标管理器
+        val metricsManager = MetricsManager.getInstance(vertx)
+        logger.info("Metrics Manager initialized")
+
+        // 初始化追踪管理器
+        val tracingManager = TracingManager.getInstance(vertx)
+        logger.info("Tracing Manager initialized")
+
         // 加载 HTTP/2 设置
         val http2ConfigPath = System.getProperty("apix.http2.config.path", "src/main/resources/vertx-high-performance.json")
         http2Optimizer.loadHttp2SettingsFromConfig(http2ConfigPath)
@@ -299,6 +314,14 @@ private fun initializePerformanceComponents(vertx: Vertx) {
             .onFailure { cause ->
                 logger.warn("Failed to load HTTP/2 settings from: {}, using defaults", http2ConfigPath)
             }
+
+        // 配置日志优化
+        loggingManager.optimizeLoggingForLoad(0.7)
+        logger.info("Logging optimized for high load")
+
+        // 配置追踪
+        tracingManager.configureTracing(true, 0.1) // 启用追踪，采样率10%
+        logger.info("Tracing configured with 10% sampling rate")
     } catch (e: Exception) {
         logger.error("Failed to initialize performance components", e)
     }

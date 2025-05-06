@@ -27,6 +27,8 @@ dependencies {
     implementation("io.vertx:vertx-auth-common")
     implementation("io.vertx:vertx-auth-htpasswd")
     implementation("io.vertx:vertx-circuit-breaker")
+    implementation("io.vertx:vertx-dropwizard-metrics")
+    implementation("io.vertx:vertx-zipkin")
 
     // Cluster support
     implementation("io.vertx:vertx-zookeeper")

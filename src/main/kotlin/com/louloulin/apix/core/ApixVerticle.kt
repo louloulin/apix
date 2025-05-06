@@ -3,6 +3,7 @@ package com.louloulin.apix.core
 import com.louloulin.apix.admin.AdminApiHandler
 import com.louloulin.apix.config.ConfigManager
 import com.louloulin.apix.core.common.EventBusAddresses
+import com.louloulin.apix.core.tracing.TracingManager
 import com.louloulin.apix.core.verticle.BaseVerticle
 import com.louloulin.apix.plugins.PluginManager
 import io.vertx.core.Promise
@@ -49,11 +50,15 @@ class ApixVerticle : BaseVerticle() {
                         // 初始化路由管理器
                         routeManager = RouteManager(vertx, mainRouter, configManager, pluginManager)
 
+                        // 初始化追踪管理器
+                        val tracingManager = TracingManager.getInstance(vertx)
+
                         // Add common handlers
+                        mainRouter.route().handler(tracingManager.createTracingHandler()) // 添加追踪中间件
                         mainRouter.route().handler(LoggerHandler.create())
                         mainRouter.route().handler(BodyHandler.create())
                         mainRouter.route().handler(CorsHandler.create("*")
-                            .allowedHeaders(setOf("Content-Type", "Authorization"))
+                            .allowedHeaders(setOf("Content-Type", "Authorization", "X-Trace-ID")) // 添加追踪ID头
                             .allowedMethods(setOf(
                                 io.vertx.core.http.HttpMethod.GET,
                                 io.vertx.core.http.HttpMethod.POST,
