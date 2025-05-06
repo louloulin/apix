@@ -12,9 +12,8 @@ import com.louloulin.apix.core.monitoring.PerformanceMonitor
 import com.louloulin.apix.core.monitoring.SystemMonitor
 import com.louloulin.apix.core.network.NetworkOptimizer
 import com.louloulin.apix.core.network.TcpTuner
-import com.louloulin.apix.core.plugin.PluginLoader
-import com.louloulin.apix.core.plugin.PluginOptimizer
 import com.louloulin.apix.core.tracing.TracingManager
+
 import com.louloulin.apix.core.verticle.AdminVerticle
 import com.louloulin.apix.core.verticle.AuthVerticle
 import com.louloulin.apix.core.verticle.CacheVerticle
@@ -323,10 +322,14 @@ private fun initializePerformanceComponents(vertx: Vertx) {
         val pluginOptimizer = PluginOptimizer.getInstance(vertx)
         logger.info("Plugin Optimizer initialized")
 
-        // 初始化插件加载器
-        val pluginLoader = PluginLoader.getInstance(vertx)
-        pluginLoader.registerBuiltInFactories()
-        logger.info("Plugin Loader initialized")
+        // 初始化插件性能监控器
+        val pluginPerformanceMonitor = PluginPerformanceMonitor.getInstance(vertx)
+        pluginPerformanceMonitor.setSlowPluginThreshold(100) // 设置慢插件阈值为100毫秒
+        logger.info("Plugin Performance Monitor initialized")
+
+        // 初始化优化的插件管理器
+        val optimizedPluginManager = OptimizedPluginManager.getInstance(vertx)
+        logger.info("Optimized Plugin Manager initialized")
 
         // 初始化系统监控器
         val systemMonitor = SystemMonitor.getInstance(vertx)

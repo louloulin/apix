@@ -147,6 +147,13 @@ class ConfigManager(private val vertx: Vertx) {
     }
 
     /**
+     * Gets the gateway idle timeout in seconds.
+     */
+    fun getGatewayIdleTimeout(): Int {
+        return config.getJsonObject("gateway", JsonObject()).getInteger("idleTimeout", 300)
+    }
+
+    /**
      * Gets the admin API host.
      */
     fun getAdminHost(): String {

@@ -1,5 +1,7 @@
-package com.louloulin.apix.core.plugin
+package com.louloulin.apix.plugins.optimization
 
+import com.louloulin.apix.plugins.Plugin
+import com.louloulin.apix.plugins.PluginChain
 import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
@@ -8,6 +10,7 @@ import io.vertx.ext.web.RoutingContext
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * 插件优化器，用于提高插件执行效率和性能。
@@ -20,13 +23,24 @@ class PluginOptimizer(private val vertx: Vertx) {
     private val executionCounters = ConcurrentHashMap<String, AtomicInteger>()
     
     // 插件执行时间统计（毫秒）
-    private val executionTimes = ConcurrentHashMap<String, Long>()
+    private val executionTimes = ConcurrentHashMap<String, AtomicLong>()
     
     // 插件缓存
     private val pluginCache = ConcurrentHashMap<String, Any>()
     
     // 插件依赖关系图
     private val dependencyGraph = ConcurrentHashMap<String, Set<String>>()
+    
+    // 插件类型分组
+    private val pluginTypeGroups = mapOf(
+        "security" to 1,      // 安全类插件优先级最高
+        "auth" to 1,          // 认证类插件优先级最高
+        "validation" to 2,    // 验证类插件优先级次之
+        "transform" to 3,     // 转换类插件优先级再次
+        "logging" to 4,       // 日志类插件可以并行执行
+        "monitoring" to 4,    // 监控类插件可以并行执行
+        "cache" to 5          // 缓存类插件优先级最低
+    )
     
     /**
      * 初始化插件优化器
@@ -53,55 +67,79 @@ class PluginOptimizer(private val vertx: Vertx) {
         }
         
         // 按插件类型分组
-        val pluginsByType = plugins.groupBy { it.type }
+        val pluginsByPriority = plugins.groupBy { getPluginPriority(it.type) }
         
         // 创建执行Promise
         val promise = Promise.promise<Void>()
         
-        // 首先执行安全插件（串行执行）
-        val securityPlugins = pluginsByType[PluginType.SECURITY] ?: emptyList()
-        executePluginsSequentially(securityPlugins, context).onComplete { securityResult ->
-            if (securityResult.failed() || context.response().ended()) {
-                promise.complete(securityResult.result())
-                return@onComplete
-            }
-            
-            // 然后并行执行监控和日志插件
-            val monitoringPlugins = pluginsByType[PluginType.MONITORING] ?: emptyList()
-            val loggingPlugins = pluginsByType[PluginType.LOGGING] ?: emptyList()
-            val parallelPlugins = monitoringPlugins + loggingPlugins
-            
-            if (parallelPlugins.isNotEmpty()) {
-                executePluginsInParallel(parallelPlugins, context).onComplete { parallelResult ->
-                    if (parallelResult.failed() || context.response().ended()) {
-                        promise.complete(parallelResult.result())
-                        return@onComplete
-                    }
-                    
-                    // 最后执行其他类型的插件（串行执行）
-                    val remainingPlugins = plugins.filter { 
-                        it.type != PluginType.SECURITY && 
-                        it.type != PluginType.MONITORING && 
-                        it.type != PluginType.LOGGING 
-                    }
-                    
-                    executePluginsSequentially(remainingPlugins, context).onComplete { result ->
-                        promise.complete(result.result())
-                    }
-                }
-            } else {
-                // 没有并行插件，直接执行其他插件
-                val remainingPlugins = plugins.filter { 
-                    it.type != PluginType.SECURITY
-                }
-                
-                executePluginsSequentially(remainingPlugins, context).onComplete { result ->
-                    promise.complete(result.result())
-                }
-            }
-        }
+        // 按优先级顺序执行插件组
+        executePluginGroups(pluginsByPriority, 1, context, promise)
         
         return promise.future()
+    }
+    
+    /**
+     * 按优先级顺序执行插件组
+     */
+    private fun executePluginGroups(
+        pluginsByPriority: Map<Int, List<Plugin>>, 
+        currentPriority: Int,
+        context: RoutingContext,
+        promise: Promise<Void>
+    ) {
+        // 如果响应已结束或已达到最大优先级，完成执行
+        if (context.response().ended() || currentPriority > 5) {
+            promise.complete()
+            return
+        }
+        
+        // 获取当前优先级的插件
+        val currentPlugins = pluginsByPriority[currentPriority] ?: emptyList()
+        
+        if (currentPlugins.isEmpty()) {
+            // 如果当前优先级没有插件，继续下一个优先级
+            executePluginGroups(pluginsByPriority, currentPriority + 1, context, promise)
+            return
+        }
+        
+        // 监控和日志插件可以并行执行
+        if (currentPriority == 4) {
+            executePluginsInParallel(currentPlugins, context).onComplete { result ->
+                if (result.failed()) {
+                    promise.fail(result.cause())
+                    return@onComplete
+                }
+                
+                // 继续下一个优先级
+                executePluginGroups(pluginsByPriority, currentPriority + 1, context, promise)
+            }
+        } else {
+            // 其他插件按顺序执行
+            executePluginsSequentially(currentPlugins, context).onComplete { result ->
+                if (result.failed()) {
+                    promise.fail(result.cause())
+                    return@onComplete
+                }
+                
+                // 如果响应已结束，完成执行
+                if (context.response().ended()) {
+                    promise.complete()
+                    return@onComplete
+                }
+                
+                // 继续下一个优先级
+                executePluginGroups(pluginsByPriority, currentPriority + 1, context, promise)
+            }
+        }
+    }
+    
+    /**
+     * 获取插件优先级
+     */
+    private fun getPluginPriority(type: String): Int {
+        // 从类型前缀中获取优先级
+        val prefix = type.split("-").first()
+        return pluginTypeGroups[prefix] ?: 3 // 默认优先级为3
     }
     
     /**
@@ -134,24 +172,24 @@ class PluginOptimizer(private val vertx: Vertx) {
         
         try {
             // 增加执行计数
-            executionCounters.computeIfAbsent(plugin.name) { AtomicInteger(0) }.incrementAndGet()
+            executionCounters.computeIfAbsent(plugin.id) { AtomicInteger(0) }.incrementAndGet()
             
             // 执行插件
-            plugin.handleRequest(context).onComplete { result ->
+            plugin.execute(context).onComplete { result ->
                 // 记录执行时间
                 val executionTime = System.currentTimeMillis() - startTime
-                executionTimes.merge(plugin.name, executionTime) { old, new -> old + new }
+                executionTimes.computeIfAbsent(plugin.id) { AtomicLong(0) }.addAndGet(executionTime)
                 
                 if (result.succeeded()) {
                     // 继续执行下一个插件
                     executeNextPlugin(plugins, index + 1, context, promise)
                 } else {
-                    logger.error("Plugin execution failed: {}", plugin.name, result.cause())
+                    logger.error("Plugin execution failed: {}", plugin.id, result.cause())
                     promise.fail(result.cause())
                 }
             }
         } catch (e: Exception) {
-            logger.error("Exception during plugin execution: {}", plugin.name, e)
+            logger.error("Exception during plugin execution: {}", plugin.id, e)
             promise.fail(e)
         }
     }
@@ -164,16 +202,16 @@ class PluginOptimizer(private val vertx: Vertx) {
             val startTime = System.currentTimeMillis()
             
             // 增加执行计数
-            executionCounters.computeIfAbsent(plugin.name) { AtomicInteger(0) }.incrementAndGet()
+            executionCounters.computeIfAbsent(plugin.id) { AtomicInteger(0) }.incrementAndGet()
             
             // 执行插件
-            plugin.handleRequest(context).onComplete { result ->
+            plugin.execute(context).onComplete { result ->
                 // 记录执行时间
                 val executionTime = System.currentTimeMillis() - startTime
-                executionTimes.merge(plugin.name, executionTime) { old, new -> old + new }
+                executionTimes.computeIfAbsent(plugin.id) { AtomicLong(0) }.addAndGet(executionTime)
                 
                 if (result.failed()) {
-                    logger.error("Plugin execution failed: {}", plugin.name, result.cause())
+                    logger.error("Plugin execution failed: {}", plugin.id, result.cause())
                 }
             }
         }
@@ -198,18 +236,30 @@ class PluginOptimizer(private val vertx: Vertx) {
         val startTime = System.currentTimeMillis()
         
         // 增加执行计数
-        executionCounters.computeIfAbsent(plugin.name) { AtomicInteger(0) }.incrementAndGet()
+        executionCounters.computeIfAbsent(plugin.id) { AtomicInteger(0) }.incrementAndGet()
         
         // 执行插件
-        return plugin.handleRequest(context).onComplete { result ->
+        return plugin.execute(context).onComplete { result ->
             // 记录执行时间
             val executionTime = System.currentTimeMillis() - startTime
-            executionTimes.merge(plugin.name, executionTime) { old, new -> old + new }
+            executionTimes.computeIfAbsent(plugin.id) { AtomicLong(0) }.addAndGet(executionTime)
             
             if (result.failed()) {
-                logger.error("Plugin execution failed: {}", plugin.name, result.cause())
+                logger.error("Plugin execution failed: {}", plugin.id, result.cause())
             }
         }
+    }
+    
+    /**
+     * 优化插件链
+     * 
+     * @param chain 插件链
+     * @return 优化后的插件链
+     */
+    fun optimizePluginChain(chain: PluginChain): PluginChain {
+        // 这里可以实现更复杂的插件链优化逻辑
+        // 例如，根据历史执行时间重新排序插件，或者合并相似功能的插件
+        return chain
     }
     
     /**
@@ -242,17 +292,17 @@ class PluginOptimizer(private val vertx: Vertx) {
     /**
      * 添加插件依赖关系
      */
-    fun addDependency(pluginName: String, dependsOn: String) {
-        val dependencies = dependencyGraph.computeIfAbsent(pluginName) { HashSet() }.toMutableSet()
+    fun addDependency(pluginId: String, dependsOn: String) {
+        val dependencies = dependencyGraph.computeIfAbsent(pluginId) { HashSet() }.toMutableSet()
         dependencies.add(dependsOn)
-        dependencyGraph[pluginName] = dependencies
+        dependencyGraph[pluginId] = dependencies
     }
     
     /**
      * 获取插件依赖
      */
-    fun getDependencies(pluginName: String): Set<String> {
-        return dependencyGraph[pluginName] ?: emptySet()
+    fun getDependencies(pluginId: String): Set<String> {
+        return dependencyGraph[pluginId] ?: emptySet()
     }
     
     /**
@@ -263,18 +313,18 @@ class PluginOptimizer(private val vertx: Vertx) {
         
         // 添加执行计数
         val counters = JsonObject()
-        executionCounters.forEach { (name, counter) ->
-            counters.put(name, counter.get())
+        executionCounters.forEach { (id, counter) ->
+            counters.put(id, counter.get())
         }
         stats.put("executionCounts", counters)
         
         // 添加平均执行时间
         val avgTimes = JsonObject()
-        executionCounters.forEach { (name, counter) ->
-            val totalTime = executionTimes[name] ?: 0
+        executionCounters.forEach { (id, counter) ->
+            val totalTime = executionTimes[id]?.get() ?: 0
             val count = counter.get()
             val avgTime = if (count > 0) totalTime.toDouble() / count else 0.0
-            avgTimes.put(name, avgTime)
+            avgTimes.put(id, avgTime)
         }
         stats.put("averageExecutionTimes", avgTimes)
         
