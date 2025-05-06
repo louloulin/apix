@@ -21,8 +21,8 @@ class JCToolsEventBus(private val vertx: Vertx) {
     // 是否已启动
     private val started = AtomicBoolean(false)
 
-    // 消息队列
-    private val messageQueue = MpscArrayQueue<Any>(100000) // 增大队列容量
+    // 消息队列 - 高并发优化
+    private val messageQueue = MpscArrayQueue<Any>(5000000) // 增大队列容量到 5 百万
 
     // 性能统计
     private val messagesSent = AtomicLong(0)
@@ -30,10 +30,10 @@ class JCToolsEventBus(private val vertx: Vertx) {
     private val messagesDropped = AtomicLong(0)
     private val queueFullCount = AtomicLong(0)
 
-    // 批处理配置
-    private val minBatchSize = 10
-    private val maxBatchSize = 1000
-    private val adaptiveBatchSize = AtomicLong(100) // 自适应批大小
+    // 批处理配置 - 高并发优化
+    private val minBatchSize = 500                    // 最小批大小增加到 500
+    private val maxBatchSize = 50000                  // 最大批大小增加到 50000
+    private val adaptiveBatchSize = AtomicLong(5000)  // 初始自适应批大小增加到 5000
 
     // 地址缓存
     private val addressCache = ConcurrentHashMap<String, Long>()

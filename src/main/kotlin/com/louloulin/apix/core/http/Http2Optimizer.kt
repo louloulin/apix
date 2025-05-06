@@ -16,13 +16,13 @@ import org.slf4j.LoggerFactory
 class Http2Optimizer(private val vertx: Vertx) {
     private val logger = LoggerFactory.getLogger(Http2Optimizer::class.java)
 
-    // 默认的 HTTP/2 设置
+    // 默认的 HTTP/2 设置 - 高并发优化
     private val defaultHttp2Settings = Http2Settings()
-        .setMaxConcurrentStreams(10000)         // 每个连接的最大并发流数
-        .setInitialWindowSize(1048576)          // 初始窗口大小 (1MB)
-        .setHeaderTableSize(8192)               // HPACK 头表大小
-        .setMaxHeaderListSize(32768)            // 最大头列表大小
-        .setMaxFrameSize(16384)                 // 最大帧大小
+        .setMaxConcurrentStreams(100000)        // 每个连接的最大并发流数增加到 100000
+        .setInitialWindowSize(2097152)          // 初始窗口大小增加到 2MB
+        .setHeaderTableSize(16384)              // HPACK 头表大小增加到 16KB
+        .setMaxHeaderListSize(65536)            // 最大头列表大小增加到 64KB
+        .setMaxFrameSize(24576)                 // 最大帧大小增加到 24KB
         .setPushEnabled(false)                  // 禁用服务器推送 (通常不需要)
 
     /**

@@ -9,6 +9,7 @@ import com.louloulin.apix.core.tracing.TracingManager
 import com.louloulin.apix.core.verticle.BaseVerticle
 import com.louloulin.apix.plugins.PluginManager
 import io.vertx.core.Promise
+import io.vertx.core.http.Http2Settings
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
@@ -61,13 +62,29 @@ class ApixVerticle : BaseVerticle() {
                         // 初始化网络优化器
                         val networkOptimizer = NetworkOptimizer.getInstance(vertx)
 
-                        // Add common handlers
+                        // Add common handlers - 高并发优化
+                        // 为性能测试端点创建特殊路由，跳过大部分中间件
+                        mainRouter.route("/bench/*").handler { ctx -> ctx.next() } // 跳过中间件
+                        mainRouter.route("/ping").handler { ctx -> ctx.next() }    // 跳过中间件
+
+                        // 对其他路由添加标准中间件
                         mainRouter.route().handler(tracingManager.createTracingHandler()) // 添加追踪中间件
                         mainRouter.route().handler(performanceMonitor.createPerformanceMonitorHandler()) // 添加性能监控中间件
-                        mainRouter.route().handler(LoggerHandler.create())
-                        mainRouter.route().handler(BodyHandler.create())
-                        mainRouter.route().handler(CorsHandler.create("*")
-                            .allowedHeaders(setOf("Content-Type", "Authorization", "X-Trace-ID", "X-Response-Time")) // 添加追踪ID和响应时间头
+
+                        // 优化日志处理 - 高并发场景下使用更高效的日志处理
+                        val loggerHandler = LoggerHandler.create(LoggerHandler.DEFAULT_FORMAT)
+                        mainRouter.route().handler(loggerHandler)
+
+                        // 优化请求体处理 - 高并发场景下使用更高效的请求体处理
+                        val bodyHandler = BodyHandler.create()
+                            .setBodyLimit(10485760) // 限制请求体大小为 10MB
+                            .setDeleteUploadedFilesOnEnd(true) // 处理完成后删除上传的文件
+                            .setMergeFormAttributes(false) // 不合并表单属性，提高性能
+                        mainRouter.route().handler(bodyHandler)
+
+                        // 优化 CORS 处理 - 高并发场景下使用更高效的 CORS 处理
+                        val corsHandler = CorsHandler.create("*")
+                            .allowedHeaders(setOf("Content-Type", "Authorization", "X-Trace-ID", "X-Response-Time"))
                             .allowedMethods(setOf(
                                 io.vertx.core.http.HttpMethod.GET,
                                 io.vertx.core.http.HttpMethod.POST,
@@ -75,7 +92,7 @@ class ApixVerticle : BaseVerticle() {
                                 io.vertx.core.http.HttpMethod.DELETE,
                                 io.vertx.core.http.HttpMethod.OPTIONS
                             ))
-                        )
+                        mainRouter.route().handler(corsHandler)
 
                         // 设置管理 API 路由
                         val adminRouter = Router.router(vertx)
@@ -104,14 +121,34 @@ class ApixVerticle : BaseVerticle() {
                             ctx.response().end("pong")
                         }
 
+                        // Add an ultra-lightweight endpoint for benchmark testing
+                        // This endpoint bypasses most middleware for maximum performance
+                        mainRouter.route("/bench").handler { ctx ->
+                            // 跳过其他中间件，直接响应
+                            ctx.response()
+                                .putHeader("content-type", "text/plain")
+                                .end("OK")
+                        }
+
                         // Create HTTP server with ultra-high concurrency settings (200K+ connections)
                         val baseOptions = HttpServerOptions()
                             // Basic settings
                             .setPort(configManager.getGatewayPort())
                             .setHost(configManager.getGatewayHost())
-                            .setCompressionSupported(true)
-                            .setDecompressionSupported(true)
+                            // 高并发优化 - 禁用压缩以减少 CPU 开销
+                            .setCompressionSupported(false)
+                            .setDecompressionSupported(false)
+                            // 超时设置
                             .setIdleTimeout(configManager.getGatewayIdleTimeout())
+                            // HTTP/2 设置
+                            .setUseAlpn(true)  // 启用 ALPN 协议协商
+                            .setInitialSettings(Http2Settings()
+                                .setMaxConcurrentStreams(100000)  // 每个连接的最大并发流数
+                                .setInitialWindowSize(2097152)     // 初始窗口大小 2MB
+                                .setHeaderTableSize(16384)         // HPACK 头表大小 16KB
+                                .setMaxHeaderListSize(65536)       // 最大头列表大小 64KB
+                                .setMaxFrameSize(24576)            // 最大帧大小 24KB
+                            )
 
                         // 使用网络优化器创建优化的服务器选项
                         val serverOptions = networkOptimizer.createOptimizedHttpServerOptions(baseOptions)

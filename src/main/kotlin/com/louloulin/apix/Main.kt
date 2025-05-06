@@ -4,6 +4,8 @@ import com.louloulin.apix.cluster.ClusterConfig
 import com.louloulin.apix.cluster.ClusterManagerFactory
 import com.louloulin.apix.core.ApixVerticle
 import com.louloulin.apix.core.eventbus.BatchMessageProcessor
+import com.louloulin.apix.core.eventbus.EventBusManager
+import com.louloulin.apix.core.eventbus.JCToolsEventBus
 import com.louloulin.apix.core.http.Http2Optimizer
 import com.louloulin.apix.core.io.ZeroCopyHandler
 import com.louloulin.apix.core.logging.LoggingManager
@@ -321,14 +323,14 @@ private fun initializePerformanceComponents(vertx: Vertx) {
         val batchProcessor = BatchMessageProcessor.getInstance(vertx)
         logger.info("Batch Message Processor initialized")
 
-        // 注意：以下组件已注释掉，因为它们尚未集成到主代码库中
-        // // 初始化JCToolsEventBus
-        // val jcToolsEventBus = JCToolsEventBus.getInstance(vertx)
-        // logger.info("JCTools EventBus initialized")
-        //
-        // // 初始化EventBus管理器
-        // val eventBusManager = EventBusManager.getInstance(vertx)
-        // logger.info("EventBus Manager initialized")
+        // 注意：以下组件已集成到主代码库中
+        // 初始化JCToolsEventBus
+        val jcToolsEventBus = JCToolsEventBus.getInstance(vertx)
+        logger.info("JCTools EventBus initialized")
+
+        // 初始化EventBus管理器
+        val eventBusManager = EventBusManager.getInstance(vertx)
+        logger.info("EventBus Manager initialized")
         //
         // // 初始化连接预热器
         // val connectionWarmer = ConnectionWarmer.getInstance(vertx)
