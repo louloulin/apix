@@ -19,6 +19,7 @@ import com.louloulin.apix.core.verticle.AuthVerticle
 import com.louloulin.apix.core.verticle.CacheVerticle
 import com.louloulin.apix.core.verticle.ClusterVerticle
 import com.louloulin.apix.core.verticle.ConfigVerticle
+import com.louloulin.apix.core.verticle.BenchmarkVerticle
 import com.louloulin.apix.core.verticle.DeploymentVerticle
 import com.louloulin.apix.core.verticle.HealthVerticle
 import com.louloulin.apix.core.verticle.ModelRouterVerticle
@@ -255,6 +256,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy DeploymentVerticle
             deployVerticle(vertx, DeploymentVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy BenchmarkVerticle for performance testing
+            deployVerticle(vertx, BenchmarkVerticle::class.java.name, standardOptions)
         }
         // 注意：以下Verticle已注释掉，因为它们尚未集成到主代码库中
         // .compose {
