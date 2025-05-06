@@ -3,7 +3,13 @@ package com.louloulin.apix
 import com.louloulin.apix.cluster.ClusterConfig
 import com.louloulin.apix.cluster.ClusterManagerFactory
 import com.louloulin.apix.core.ApixVerticle
+import com.louloulin.apix.core.connection.ConnectionWarmer
+import com.louloulin.apix.core.connection.ConnectionWarmerManager
 import com.louloulin.apix.core.eventbus.BatchMessageProcessor
+import com.louloulin.apix.core.eventbus.EventBusManager
+import com.louloulin.apix.core.eventbus.JCToolsEventBus
+import com.louloulin.apix.core.metrics.LatencyRecorder
+import com.louloulin.apix.core.metrics.PerformanceMonitor
 import com.louloulin.apix.core.http.Http2Optimizer
 import com.louloulin.apix.core.io.ZeroCopyHandler
 import com.louloulin.apix.core.logging.LoggingManager
@@ -19,7 +25,9 @@ import com.louloulin.apix.core.verticle.AuthVerticle
 import com.louloulin.apix.core.verticle.CacheVerticle
 import com.louloulin.apix.core.verticle.ClusterVerticle
 import com.louloulin.apix.core.verticle.ConfigVerticle
+import com.louloulin.apix.core.verticle.ConnectionWarmerVerticle
 import com.louloulin.apix.core.verticle.DeploymentVerticle
+import com.louloulin.apix.core.verticle.EventBusManagerVerticle
 import com.louloulin.apix.core.verticle.HealthVerticle
 import com.louloulin.apix.core.verticle.ModelRouterVerticle
 import com.louloulin.apix.core.verticle.MonitorVerticle
@@ -257,6 +265,18 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
             deployVerticle(vertx, DeploymentVerticle::class.java.name, standardOptions)
         }
         .compose {
+            // Then deploy EventBusManagerVerticle
+            deployVerticle(vertx, EventBusManagerVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy ConnectionWarmerVerticle
+            deployVerticle(vertx, ConnectionWarmerVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy PerformanceMonitorVerticle
+            deployVerticle(vertx, PerformanceMonitorVerticle::class.java.name, standardOptions)
+        }
+        .compose {
             // Finally deploy the main ApixVerticle
             deployVerticle(vertx, ApixVerticle::class.java.name, gatewayOptions)
         }
@@ -293,6 +313,30 @@ private fun initializePerformanceComponents(vertx: Vertx) {
         // 初始化批量消息处理器
         val batchProcessor = BatchMessageProcessor.getInstance(vertx)
         logger.info("Batch Message Processor initialized")
+
+        // 初始化JCToolsEventBus
+        val jcToolsEventBus = JCToolsEventBus.getInstance(vertx)
+        logger.info("JCTools EventBus initialized")
+
+        // 初始化EventBus管理器
+        val eventBusManager = EventBusManager.getInstance(vertx)
+        logger.info("EventBus Manager initialized")
+
+        // 初始化连接预热器
+        val connectionWarmer = ConnectionWarmer.getInstance(vertx)
+        logger.info("Connection Warmer initialized")
+
+        // 初始化连接预热管理器
+        val connectionWarmerManager = ConnectionWarmerManager.getInstance(vertx)
+        logger.info("Connection Warmer Manager initialized")
+
+        // 初始化延迟记录器
+        val latencyRecorder = LatencyRecorder.getInstance()
+        logger.info("Latency Recorder initialized")
+
+        // 初始化性能监控器
+        val performanceMonitor = PerformanceMonitor.getInstance(vertx)
+        logger.info("Performance Monitor initialized")
 
         // 初始化零拷贝处理器
         val zeroCopyHandler = ZeroCopyHandler.getInstance(vertx)

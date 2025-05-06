@@ -42,6 +42,12 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
 
+    // JCTools - high performance concurrent data structures
+    implementation("org.jctools:jctools-core:4.0.1")
+
+    // HdrHistogram - high dynamic range histogram
+    implementation("org.hdrhistogram:HdrHistogram:2.1.12")
+
     // Testing
     testImplementation(kotlin("test"))
     testImplementation("io.vertx:vertx-junit5")

@@ -1,0 +1,22 @@
+{
+  "endpoints": [
+    {
+      "host": "api.example.com",
+      "port": 443,
+      "count": 20,
+      "ssl": true
+    },
+    {
+      "host": "api2.example.com",
+      "port": 443,
+      "count": 10,
+      "ssl": true
+    },
+    {
+      "host": "internal-api.example.com",
+      "port": 8080,
+      "count": 30,
+      "ssl": false
+    }
+  ]
+}
