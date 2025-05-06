@@ -6,6 +6,7 @@ import io.vertx.core.Vertx
 import io.vertx.core.eventbus.EventBus
 import io.vertx.core.json.JsonObject
 import org.slf4j.LoggerFactory
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -19,6 +20,12 @@ class EventBusManager(private val vertx: Vertx) {
 
     // JCToolsEventBus实例
     private val jcToolsEventBus = JCToolsEventBus.getInstance(vertx)
+
+    // 性能统计
+    private val messagesSent = AtomicLong(0)
+    private val switchCount = AtomicLong(0)
+    private val lastSwitchTime = AtomicLong(0)
+    private val startTime = AtomicLong(System.currentTimeMillis())
 
     /**
      * EventBus类型
@@ -49,10 +56,24 @@ class EventBusManager(private val vertx: Vertx) {
      * 发送消息
      */
     fun send(address: String, message: Any) {
+        // 更新统计信息
+        messagesSent.incrementAndGet()
+
         when (currentType.get()) {
             EventBusType.VERTX -> vertx.eventBus().send(address, message)
             EventBusType.JCTOOLS -> jcToolsEventBus.sendToQueue(address, message)
         }
+    }
+
+    /**
+     * 发布消息
+     */
+    fun publish(address: String, message: Any) {
+        // 更新统计信息
+        messagesSent.incrementAndGet()
+
+        // 发布消息始终使用原生EventBus
+        vertx.eventBus().publish(address, message)
     }
 
     /**
@@ -70,17 +91,23 @@ class EventBusManager(private val vertx: Vertx) {
 
             logger.info("Switching EventBus type from {} to {}", currentType.get(), type)
 
+            // 更新统计信息
+            switchCount.incrementAndGet()
+            lastSwitchTime.set(System.currentTimeMillis())
+
             // 切换类型
             when (type) {
                 EventBusType.VERTX -> {
                     // 切换到原生EventBus
                     currentType.set(EventBusType.VERTX)
+                    logger.info("Switched to VERTX EventBus")
                     promise.complete(true)
                 }
                 EventBusType.JCTOOLS -> {
                     // 切换到JCToolsEventBus
                     jcToolsEventBus.start()
                     currentType.set(EventBusType.JCTOOLS)
+                    logger.info("Switched to JCToolsEventBus")
                     promise.complete(true)
                 }
             }
@@ -96,10 +123,36 @@ class EventBusManager(private val vertx: Vertx) {
      * 获取统计信息
      */
     fun getStats(): JsonObject {
+        val currentTimeMillis = System.currentTimeMillis()
+        val uptime = currentTimeMillis - startTime.get()
+
         val stats = JsonObject()
             .put("type", currentType.get().name)
+            .put("messages_sent", messagesSent.get())
+            .put("switch_count", switchCount.get())
+            .put("last_switch_time", lastSwitchTime.get())
+            .put("start_time", startTime.get())
+            .put("uptime_ms", uptime)
+            .put("timestamp", currentTimeMillis)
+
+        // 添加JCToolsEventBus统计信息
+        if (currentType.get() == EventBusType.JCTOOLS) {
+            stats.put("jctools", jcToolsEventBus.getStats())
+        }
 
         return stats
+    }
+
+    /**
+     * 重置统计信息
+     */
+    fun resetStats() {
+        messagesSent.set(0)
+
+        // 重置JCToolsEventBus统计信息
+        jcToolsEventBus.resetStats()
+
+        logger.info("Statistics reset")
     }
 
     companion object {
