@@ -10,6 +10,7 @@ import com.louloulin.apix.core.eventbus.EventBusManager
 import com.louloulin.apix.core.eventbus.JCToolsEventBus
 import com.louloulin.apix.core.metrics.LatencyRecorder
 import com.louloulin.apix.core.metrics.PerformanceMonitor
+import com.louloulin.apix.core.resource.ResourceManager
 import com.louloulin.apix.core.http.Http2Optimizer
 import com.louloulin.apix.core.io.ZeroCopyHandler
 import com.louloulin.apix.core.logging.LoggingManager
@@ -277,6 +278,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
             deployVerticle(vertx, PerformanceMonitorVerticle::class.java.name, standardOptions)
         }
         .compose {
+            // Then deploy ResourceManagerVerticle
+            deployVerticle(vertx, ResourceManagerVerticle::class.java.name, standardOptions)
+        }
+        .compose {
             // Finally deploy the main ApixVerticle
             deployVerticle(vertx, ApixVerticle::class.java.name, gatewayOptions)
         }
@@ -337,6 +342,10 @@ private fun initializePerformanceComponents(vertx: Vertx) {
         // 初始化性能监控器
         val performanceMonitor = PerformanceMonitor.getInstance(vertx)
         logger.info("Performance Monitor initialized")
+
+        // 初始化资源管理器
+        val resourceManager = ResourceManager.getInstance(vertx)
+        logger.info("Resource Manager initialized")
 
         // 初始化零拷贝处理器
         val zeroCopyHandler = ZeroCopyHandler.getInstance(vertx)

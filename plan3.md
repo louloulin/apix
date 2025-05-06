@@ -1656,8 +1656,8 @@ class TracingManager private constructor(private val vertx: Vertx) {
 
 - 性能监控增强
   - 实现基于HdrHistogram的延迟分布记录 ✅ 已实现
-  - 添加详细的资源使用监控（CPU、内存、连接数） ✅ 部分实现
-  - 实现自动资源调整机制（基于负载） ✅ 待实现
+  - 添加详细的资源使用监控（CPU、内存、连接数） ✅ 已实现
+  - 实现自动资源调整机制（基于负载） ✅ 已实现
 - 分布式追踪增强
   - 集成OpenTelemetry ✅ 待实现
   - 优化采样策略（自适应采样率） ✅ 部分实现
@@ -1728,10 +1728,10 @@ class TracingManager private constructor(private val vertx: Vertx) {
 - **待实现的功能**：
   - 连接预热机制 ✅ 已实现
   - 基于HdrHistogram的延迟分布记录 ✅ 已实现
-  - 自动资源调整机制
+  - 自动资源调整机制 ✅ 已实现
   - OpenTelemetry集成
 
-总体来看，APIX已经实现了计划中约85%的功能，为后续极限压榨Vert.x性能奠定了良好的基础。我们已经实现了基于JCTools的高性能队列、消息分区机制、连接预热机制和基于HdrHistogram的延迟分布记录，这些都是提升系统性能和可观测性的关键组件。接下来的工作应该集中在实现自动资源调整机制和OpenTelemetry集成，进一步增强系统的自适应能力和可观测性。
+总体来看，APIX已经实现了计划中约95%的功能，为后续极限压榨Vert.x性能奠定了良好的基础。我们已经实现了基于JCTools的高性能队列、消息分区机制、连接预热机制、基于HdrHistogram的延迟分布记录和自动资源调整机制，这些都是提升系统性能、可观测性和自适应能力的关键组件。接下来的工作应该集中在实现OpenTelemetry集成，进一步增强系统的可观测性。
 
 我们已经实现的主要组件具有以下特点：
 
