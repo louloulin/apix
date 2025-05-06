@@ -6,9 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
-import java.lang.management.ManagementFactory
-import java.lang.management.MemoryMXBean
-import java.lang.management.MemoryPoolMXBean
+import com.louloulin.apix.core.util.RuntimeMetrics
 import java.lang.management.MemoryType
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -21,8 +19,8 @@ class MemoryManager(private val vertx: Vertx) {
     private val logger = LoggerFactory.getLogger(MemoryManager::class.java)
 
     // 内存监控相关
-    private val memoryMXBean: MemoryMXBean = ManagementFactory.getMemoryMXBean()
-    private val memoryPoolMXBeans: List<MemoryPoolMXBean> = ManagementFactory.getMemoryPoolMXBeans()
+    private val runtime = Runtime.getRuntime()
+    // private val memoryPoolMXBeans: List<MemoryPoolMXBean> = ManagementFactory.getMemoryPoolMXBeans()
 
     // 内存使用统计
     private val heapUsage = AtomicLong(0)
@@ -89,8 +87,8 @@ class MemoryManager(private val vertx: Vertx) {
      * 更新内存统计信息
      */
     private fun updateMemoryStats() {
-        val heapMemoryUsage = memoryMXBean.heapMemoryUsage
-        val nonHeapMemoryUsage = memoryMXBean.nonHeapMemoryUsage
+        val heapMemoryUsage = RuntimeMetrics.getHeapMemoryUsage()
+        val nonHeapMemoryUsage = RuntimeMetrics.getNonHeapMemoryUsage()
 
         heapUsage.set(heapMemoryUsage.used)
         nonHeapUsage.set(nonHeapMemoryUsage.used)
@@ -190,28 +188,14 @@ class MemoryManager(private val vertx: Vertx) {
      * 获取内存使用情况
      */
     fun getMemoryUsage(): JsonObject {
-        val heapMemoryUsage = memoryMXBean.heapMemoryUsage
-        val nonHeapMemoryUsage = memoryMXBean.nonHeapMemoryUsage
+        val heapMemoryUsage = RuntimeMetrics.getHeapMemoryUsage()
+        val nonHeapMemoryUsage = RuntimeMetrics.getNonHeapMemoryUsage()
 
         val heapUsageRatio = if (heapMemoryUsage.max > 0) heapMemoryUsage.used.toDouble() / heapMemoryUsage.max else 0.0
         val committedUsageRatio = if (heapMemoryUsage.committed > 0) heapMemoryUsage.used.toDouble() / heapMemoryUsage.committed else 0.0
 
         val memoryPools = JsonObject()
-        for (pool in memoryPoolMXBeans) {
-            val usage = pool.usage
-            val peakUsage = pool.peakUsage
-            val poolInfo = JsonObject()
-                .put("name", pool.name)
-                .put("type", pool.type.toString())
-                .put("used", usage.used)
-                .put("max", usage.max)
-                .put("committed", usage.committed)
-                .put("init", usage.init)
-                .put("peakUsed", peakUsage.used)
-                .put("usageRatio", if (usage.max > 0) usage.used.toDouble() / usage.max else 0.0)
-
-            memoryPools.put(pool.name, poolInfo)
-        }
+        // 在Native Image模式下，不使用内存池信息
 
         // 对象池统计
         val poolStats = JsonObject()

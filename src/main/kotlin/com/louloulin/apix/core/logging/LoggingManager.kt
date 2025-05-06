@@ -11,6 +11,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.ConsoleAppender
 import ch.qos.logback.core.rolling.RollingFileAppender
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy
+import com.louloulin.apix.core.util.RuntimeMetrics
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -264,8 +265,8 @@ class LoggingManager(private val vertx: Vertx) {
      * @return 系统负载（0-1之间的值）
      */
     private fun getSystemLoad(): Double {
-        val osBean = java.lang.management.ManagementFactory.getOperatingSystemMXBean()
-        return osBean.systemLoadAverage / osBean.availableProcessors
+        val osInfo = RuntimeMetrics.getOperatingSystemInfo()
+        return osInfo.systemLoadAverage / osInfo.availableProcessors
     }
 
     companion object {

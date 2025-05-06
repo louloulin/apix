@@ -12,10 +12,7 @@ import io.vertx.ext.healthchecks.HealthChecks
 import io.vertx.ext.healthchecks.Status
 import io.vertx.ext.web.Router
 import org.slf4j.LoggerFactory
-import java.lang.management.ManagementFactory
-import java.lang.management.MemoryMXBean
-import java.lang.management.OperatingSystemMXBean
-import java.lang.management.RuntimeMXBean
+import com.louloulin.apix.core.util.RuntimeMetrics
 
 /**
  * 负责健康检查和就绪探针的 Verticle
@@ -165,8 +162,8 @@ class HealthVerticle : BaseVerticle() {
     private fun registerHealthChecks() {
         // 注册内存健康检查
         healthChecks.register("memory") { promise ->
-            val memoryMXBean = ManagementFactory.getMemoryMXBean()
-            val heapMemoryUsage = memoryMXBean.heapMemoryUsage
+            val runtime = Runtime.getRuntime()
+            val heapMemoryUsage = RuntimeMetrics.getHeapMemoryUsage()
             val usedMemory = heapMemoryUsage.used
             val maxMemory = heapMemoryUsage.max
             val memoryUsageRatio = usedMemory.toDouble() / maxMemory
@@ -188,9 +185,9 @@ class HealthVerticle : BaseVerticle() {
 
         // 注册 CPU 健康检查
         healthChecks.register("cpu") { promise ->
-            val osMXBean = ManagementFactory.getOperatingSystemMXBean()
-            val systemLoadAverage = osMXBean.systemLoadAverage
-            val availableProcessors = osMXBean.availableProcessors
+            val osInfo = RuntimeMetrics.getOperatingSystemInfo()
+            val systemLoadAverage = osInfo.systemLoadAverage
+            val availableProcessors = osInfo.availableProcessors
             val normalizedLoadAverage = systemLoadAverage / availableProcessors
 
             if (normalizedLoadAverage < 0.8) {
@@ -288,19 +285,20 @@ class HealthVerticle : BaseVerticle() {
      * 获取系统信息
      */
     private fun getSystemInfo(): JsonObject {
-        val runtimeMXBean = ManagementFactory.getRuntimeMXBean()
-        val memoryMXBean = ManagementFactory.getMemoryMXBean()
-        val osMXBean = ManagementFactory.getOperatingSystemMXBean()
+        val deploymentTime = vertx.deploymentIDs().size * 1000
+        val runtime = Runtime.getRuntime()
+        val availableProcessors = Runtime.getRuntime().availableProcessors()
+        val runtimeInfo = RuntimeMetrics.getRuntimeInfo()
 
-        val heapMemoryUsage = memoryMXBean.heapMemoryUsage
-        val nonHeapMemoryUsage = memoryMXBean.nonHeapMemoryUsage
+        val heapMemoryUsage = RuntimeMetrics.getHeapMemoryUsage()
+        val nonHeapMemoryUsage = RuntimeMetrics.getNonHeapMemoryUsage()
 
         return JsonObject()
             .put("jvm", JsonObject()
                 .put("version", System.getProperty("java.version"))
                 .put("vendor", System.getProperty("java.vendor"))
-                .put("uptime", runtimeMXBean.uptime)
-                .put("startTime", runtimeMXBean.startTime)
+                .put("uptime", runtimeInfo.uptime)
+                .put("startTime", runtimeInfo.startTime)
                 .put("memory", JsonObject()
                     .put("heap", JsonObject()
                         .put("init", heapMemoryUsage.init)
@@ -320,8 +318,8 @@ class HealthVerticle : BaseVerticle() {
                 .put("name", System.getProperty("os.name"))
                 .put("version", System.getProperty("os.version"))
                 .put("arch", System.getProperty("os.arch"))
-                .put("availableProcessors", osMXBean.availableProcessors)
-                .put("systemLoadAverage", osMXBean.systemLoadAverage)
+                .put("availableProcessors", availableProcessors)
+                .put("systemLoadAverage", RuntimeMetrics.getOperatingSystemInfo().systemLoadAverage)
             )
             .put("vertx", JsonObject()
                 .put("version", vertx.javaClass.`package`.implementationVersion)

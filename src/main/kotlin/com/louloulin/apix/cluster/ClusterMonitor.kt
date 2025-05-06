@@ -6,7 +6,7 @@ import io.vertx.core.Vertx
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import org.slf4j.LoggerFactory
-import java.lang.management.ManagementFactory
+import com.louloulin.apix.core.util.RuntimeMetrics
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -101,20 +101,18 @@ class ClusterMonitor(private val vertx: Vertx, private val clusterConfig: Cluste
      */
     private fun collectLocalNodeStats(nodeId: String): NodeStats {
         val runtime = Runtime.getRuntime()
-        val memoryMXBean = ManagementFactory.getMemoryMXBean()
-        val threadMXBean = ManagementFactory.getThreadMXBean()
-
-        val heapMemoryUsage = memoryMXBean.heapMemoryUsage
-        val nonHeapMemoryUsage = memoryMXBean.nonHeapMemoryUsage
+        val memoryUsage = RuntimeMetrics.getHeapMemoryUsage()
+        val nonHeapMemoryUsage = RuntimeMetrics.getNonHeapMemoryUsage()
+        val threadInfo = RuntimeMetrics.getThreadInfo()
 
         return NodeStats(
             nodeId = nodeId,
             timestamp = System.currentTimeMillis(),
             cpuCount = runtime.availableProcessors(),
-            heapMemoryUsed = heapMemoryUsage.used,
-            heapMemoryMax = heapMemoryUsage.max,
+            heapMemoryUsed = memoryUsage.used,
+            heapMemoryMax = memoryUsage.max,
             nonHeapMemoryUsed = nonHeapMemoryUsage.used,
-            threadCount = threadMXBean.threadCount,
+            threadCount = threadInfo.threadCount,
             messagesSent = messagesSent.get(),
             messagesReceived = messagesReceived.get(),
             messagesFailed = messagesFailed.get()

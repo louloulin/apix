@@ -36,7 +36,7 @@ class ConcurrencyControlVerticle : CoroutineVerticle() {
         }
 
         // 初始化并发控制器
-        concurrencyController.initialize(config)
+        concurrencyController.init(config)
 
         // 注册 EventBus 处理器
         registerEventBusHandlers()
@@ -85,7 +85,8 @@ class ConcurrencyControlVerticle : CoroutineVerticle() {
                     val responseTime = request.getLong("responseTime", 0)
                     val isError = request.getBoolean("isError", false)
 
-                    concurrencyController.release(serviceId, responseTime, isError)
+                    concurrencyController.release(serviceId, !isError)
+                    concurrencyController.recordRequestCompletion(serviceId, responseTime, !isError)
 
                     val response = JsonObject()
                         .put("success", true)
