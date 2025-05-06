@@ -283,6 +283,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
             deployVerticle(vertx, ResourceManagerVerticle::class.java.name, standardOptions)
         }
         .compose {
+            // Then deploy OpenTelemetryVerticle
+            deployVerticle(vertx, OpenTelemetryVerticle::class.java.name, standardOptions)
+        }
+        .compose {
             // Finally deploy the main ApixVerticle
             deployVerticle(vertx, ApixVerticle::class.java.name, gatewayOptions)
         }
