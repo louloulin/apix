@@ -6,6 +6,7 @@ import com.louloulin.apix.core.ApixVerticle
 import com.louloulin.apix.core.eventbus.BatchMessageProcessor
 import com.louloulin.apix.core.eventbus.EventBusManager
 import com.louloulin.apix.core.eventbus.JCToolsEventBus
+import com.louloulin.apix.core.http.HighPerformanceServer
 import com.louloulin.apix.core.http.Http2Optimizer
 import com.louloulin.apix.core.io.ZeroCopyHandler
 import com.louloulin.apix.core.logging.LoggingManager
@@ -79,21 +80,23 @@ fun main() {
     val vertxConfigPath = System.getProperty("apix.vertx.config.path", "src/main/resources/vertx-high-concurrency.json")
     val vertxConfigFile = java.nio.file.Paths.get(vertxConfigPath)
 
-    // Default Vert.x configuration for ultra-high concurrency (100K+ connections)
+    // Default Vert.x configuration for ultra-high concurrency (200K+ connections)
     val availableProcessors = Runtime.getRuntime().availableProcessors()
     var vertxOptions = VertxOptions()
         // Event loop pool - critical for handling many concurrent connections
-        .setEventLoopPoolSize(availableProcessors * 4) // 4 event loop threads per core
+        .setEventLoopPoolSize(availableProcessors * 8) // 8 event loop threads per core (increased from 4)
         // Worker pool - for handling blocking operations
-        .setWorkerPoolSize(availableProcessors * 16)   // 16 worker threads per core
+        .setWorkerPoolSize(availableProcessors * 10)   // 10 worker threads per core (reduced from 16 to avoid context switching)
         // Internal blocking pool - for internal Vert.x operations
-        .setInternalBlockingPoolSize(availableProcessors * 8) // 8 internal blocking threads per core
+        .setInternalBlockingPoolSize(availableProcessors * 10) // 10 internal blocking threads per core (increased from 8)
         // Increase event loop execute time for high load scenarios
-        .setMaxEventLoopExecuteTime(5000000000L)  // 5 seconds in nanoseconds
+        .setMaxEventLoopExecuteTime(2000000000L)  // 2 seconds in nanoseconds (reduced from 5s for faster detection)
         // Enable native transport for better performance
         .setPreferNativeTransport(true)
-        // Enable metrics
-        .setMetricsOptions(MetricsManager.configureVertxOptions(VertxOptions()).metricsOptions)
+        // 禁用指标以提高性能
+        .setMetricsOptions(null)
+        // Optimize for high throughput
+        .setHAEnabled(false) // Disable high availability for better performance
 
     // Try to load Vert.x configuration from file
     if (java.nio.file.Files.exists(vertxConfigFile)) {
@@ -114,10 +117,15 @@ fun main() {
     vertxOptions.setWarningExceptionTime(5000000000L)    // 5 seconds in nanoseconds
     vertxOptions.setBlockedThreadCheckInterval(2000)     // 2 seconds
 
-    // Increase event bus options for better internal communication
+    // Optimize event bus options for high throughput
     vertxOptions.setEventBusOptions(
         EventBusOptions()
-            .setConnectTimeout(30000) // 30 seconds
+            .setConnectTimeout(10000) // 10 seconds (reduced from 30s)
+            .setAcceptBacklog(10000) // Increase accept backlog
+            .setTcpNoDelay(true)     // Disable Nagle's algorithm
+            .setTcpFastOpen(true)    // Enable TCP Fast Open
+            .setTcpQuickAck(true)    // Enable TCP Quick ACK
+            .setReusePort(true)      // Enable port reuse
             .setReconnectAttempts(10)
             .setReconnectInterval(2000) // 2 seconds
     )
@@ -190,10 +198,12 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
     val standardOptions = DeploymentOptions()
         .setInstances(1) // Single instance for service verticles
 
-    // High concurrency deployment options for gateway verticle
+    // Ultra-high concurrency deployment options for gateway verticle
     val gatewayOptions = DeploymentOptions()
-        .setInstances(availableProcessors * 2) // Deploy two instances per core
-        .setWorkerPoolSize(availableProcessors * 20) // 20 worker threads per core
+        .setInstances(availableProcessors) // Deploy one instance per core for better CPU affinity
+        .setWorkerPoolSize(availableProcessors * 10) // 10 worker threads per core (reduced to avoid context switching)
+        .setWorkerPoolName("gateway-worker-pool")
+        .setMaxWorkerExecuteTime(30000000000L) // 30 seconds in nanoseconds
 
     // Deploy ConfigVerticle first
     return deployVerticle(vertx, ConfigVerticle::class.java.name, standardOptions)
@@ -286,8 +296,13 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         //     deployVerticle(vertx, OpenTelemetryVerticle::class.java.name, standardOptions)
         // }
         .compose {
-            // Finally deploy the main ApixVerticle
+            // Deploy the main ApixVerticle
             deployVerticle(vertx, ApixVerticle::class.java.name, gatewayOptions)
+        }
+        .compose {
+            // Deploy the high performance server for benchmarking
+            logger.info("Deploying High Performance Server for benchmarking")
+            deployVerticle(vertx, HighPerformanceServer::class.java.name, DeploymentOptions().setInstances(1))
         }
         .mapEmpty()
 }
