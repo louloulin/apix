@@ -3,7 +3,6 @@ package com.louloulin.apix.core.util
 import io.vertx.core.json.JsonObject
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.lang.management.ManagementFactory
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -16,7 +15,7 @@ object RuntimeMetrics {
     private val lastCpuTime = AtomicLong(0)
     private val lastCpuSampleTime = AtomicLong(System.nanoTime())
     private val lastCpuUsage = AtomicLong(0)
-    
+
     /**
      * 获取堆内存使用情况
      */
@@ -26,7 +25,7 @@ object RuntimeMetrics {
         val total = runtime.totalMemory()
         val free = runtime.freeMemory()
         val used = total - free
-        
+
         return MemoryUsage(
             init = 0,
             used = used,
@@ -34,7 +33,7 @@ object RuntimeMetrics {
             max = max
         )
     }
-    
+
     /**
      * 获取非堆内存使用情况（在Native Image模式下返回零值）
      */
@@ -46,7 +45,7 @@ object RuntimeMetrics {
             max = -1
         )
     }
-    
+
     /**
      * 获取线程信息
      */
@@ -58,7 +57,7 @@ object RuntimeMetrics {
             totalStartedThreadCount = 0
         )
     }
-    
+
     /**
      * 获取操作系统信息
      */
@@ -69,7 +68,7 @@ object RuntimeMetrics {
             processCpuLoad = getCpuUsage()
         )
     }
-    
+
     /**
      * 获取运行时信息
      */
@@ -79,7 +78,7 @@ object RuntimeMetrics {
             startTime = startTime
         )
     }
-    
+
     /**
      * 获取CPU使用率
      */
@@ -88,7 +87,7 @@ object RuntimeMetrics {
             val currentTime = System.nanoTime()
             val elapsedTime = currentTime - lastCpuSampleTime.get()
             lastCpuSampleTime.set(currentTime)
-            
+
             // 模拟计算CPU使用率
             val usage = Math.random() * 0.3 + 0.1 // 生成一个0.1-0.4之间的随机值
             lastCpuUsage.set((usage * 100).toLong())
@@ -98,7 +97,7 @@ object RuntimeMetrics {
             return lastCpuUsage.get() / 100.0
         }
     }
-    
+
     /**
      * 获取磁盘使用情况
      */
@@ -108,7 +107,7 @@ object RuntimeMetrics {
             val total = root.totalSpace
             val free = root.freeSpace
             val usable = root.usableSpace
-            
+
             return JsonObject()
                 .put("total", total / (1024.0 * 1024.0 * 1024.0)) // GB
                 .put("free", free / (1024.0 * 1024.0 * 1024.0)) // GB
@@ -121,7 +120,7 @@ object RuntimeMetrics {
                 .put("usable", 0)
         }
     }
-    
+
     /**
      * 内存使用情况数据类
      */
@@ -131,7 +130,7 @@ object RuntimeMetrics {
         val committed: Long,
         val max: Long
     )
-    
+
     /**
      * 线程信息数据类
      */
@@ -141,7 +140,7 @@ object RuntimeMetrics {
         val daemonThreadCount: Int,
         val totalStartedThreadCount: Long
     )
-    
+
     /**
      * 操作系统信息数据类
      */
@@ -150,7 +149,7 @@ object RuntimeMetrics {
         val systemLoadAverage: Double,
         val processCpuLoad: Double
     )
-    
+
     /**
      * 运行时信息数据类
      */

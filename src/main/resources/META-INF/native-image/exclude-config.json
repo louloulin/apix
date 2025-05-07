@@ -1,0 +1,22 @@
+{
+  "rules": [
+    {
+      "excludeClasses": "java.lang.management.ManagementFactory"
+    },
+    {
+      "excludeClasses": "com.sun.management.internal.HotSpotDiagnostic"
+    },
+    {
+      "excludeClasses": "sun.management.BaseOperatingSystemImpl"
+    },
+    {
+      "excludeClasses": "sun.management.Util"
+    },
+    {
+      "excludeClasses": "sun.management.ManagementFactoryHelper"
+    },
+    {
+      "excludeClasses": "sun.management.VMManagementImpl"
+    }
+  ]
+}

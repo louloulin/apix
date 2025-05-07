@@ -1,0 +1,99 @@
+[
+  {
+    "name": "java.lang.ClassLoader",
+    "methods": [
+      { "name": "loadClass", "parameterTypes": ["java.lang.String"] }
+    ]
+  },
+  {
+    "name": "java.lang.Class",
+    "methods": [
+      { "name": "getMethod", "parameterTypes": ["java.lang.String", "java.lang.Class[]"] },
+      { "name": "getMethods", "parameterTypes": [] },
+      { "name": "getDeclaredMethods", "parameterTypes": [] },
+      { "name": "getDeclaredFields", "parameterTypes": [] },
+      { "name": "getDeclaredConstructors", "parameterTypes": [] },
+      { "name": "getConstructors", "parameterTypes": [] },
+      { "name": "getField", "parameterTypes": ["java.lang.String"] },
+      { "name": "getDeclaredField", "parameterTypes": ["java.lang.String"] },
+      { "name": "getDeclaredMethod", "parameterTypes": ["java.lang.String", "java.lang.Class[]"] },
+      { "name": "getEnclosingMethod", "parameterTypes": [] },
+      { "name": "getEnclosingConstructor", "parameterTypes": [] },
+      { "name": "getClassLoader", "parameterTypes": [] },
+      { "name": "forName", "parameterTypes": ["java.lang.String"] },
+      { "name": "forName", "parameterTypes": ["java.lang.String", "boolean", "java.lang.ClassLoader"] }
+    ]
+  },
+  {
+    "name": "java.lang.reflect.Method",
+    "methods": [
+      { "name": "invoke", "parameterTypes": ["java.lang.Object", "java.lang.Object[]"] },
+      { "name": "getName", "parameterTypes": [] },
+      { "name": "getParameterTypes", "parameterTypes": [] },
+      { "name": "getReturnType", "parameterTypes": [] },
+      { "name": "getModifiers", "parameterTypes": [] },
+      { "name": "getDeclaringClass", "parameterTypes": [] }
+    ]
+  },
+  {
+    "name": "java.lang.reflect.Field",
+    "methods": [
+      { "name": "get", "parameterTypes": ["java.lang.Object"] },
+      { "name": "set", "parameterTypes": ["java.lang.Object", "java.lang.Object"] },
+      { "name": "getName", "parameterTypes": [] },
+      { "name": "getType", "parameterTypes": [] },
+      { "name": "getModifiers", "parameterTypes": [] },
+      { "name": "getDeclaringClass", "parameterTypes": [] }
+    ]
+  },
+  {
+    "name": "java.lang.reflect.Constructor",
+    "methods": [
+      { "name": "newInstance", "parameterTypes": ["java.lang.Object[]"] },
+      { "name": "getParameterTypes", "parameterTypes": [] },
+      { "name": "getModifiers", "parameterTypes": [] },
+      { "name": "getDeclaringClass", "parameterTypes": [] }
+    ]
+  },
+  {
+    "name": "java.nio.ByteBuffer",
+    "methods": [
+      { "name": "allocateDirect", "parameterTypes": ["int"] },
+      { "name": "allocate", "parameterTypes": ["int"] },
+      { "name": "wrap", "parameterTypes": ["byte[]"] },
+      { "name": "wrap", "parameterTypes": ["byte[]", "int", "int"] }
+    ]
+  },
+  {
+    "name": "java.nio.DirectByteBuffer",
+    "methods": [
+      { "name": "<init>", "parameterTypes": ["long", "int"] }
+    ]
+  },
+  {
+    "name": "sun.misc.Unsafe",
+    "fields": [
+      { "name": "theUnsafe" }
+    ],
+    "methods": [
+      { "name": "allocateMemory", "parameterTypes": ["long"] },
+      { "name": "reallocateMemory", "parameterTypes": ["long", "long"] },
+      { "name": "freeMemory", "parameterTypes": ["long"] },
+      { "name": "objectFieldOffset", "parameterTypes": ["java.lang.reflect.Field"] },
+      { "name": "getInt", "parameterTypes": ["java.lang.Object", "long"] },
+      { "name": "putInt", "parameterTypes": ["java.lang.Object", "long", "int"] },
+      { "name": "getLong", "parameterTypes": ["java.lang.Object", "long"] },
+      { "name": "putLong", "parameterTypes": ["java.lang.Object", "long", "long"] },
+      { "name": "getObject", "parameterTypes": ["java.lang.Object", "long"] },
+      { "name": "putObject", "parameterTypes": ["java.lang.Object", "long", "java.lang.Object"] },
+      { "name": "getByte", "parameterTypes": ["long"] },
+      { "name": "putByte", "parameterTypes": ["long", "byte"] },
+      { "name": "getInt", "parameterTypes": ["long"] },
+      { "name": "putInt", "parameterTypes": ["long", "int"] },
+      { "name": "getLong", "parameterTypes": ["long"] },
+      { "name": "putLong", "parameterTypes": ["long", "long"] },
+      { "name": "copyMemory", "parameterTypes": ["long", "long", "long"] },
+      { "name": "copyMemory", "parameterTypes": ["java.lang.Object", "long", "java.lang.Object", "long", "long"] }
+    ]
+  }
+]

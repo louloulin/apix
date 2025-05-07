@@ -81,7 +81,11 @@ graalvmNative {
             buildArgs.add("--no-fallback")
             buildArgs.add("-H:+ReportExceptionStackTraces")
             buildArgs.add("-H:+PrintClassInitialization")
+
         }
+    }
+    metadataRepository {
+        enabled.set(false)
     }
 }
 

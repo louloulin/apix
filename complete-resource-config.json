@@ -1,0 +1,100 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "\\QMETA-INF/vertx/vertx-version.txt\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/io.vertx.core.spi.VertxMetricsFactory\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/io.vertx.core.spi.VerticleFactory\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/io.vertx.core.spi.ClusterManager\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/io.vertx.core.spi.launcher.CommandFactory\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/java.nio.file.spi.FileSystemProvider\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/org.slf4j.spi.SLF4JServiceProvider\\E"
+      },
+      {
+        "pattern": "\\Qvertx-default-jul-logging.properties\\E"
+      },
+      {
+        "pattern": "\\Qlogback.xml\\E"
+      },
+      {
+        "pattern": "\\Qconfig.json\\E"
+      },
+      {
+        "pattern": "\\Qapix.json\\E"
+      },
+      {
+        "pattern": "\\Qvertx-high-performance.json\\E"
+      },
+      {
+        "pattern": "\\Qvertx-ultra-performance.json\\E"
+      },
+      {
+        "pattern": ".*\\.properties"
+      },
+      {
+        "pattern": ".*\\.json"
+      },
+      {
+        "pattern": ".*\\.xml"
+      },
+      {
+        "pattern": ".*\\.yaml"
+      },
+      {
+        "pattern": ".*\\.yml"
+      },
+      {
+        "pattern": ".*\\.html"
+      },
+      {
+        "pattern": ".*\\.css"
+      },
+      {
+        "pattern": ".*\\.js"
+      },
+      {
+        "pattern": ".*\\.ico"
+      },
+      {
+        "pattern": ".*\\.png"
+      },
+      {
+        "pattern": ".*\\.jpg"
+      },
+      {
+        "pattern": ".*\\.jpeg"
+      },
+      {
+        "pattern": ".*\\.gif"
+      },
+      {
+        "pattern": ".*\\.svg"
+      },
+      {
+        "pattern": ".*\\.ttf"
+      },
+      {
+        "pattern": ".*\\.woff"
+      },
+      {
+        "pattern": ".*\\.woff2"
+      },
+      {
+        "pattern": ".*\\.eot"
+      }
+    ]
+  },
+  "bundles": []
+}

@@ -1,0 +1,7 @@
+{
+  "rules": [
+    {
+      "excludeClasses": "com.sun.management.internal.HotSpotDiagnostic"
+    }
+  ]
+}

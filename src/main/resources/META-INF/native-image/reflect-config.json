@@ -1,5 +1,32 @@
 [
   {
+    "name": "io.vertx.core.net.impl.VertxHandler",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "methods": [
+      { "name": "userEventTriggered", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object"] },
+      { "name": "close", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "io.netty.channel.ChannelPromise"] },
+      { "name": "exceptionCaught", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Throwable"] },
+      { "name": "channelRead", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object"] },
+      { "name": "channelReadComplete", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "channelWritabilityChanged", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "channelInactive", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "channelActive", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "flush", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "write", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object", "io.netty.channel.ChannelPromise"] }
+    ]
+  },
+  {
+    "name": "io.vertx.core.http.impl.HttpServerWorker$1",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "methods": [
+      { "name": "userEventTriggered", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object"] }
+    ]
+  },
+  {
     "name": "ch.qos.logback.classic.Logger",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true,
@@ -115,13 +142,7 @@
     "allPublicMethods": true,
     "allDeclaredFields": true
   },
-  {
-    "name": "com.sun.management.OperatingSystemMXBean",
-    "allDeclaredConstructors": true,
-    "allPublicConstructors": true,
-    "allDeclaredMethods": true,
-    "allPublicMethods": true
-  },
+
   {
     "name": "com.louloulin.apix.core.util.RuntimeMetrics",
     "allDeclaredConstructors": true,
@@ -258,11 +279,86 @@
     "allDeclaredFields": true
   },
   {
-    "name": "com.louloulin.apix.core.verticle.SimpleHttpVerticle",
+    "name": "io.vertx.core.net.impl.VertxHandler",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true,
     "allDeclaredMethods": true,
     "allPublicMethods": true,
-    "allDeclaredFields": true
+    "methods": [
+      { "name": "userEventTriggered", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object"] },
+      { "name": "exceptionCaught", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Throwable"] },
+      { "name": "close", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "io.netty.channel.ChannelPromise"] }
+    ]
+  },
+  {
+    "name": "io.netty.channel.ChannelHandlerMask",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "io.netty.channel.ChannelHandlerAdapter",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "io.netty.channel.ChannelInboundHandlerAdapter",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "io.netty.channel.ChannelOutboundHandlerAdapter",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "io.netty.channel.ChannelDuplexHandler",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "io.vertx.core.http.impl.Http1xUpgradeToH2CHandler",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "io.vertx.core.http.impl.Http1xOrH2CHandler",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "io.vertx.core.http.impl.HttpServerWorker",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "io.netty.handler.codec.ByteToMessageDecoder",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "io.netty.handler.timeout.IdleStateHandler",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
   }
 ]
+
