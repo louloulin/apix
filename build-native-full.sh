@@ -46,7 +46,7 @@ native-image \
   -H:+FoldSecurityManagerGetter \
   -H:+TrustFinalDefaultFields \
   --initialize-at-build-time=ch.qos,org.slf4j,io.netty \
-  --initialize-at-run-time=io.vertx.ext.web.client.WebClientOptions,io.netty.channel.epoll,io.netty.channel.unix,io.netty.handler.ssl \
+  --initialize-at-run-time=io.vertx.ext.web.client.WebClientOptions,io.netty.channel.epoll,io.netty.channel.unix,io.netty.handler.ssl,org.graalvm \
   --allow-incomplete-classpath \
   --install-exit-handlers \
   --gc=serial \
@@ -64,6 +64,7 @@ native-image \
   -Dvertx.eventLoopPoolSize=84 \
   -Dvertx.workerPoolSize=140 \
   -Dvertx.preferNativeTransport=true \
+  -H:+AllowDeprecatedBuilderClassesOnImageClasspath \
   -jar $JAR_FILE
 
 # 检查构建结果

@@ -22,6 +22,12 @@
       },
       {
         "pattern": "vertx-version.txt"
+      },
+      {
+        "pattern": ".*\\.wasm"
+      },
+      {
+        "pattern": "org/graalvm/.*"
       }
     ]
   },
