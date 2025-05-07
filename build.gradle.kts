@@ -54,6 +54,11 @@ dependencies {
     // implementation("io.opentelemetry:opentelemetry-semconv:1.24.0-alpha")
     // implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:1.24.0")
 
+    // GraalVM WebAssembly support
+    implementation("org.graalvm.polyglot:wasm:23.1.1")
+    implementation("org.graalvm.polyglot:polyglot:23.1.1")
+    implementation("org.graalvm.polyglot:js:23.1.1")
+
     // Testing
     testImplementation(kotlin("test"))
     testImplementation("io.vertx:vertx-junit5")

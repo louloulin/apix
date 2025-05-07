@@ -153,7 +153,7 @@ class PluginManager(
      */
     fun createPluginChain(pluginIds: List<String>): PluginChain {
         val chainPlugins = pluginIds.mapNotNull { plugins[it] }
-        return PluginChain(chainPlugins)
+        return PluginChain(vertx, chainPlugins)
     }
 
     /**

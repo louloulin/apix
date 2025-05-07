@@ -1,5 +1,6 @@
 package com.louloulin.apix.plugins
 
+import com.louloulin.apix.plugins.version.PluginVersion
 import io.vertx.core.json.JsonObject
 
 /**
@@ -8,7 +9,8 @@ import io.vertx.core.json.JsonObject
 data class PluginConfig(
     val id: String,
     val type: String,
-    val config: JsonObject
+    val config: JsonObject,
+    val version: PluginVersion = PluginVersion(1, 0, 0)
 ) {
     /**
      * Gets a string value from the configuration.
@@ -43,6 +45,31 @@ data class PluginConfig(
      */
     fun getJsonArray(key: String): io.vertx.core.json.JsonArray? {
         return config.getJsonArray(key)
+    }
+
+    /**
+     * Gets a long value from the configuration.
+     */
+    fun getLong(key: String, defaultValue: Long? = null): Long? {
+        return if (config.containsKey(key)) config.getLong(key, defaultValue) else defaultValue
+    }
+
+    /**
+     * Gets the plugin version.
+     *
+     * Note: This method is not needed as Kotlin already generates a getter for the version property.
+     * Keeping it for backward compatibility with Java code.
+     */
+    @Deprecated("Use the version property directly", ReplaceWith("version"))
+    fun getPluginVersion(): PluginVersion {
+        return version
+    }
+
+    /**
+     * Checks if this plugin is compatible with the specified version.
+     */
+    fun isCompatibleWith(requiredVersion: PluginVersion): Boolean {
+        return version.isCompatibleWith(requiredVersion)
     }
 
     /**
