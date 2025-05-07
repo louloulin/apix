@@ -1,0 +1,40 @@
+[
+  {
+    "name": "io.vertx.core.net.impl.VertxHandler",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "methods": [
+      { "name": "userEventTriggered", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object"] },
+      { "name": "close", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "io.netty.channel.ChannelPromise"] },
+      { "name": "exceptionCaught", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Throwable"] },
+      { "name": "channelRead", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object"] },
+      { "name": "channelReadComplete", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "channelWritabilityChanged", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "channelInactive", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "channelActive", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "flush", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "write", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object", "io.netty.channel.ChannelPromise"] }
+    ]
+  },
+  {
+    "name": "io.netty.channel.ChannelHandlerContext",
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.netty.channel.ChannelPromise",
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.netty.channel.ChannelHandler",
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.netty.channel.ChannelInboundHandler",
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.netty.channel.ChannelOutboundHandler",
+    "allDeclaredMethods": true
+  }
+]
