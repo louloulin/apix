@@ -21,6 +21,9 @@ class EventBusManager(private val vertx: Vertx) {
     // SimpleEventBus实例
     private val simpleEventBus = SimpleEventBus.getInstance(vertx)
 
+    // JCToolsEventBus实例
+    private val jcToolsEventBus = JCToolsEventBus.getInstance(vertx)
+
     // 性能统计
     private val messagesSent = AtomicLong(0)
     private val switchCount = AtomicLong(0)
@@ -32,7 +35,8 @@ class EventBusManager(private val vertx: Vertx) {
      */
     enum class EventBusType {
         VERTX,      // 原生Vert.x EventBus
-        SIMPLE      // 简化版EventBus
+        SIMPLE,     // 简化版EventBus
+        JCTOOLS     // JCTools版EventBus（兼容模式）
     }
 
     /**
@@ -49,6 +53,7 @@ class EventBusManager(private val vertx: Vertx) {
         return when (currentType.get()) {
             EventBusType.VERTX -> vertx.eventBus()
             EventBusType.SIMPLE -> simpleEventBus.getOriginalEventBus()
+            EventBusType.JCTOOLS -> jcToolsEventBus.getOriginalEventBus()
         }
     }
 
@@ -62,6 +67,7 @@ class EventBusManager(private val vertx: Vertx) {
         when (currentType.get()) {
             EventBusType.VERTX -> vertx.eventBus().send(address, message)
             EventBusType.SIMPLE -> simpleEventBus.sendToQueue(address, message)
+            EventBusType.JCTOOLS -> jcToolsEventBus.sendToQueue(address, message)
         }
     }
 
@@ -110,6 +116,13 @@ class EventBusManager(private val vertx: Vertx) {
                     logger.info("Switched to SimpleEventBus")
                     promise.complete(true)
                 }
+                EventBusType.JCTOOLS -> {
+                    // 切换到JCToolsEventBus
+                    jcToolsEventBus.start()
+                    currentType.set(EventBusType.JCTOOLS)
+                    logger.info("Switched to JCToolsEventBus")
+                    promise.complete(true)
+                }
             }
         } catch (e: Exception) {
             logger.error("Error switching EventBus type", e)
@@ -138,6 +151,11 @@ class EventBusManager(private val vertx: Vertx) {
         // 添加SimpleEventBus统计信息
         if (currentType.get() == EventBusType.SIMPLE) {
             stats.put("simple", simpleEventBus.getStats())
+        }
+
+        // 添加JCToolsEventBus统计信息
+        if (currentType.get() == EventBusType.JCTOOLS) {
+            stats.put("jctools", jcToolsEventBus.getStats())
         }
 
         return stats

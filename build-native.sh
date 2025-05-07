@@ -98,7 +98,8 @@ EOF
 
 # 构建 Native Image
 echo "开始构建 Native Image..."
-./gradlew nativeCompile
+./gradlew clean build -x test
+./gradlew nativeCompile --info
 
 # 检查构建是否成功
 if [ ! -f "build/native/nativeCompile/apix" ]; then
