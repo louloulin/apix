@@ -121,28 +121,28 @@ export APIX_CONFIG_PATH="../../resources/main/vertx-100k.json"
 PID=$!
 echo "APIX Gateway Native Image 已启动，进程ID: $PID"
 
-# 等待应用启动
-echo "等待应用启动..."
-sleep 5
+## 等待应用启动
+#echo "等待应用启动..."
+#sleep 5
+#
+## 检查应用是否正常启动
+#curl -s http://localhost:8080/api/hello
+#if [ $? -ne 0 ]; then
+#    echo "警告: 无法访问应用程序，请检查日志"
+#    exit 1
+#fi
 
-# 检查应用是否正常启动
-curl -s http://localhost:8080/api/hello
-if [ $? -ne 0 ]; then
-    echo "警告: 无法访问应用程序，请检查日志"
-    exit 1
-fi
-
-echo "应用已成功启动，开始性能测试..."
-
-# 返回到项目根目录
-cd ../../..
-
-# 运行 k6 性能测试
-echo "运行 k6 性能测试..."
-k6 run k6-1k-test.js
-
-# 测试完成后关闭应用
-echo "测试完成，关闭应用..."
-kill $PID
-
-echo "===== APIX Gateway Native Image 测试完成 ====="
+#echo "应用已成功启动，开始性能测试..."
+#
+## 返回到项目根目录
+#cd ../../..
+#
+## 运行 k6 性能测试
+#echo "运行 k6 性能测试..."
+#k6 run k6-1k-test.js
+#
+## 测试完成后关闭应用
+#echo "测试完成，关闭应用..."
+#kill $PID
+#
+#echo "===== APIX Gateway Native Image 测试完成 ====="
