@@ -148,11 +148,26 @@ class PluginManager(
     }
 
     /**
-     * Creates a plugin chain for the given plugin IDs.
+     * 创建给定插件ID的插件链。
+     * 优化版本支持按优先级分组执行和并行执行。
      */
     fun createPluginChain(pluginIds: List<String>): PluginChain {
         val chainPlugins = pluginIds.mapNotNull { plugins[it] }
         return PluginChain(chainPlugins)
+    }
+
+    /**
+     * 获取插件执行统计信息
+     */
+    fun getPluginExecutionStats(pluginChain: PluginChain): Map<String, Map<String, Long>> {
+        return pluginChain.getExecutionStats()
+    }
+
+    /**
+     * 清除插件执行结果缓存
+     */
+    fun clearPluginCache(pluginChain: PluginChain) {
+        pluginChain.clearCache()
     }
 
     /**

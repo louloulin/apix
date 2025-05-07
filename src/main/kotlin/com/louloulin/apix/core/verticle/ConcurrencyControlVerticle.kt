@@ -36,7 +36,7 @@ class ConcurrencyControlVerticle : CoroutineVerticle() {
         }
 
         // 初始化并发控制器
-        concurrencyController.init(config)
+        concurrencyController.initialize(config)
 
         // 注册 EventBus 处理器
         registerEventBusHandlers()

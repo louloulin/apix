@@ -48,7 +48,7 @@ class ConcurrencyController(private val vertx: Vertx) {
     /**
      * 初始化并发控制器
      */
-    fun init(config: JsonObject) {
+    fun initialize(config: JsonObject) {
         // 从配置中读取参数
         defaultMaxConcurrency = config.getInteger("defaultMaxConcurrency", defaultMaxConcurrency)
         minConcurrency = config.getInteger("minConcurrency", minConcurrency)
@@ -146,14 +146,25 @@ class ConcurrencyController(private val vertx: Vertx) {
      * 释放并发许可
      *
      * @param serviceId 服务ID
+     * @param responseTime 响应时间（毫秒）
      * @param success 请求是否成功
      */
-    fun release(serviceId: String, success: Boolean) {
+    fun release(serviceId: String, responseTime: Long, success: Boolean) {
         activeRequests.computeIfAbsent(serviceId) { AtomicInteger(0) }.decrementAndGet()
 
         if (!success) {
             errorCounts.computeIfAbsent(serviceId) { AtomicLong(0) }.incrementAndGet()
         }
+
+        // 记录响应时间
+        recordRequestCompletion(serviceId, responseTime, success)
+    }
+
+    /**
+     * 兼容旧版本的释放方法
+     */
+    fun release(serviceId: String, success: Boolean) {
+        release(serviceId, 0, success)
     }
 
     /**
@@ -258,23 +269,23 @@ class ConcurrencyController(private val vertx: Vertx) {
     /**
      * 获取所有服务的性能指标
      */
-    fun getAllServiceMetrics(): JsonArray {
-        val result = JsonArray()
+    fun getAllServiceMetrics(): JsonObject {
+        val servicesObj = JsonObject()
         val services = HashSet<String>()
         services.addAll(currentLimits.keys)
         services.addAll(activeRequests.keys)
         services.addAll(requestCounts.keys)
 
         for (serviceId in services) {
-            result.add(getServiceMetrics(serviceId))
+            servicesObj.put(serviceId, getServiceMetrics(serviceId))
         }
 
-        return result.add(JsonObject()
+        return JsonObject()
+            .put("services", servicesObj)
             .put("system", JsonObject()
                 .put("cpuUsage", cpuUsage)
                 .put("memoryUsage", memoryUsage)
                 .put("totalActiveRequests", activeRequests.values.sumOf { it.get() })
             )
-        )
     }
 }

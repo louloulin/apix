@@ -8,3 +8,6 @@
 @plan3.md   按计划，基于vert.x eventbus为核心实现相关功能，实现后增加测试验证验证通过后更新 @plan3.md 标记实现的功能
 
 @perf3.md 按照计划实现功能，优化apix网关的性能，增加验证，验证通过后更新 @perf3.md 实现的功能
+
+
+@plan4.md   按计划，基于vert.x eventbus为核心实现相关功能，实现后增加测试验证验证通过后更新 @plan4.md 标记实现的功能
