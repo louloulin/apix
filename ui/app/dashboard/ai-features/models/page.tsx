@@ -1,14 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { AlertCircle, CheckCircle2 } from "lucide-react"
+import { AlertCircle, CheckCircle2, Cpu, GitFork, Plus, RefreshCw } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useApiData } from "@/lib/hooks/use-api-data"
+import { aiApi } from "@/lib/api-client"
+import { useToast } from "@/components/ui/use-toast"
 
 interface Model {
   id: string
@@ -30,44 +32,47 @@ interface RoutingRule {
 }
 
 export default function ModelsPage() {
-  const [models, setModels] = useState<Model[]>([])
-  const [rules, setRules] = useState<RoutingRule[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
 
-  useEffect(() => {
-    const fetchModels = async () => {
-      try {
-        const response = await fetch('/api/ai/models')
-        if (!response.ok) {
-          throw new Error('Failed to fetch models')
-        }
-        const data = await response.json()
-        setModels(data.models || [])
-      } catch (err) {
-        setError('Error loading models: ' + (err instanceof Error ? err.message : String(err)))
+  const {
+    data: modelsData,
+    isLoading: isLoadingModels,
+    error: modelsError,
+    refetch: refetchModels,
+    isRefetching: isRefetchingModels
+  } = useApiData(
+    () => aiApi.getModels(),
+    {
+      onError: (err) => {
+        toast({
+          variant: "destructive",
+          title: "Error loading models",
+          description: err.message,
+        })
       }
     }
+  )
 
-    const fetchRules = async () => {
-      try {
-        const response = await fetch('/api/ai/routing/rules')
-        if (!response.ok) {
-          // This is expected to fail if the endpoint is not implemented yet
-          console.warn('Routing rules endpoint not available')
-          return
-        }
-        const data = await response.json()
-        setRules(data.rules || [])
-      } catch (err) {
+  const {
+    data: rulesData,
+    isLoading: isLoadingRules,
+    error: rulesError,
+    refetch: refetchRules,
+    isRefetching: isRefetchingRules
+  } = useApiData(
+    () => aiApi.getRoutingRules(),
+    {
+      onError: (err) => {
         console.warn('Error loading routing rules:', err)
-      } finally {
-        setLoading(false)
       }
     }
+  )
 
-    fetchModels().then(() => fetchRules())
-  }, [])
+  const models = modelsData?.models || []
+  const rules = rulesData?.rules || []
+  const isLoading = isLoadingModels || isLoadingRules
+  const isRefetching = isRefetchingModels || isRefetchingRules
+  const error = modelsError?.message || null
 
   const getConditionDescription = (condition: RoutingRule['condition']) => {
     switch (condition.type) {
@@ -98,7 +103,27 @@ export default function ModelsPage() {
               Manage AI models and routing rules
             </p>
           </div>
-          <Button>Add Custom Model</Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                refetchModels()
+                refetchRules()
+                toast({
+                  title: "Refreshed",
+                  description: "Model data has been refreshed",
+                })
+              }}
+              disabled={isRefetching}
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Custom Model
+            </Button>
+          </div>
         </div>
 
         {error && (
@@ -111,14 +136,40 @@ export default function ModelsPage() {
 
         <Tabs defaultValue="models">
           <TabsList>
-            <TabsTrigger value="models">Available Models</TabsTrigger>
-            <TabsTrigger value="routing">Routing Rules</TabsTrigger>
+            <TabsTrigger value="models" className="flex items-center gap-2">
+              <Cpu className="h-4 w-4" />
+              Available Models
+            </TabsTrigger>
+            <TabsTrigger value="routing" className="flex items-center gap-2">
+              <GitFork className="h-4 w-4" />
+              Routing Rules
+            </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="models">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {loading ? (
-                <p>Loading models...</p>
+              {isLoading ? (
+                Array(6).fill(0).map((_, i) => (
+                  <Card key={i} className="opacity-70">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="h-6 w-24 bg-muted rounded animate-pulse"></div>
+                        <div className="h-5 w-16 bg-muted rounded animate-pulse"></div>
+                      </div>
+                      <div className="h-4 w-32 bg-muted rounded animate-pulse mt-2"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 bg-muted rounded-full animate-pulse"></div>
+                        <div className="h-4 w-16 bg-muted rounded animate-pulse"></div>
+                      </div>
+                      <Separator className="my-4" />
+                      <div className="flex justify-end">
+                        <div className="h-8 w-24 bg-muted rounded animate-pulse"></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
               ) : (
                 models.map((model) => (
                   <Card key={model.id}>
@@ -144,20 +195,52 @@ export default function ModelsPage() {
               )}
             </div>
           </TabsContent>
-          
+
           <TabsContent value="routing">
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Model Routing Rules</CardTitle>
-                  <Button size="sm">Add Rule</Button>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Rule
+                  </Button>
                 </div>
                 <CardDescription>
                   Rules for routing requests to specific models based on content
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {rules.length > 0 ? (
+                {isLoading ? (
+                  <div className="space-y-4">
+                    {Array(3).fill(0).map((_, i) => (
+                      <Card key={i} className="opacity-70">
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <div className="h-5 w-32 bg-muted rounded animate-pulse"></div>
+                            <div className="h-5 w-24 bg-muted rounded animate-pulse"></div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <div className="h-4 w-16 bg-muted rounded animate-pulse mb-2"></div>
+                              <div className="h-4 w-48 bg-muted rounded animate-pulse"></div>
+                            </div>
+                            <div>
+                              <div className="h-4 w-20 bg-muted rounded animate-pulse mb-2"></div>
+                              <div className="h-4 w-32 bg-muted rounded animate-pulse"></div>
+                            </div>
+                          </div>
+                          <div className="mt-4 flex justify-end gap-2">
+                            <div className="h-8 w-16 bg-muted rounded animate-pulse"></div>
+                            <div className="h-8 w-16 bg-muted rounded animate-pulse"></div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : rules.length > 0 ? (
                   <div className="space-y-4">
                     {rules.map((rule) => (
                       <Card key={rule.id}>
@@ -191,7 +274,10 @@ export default function ModelsPage() {
                 ) : (
                   <div className="flex flex-col items-center justify-center py-8">
                     <p className="text-muted-foreground">No routing rules defined</p>
-                    <Button className="mt-4">Create First Rule</Button>
+                    <Button className="mt-4">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create First Rule
+                    </Button>
                   </div>
                 )}
               </CardContent>

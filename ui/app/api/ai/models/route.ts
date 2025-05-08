@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    const response = await fetch(`${process.env.API_BASE_URL || 'http://localhost:8080'}/ai/models`, {
+    const response = await fetch(`${process.env.API_BASE_URL || 'http://localhost:8080'}/admin/ai/models`, {
       headers: {
         'Content-Type': 'application/json',
       },

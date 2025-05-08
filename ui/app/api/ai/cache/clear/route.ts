@@ -4,12 +4,12 @@ export async function POST(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const modelId = searchParams.get('modelId')
-    
-    let url = `${process.env.API_BASE_URL || 'http://localhost:8080'}/ai/cache/clear`
+
+    let url = `${process.env.API_BASE_URL || 'http://localhost:8080'}/admin/ai/cache/clear`
     if (modelId) {
       url += `?modelId=${modelId}`
     }
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {

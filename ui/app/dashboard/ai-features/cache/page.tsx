@@ -1,14 +1,18 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { AlertCircle, RefreshCw } from "lucide-react"
+import { AlertCircle, Clock, Database, RefreshCw, Trash2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/components/ui/use-toast"
+import { DataCard } from "@/components/ui/data-card"
+import { useApiData } from "@/lib/hooks/use-api-data"
+import { useApiMutation } from "@/lib/hooks/use-api-data"
+import { aiApi } from "@/lib/api-client"
 
 interface CacheStats {
   total: {
@@ -27,65 +31,56 @@ interface CacheStats {
 }
 
 export default function CachePage() {
-  const [cacheStats, setCacheStats] = useState<CacheStats | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [clearing, setClearing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [selectedModel, setSelectedModel] = useState<string>("all")
   const { toast } = useToast()
 
-  const fetchCacheStats = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch('/api/ai/cache/stats')
-      if (!response.ok) {
-        throw new Error('Failed to fetch cache statistics')
+  const {
+    data: cacheData,
+    isLoading,
+    error,
+    refetch,
+    isRefetching
+  } = useApiData(
+    () => aiApi.getCacheStats(),
+    {
+      onError: (err) => {
+        toast({
+          variant: "destructive",
+          title: "Error loading cache statistics",
+          description: err.message,
+        })
       }
-      const data = await response.json()
-      setCacheStats(data.stats || null)
-    } catch (err) {
-      setError('Error loading cache statistics: ' + (err instanceof Error ? err.message : String(err)))
-    } finally {
-      setLoading(false)
     }
+  )
+
+  const {
+    mutate: clearCacheMutate,
+    isLoading: isClearing
+  } = useApiMutation(
+    (modelId?: string) => aiApi.clearCache(modelId),
+    {
+      onSuccess: (data) => {
+        toast({
+          title: "Cache cleared",
+          description: data.message || `Cleared ${data.count || 'all'} cache entries`,
+        })
+        refetch()
+      },
+      onError: (err) => {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: 'Failed to clear cache: ' + err.message,
+        })
+      }
+    }
+  )
+
+  const clearCache = () => {
+    clearCacheMutate(selectedModel === "all" ? undefined : selectedModel)
   }
 
-  useEffect(() => {
-    fetchCacheStats()
-  }, [])
-
-  const clearCache = async () => {
-    try {
-      setClearing(true)
-      const url = selectedModel === "all" 
-        ? '/api/ai/cache/clear' 
-        : `/api/ai/cache/clear?modelId=${selectedModel}`
-      
-      const response = await fetch(url, { method: 'POST' })
-      if (!response.ok) {
-        throw new Error('Failed to clear cache')
-      }
-      
-      const data = await response.json()
-      
-      toast({
-        title: "Cache cleared",
-        description: data.message || `Cleared ${data.count || 'all'} cache entries`,
-      })
-      
-      // Refresh stats
-      fetchCacheStats()
-    } catch (err) {
-      setError('Error clearing cache: ' + (err instanceof Error ? err.message : String(err)))
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: 'Failed to clear cache: ' + (err instanceof Error ? err.message : String(err)),
-      })
-    } finally {
-      setClearing(false)
-    }
-  }
+  const cacheStats = cacheData?.stats || null
 
   // Format large numbers with commas
   const formatNumber = (num: number) => {
@@ -107,9 +102,13 @@ export default function CachePage() {
               Manage AI response caching to improve performance and reduce costs
             </p>
           </div>
-          <Button onClick={fetchCacheStats} variant="outline" disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+          <Button
+            onClick={() => refetch()}
+            variant="outline"
+            size="icon"
+            disabled={isRefetching}
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
           </Button>
         </div>
 
@@ -117,14 +116,17 @@ export default function CachePage() {
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{error.message}</AlertDescription>
           </Alert>
         )}
 
         <div className="flex flex-col gap-4 md:flex-row">
           <Card className="flex-1">
             <CardHeader>
-              <CardTitle>Cache Management</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Cache Management</CardTitle>
+                <Database className="h-4 w-4 text-muted-foreground" />
+              </div>
               <CardDescription>Clear cache entries to free up memory</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -144,67 +146,66 @@ export default function CachePage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button 
-                onClick={clearCache} 
-                disabled={clearing || loading}
+              <Button
+                onClick={clearCache}
+                disabled={isClearing || isLoading}
                 variant="destructive"
-                className="w-full"
+                className="w-full flex items-center gap-2"
               >
-                {clearing ? 'Clearing...' : `Clear ${selectedModel === 'all' ? 'All' : selectedModel} Cache`}
+                <Trash2 className="h-4 w-4" />
+                {isClearing ? 'Clearing...' : `Clear ${selectedModel === 'all' ? 'All' : selectedModel} Cache`}
               </Button>
             </CardFooter>
           </Card>
         </div>
 
-        {loading ? (
-          <p>Loading cache statistics...</p>
+        {isLoading ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {Array(4).fill(0).map((_, i) => (
+              <Card key={i} className="opacity-70">
+                <CardHeader className="pb-2">
+                  <div className="h-5 w-24 bg-muted rounded animate-pulse"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-8 w-32 bg-muted rounded animate-pulse mb-2"></div>
+                  <div className="h-4 w-full bg-muted rounded animate-pulse"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         ) : cacheStats ? (
           <>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Cache Hit Rate</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatPercentage(cacheStats.total.hitRate)}</div>
-                  <Progress 
-                    value={cacheStats.total.hitRate * 100} 
+              <DataCard
+                title="Cache Hit Rate"
+                value={formatPercentage(cacheStats.total.hitRate)}
+                icon={<Clock className="h-4 w-4" />}
+                description={
+                  <Progress
+                    value={cacheStats.total.hitRate * 100}
                     className="mt-2"
                   />
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Cache Hits</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatNumber(cacheStats.total.hits)}</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Cache Misses</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatNumber(cacheStats.total.misses)}</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Cache Size</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {cacheStats.total.size >= 0 ? formatNumber(cacheStats.total.size) : 'N/A'}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {cacheStats.total.size < 0 ? 'Size not available in cluster mode' : 'Entries'}
-                  </p>
-                </CardContent>
-              </Card>
+                }
+              />
+
+              <DataCard
+                title="Cache Hits"
+                value={formatNumber(cacheStats.total.hits)}
+                icon={<Clock className="h-4 w-4" />}
+              />
+
+              <DataCard
+                title="Cache Misses"
+                value={formatNumber(cacheStats.total.misses)}
+                icon={<Clock className="h-4 w-4" />}
+              />
+
+              <DataCard
+                title="Cache Size"
+                value={cacheStats.total.size >= 0 ? formatNumber(cacheStats.total.size) : 'N/A'}
+                description={cacheStats.total.size < 0 ? 'Size not available in cluster mode' : 'Entries'}
+                icon={<Database className="h-4 w-4" />}
+              />
             </div>
 
             <Card>
@@ -237,8 +238,8 @@ export default function CachePage() {
                               <td className="text-right p-2">{formatNumber(model.hits + model.misses)}</td>
                               <td className="text-right p-2">{formatPercentage(model.hitRate)}</td>
                               <td className="text-right p-2">
-                                <Button 
-                                  variant="outline" 
+                                <Button
+                                  variant="outline"
                                   size="sm"
                                   onClick={() => {
                                     setSelectedModel(model.modelId)

@@ -72,6 +72,7 @@ class AdminApiHandler(
         router.get("/ai/usage").handler(this::getAiUsage)
         router.post("/ai/cache/clear").handler(this::clearAiCache)
         router.get("/ai/cache/stats").handler(this::getAiCacheStats)
+        router.get("/ai/routing/rules").handler(this::getAiRoutingRules)
 
         // Config endpoints
         router.get("/config").handler(this::getConfig)
@@ -1198,5 +1199,55 @@ class AdminApiHandler(
                     .encode()
                 )
         }
+    }
+
+    /**
+     * Gets AI routing rules.
+     */
+    private fun getAiRoutingRules(context: RoutingContext) {
+        // This is a placeholder implementation
+        // In a real gateway, this would return the actual routing rules from a model router
+
+        val rulesArray = JsonArray()
+            .add(JsonObject()
+                .put("id", "rule1")
+                .put("name", "Technical Content Rule")
+                .put("priority", 100)
+                .put("condition", JsonObject()
+                    .put("type", "CONTAINS")
+                    .put("pattern", "code")
+                    .put("contentTypes", JsonArray().add("text/plain").add("application/json"))
+                    .put("requestTypes", JsonArray().add("chat").add("completion"))
+                )
+                .put("targetModel", "gpt-4")
+            )
+            .add(JsonObject()
+                .put("id", "rule2")
+                .put("name", "Creative Content Rule")
+                .put("priority", 90)
+                .put("condition", JsonObject()
+                    .put("type", "CONTAINS")
+                    .put("pattern", "story")
+                    .put("contentTypes", JsonArray().add("text/plain"))
+                    .put("requestTypes", JsonArray().add("chat").add("completion"))
+                )
+                .put("targetModel", "claude-3-opus")
+            )
+            .add(JsonObject()
+                .put("id", "rule3")
+                .put("name", "Default Rule")
+                .put("priority", 0)
+                .put("condition", JsonObject()
+                    .put("type", "DEFAULT")
+                    .put("pattern", "*")
+                    .put("contentTypes", JsonArray().add("*"))
+                    .put("requestTypes", JsonArray().add("*"))
+                )
+                .put("targetModel", "gpt-3.5-turbo")
+            )
+
+        context.response()
+            .putHeader("Content-Type", "application/json")
+            .end(JsonObject().put("rules", rulesArray).encode())
     }
 }
