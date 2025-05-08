@@ -21,18 +21,18 @@ describe('Dashboard', () => {
 
   it('should render the welcome message', () => {
     renderWithProviders(<DashboardPage />)
-    expect(screen.getByText('Welcome to the Proksi AI Gateway control panel.')).toBeInTheDocument()
+    expect(screen.getByText('Welcome to the APIX AI Gateway control panel.')).toBeInTheDocument()
   })
 
   it('should render the overview tab by default', () => {
     renderWithProviders(<DashboardPage />)
     expect(screen.getByRole('tab', { name: 'Overview' })).toBeInTheDocument()
-    
+
     // Get card elements by their title
     const cards = screen.getAllByRole('generic', { name: '' }).filter(
       element => element.getAttribute('data-slot') === 'card'
     );
-    
+
     // Check for metric cards within their container context
     expect(cards.length).toBeGreaterThan(0);
     cards.forEach(card => {
@@ -64,4 +64,4 @@ describe('Dashboard', () => {
     expect(screen.getByText('Request Traffic')).toBeInTheDocument()
     expect(screen.getByText('Request volume over the past 30 days')).toBeInTheDocument()
   })
-}) 
+})

@@ -23,9 +23,26 @@ export function ThemeToggle() {
     console.log("Theme toggle mounted, current theme:", theme, "resolved theme:", resolvedTheme)
   }, [theme, resolvedTheme])
 
+  // Simple toggle function that directly switches between light and dark
+  const toggleTheme = () => {
+    const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark'
+    console.log(`Toggling theme from ${resolvedTheme} to ${newTheme}`)
+    try {
+      setTheme(newTheme)
+      console.log(`Theme set to ${newTheme}`)
+    } catch (error) {
+      console.error('Error setting theme:', error)
+    }
+  }
+
   const handleSetTheme = (newTheme: string) => {
-    console.log(`Setting theme to ${newTheme}`)
-    setTheme(newTheme)
+    console.log(`Attempting to set theme to ${newTheme}, current theme: ${theme}, resolved theme: ${resolvedTheme}`)
+    try {
+      setTheme(newTheme)
+      console.log(`Theme set to ${newTheme}`)
+    } catch (error) {
+      console.error('Error setting theme:', error)
+    }
   }
 
   if (!mounted) {
@@ -40,39 +57,51 @@ export function ThemeToggle() {
   const currentTheme = resolvedTheme || theme
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className={`w-9 h-9 rounded-full transition-all ${
-            currentTheme === 'dark' ? 'bg-slate-800 text-slate-100' : 'bg-slate-100 text-slate-800'
-          }`}
-        >
-          {currentTheme === "dark" ? (
-            <Moon className="h-[1.2rem] w-[1.2rem]" />
-          ) : (
-            <Sun className="h-[1.2rem] w-[1.2rem]" />
-          )}
-          <span className="sr-only">Toggle theme</span>
-        </Button>
-      </DropdownMenuTrigger>
+    <div className="flex items-center gap-2">
+      {/* Simple toggle button */}
+      <Button
+        variant="outline"
+        size="icon"
+        className={`w-9 h-9 rounded-full transition-all ${
+          currentTheme === 'dark' ? 'bg-slate-800 text-slate-100' : 'bg-slate-100 text-slate-800'
+        }`}
+        onClick={toggleTheme}
+      >
+        {currentTheme === "dark" ? (
+          <Moon className="h-[1.2rem] w-[1.2rem]" />
+        ) : (
+          <Sun className="h-[1.2rem] w-[1.2rem]" />
+        )}
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+
+      {/* Dropdown for more options */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild className="hidden md:flex">
+          <Button
+            variant="outline"
+            size="icon"
+            className="w-9 h-9 rounded-full hidden"
+          >
+            <span className="sr-only">Theme options</span>
+          </Button>
+        </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={() => handleSetTheme("light")}
           className={currentTheme === "light" ? "bg-accent font-medium" : ""}
         >
           <Sun className="h-4 w-4 mr-2" />
           Light
         </DropdownMenuItem>
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={() => handleSetTheme("dark")}
           className={currentTheme === "dark" ? "bg-accent font-medium" : ""}
         >
           <Moon className="h-4 w-4 mr-2" />
           Dark
         </DropdownMenuItem>
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={() => handleSetTheme("system")}
           className={currentTheme === "system" ? "bg-accent font-medium" : ""}
         >
@@ -87,5 +116,6 @@ export function ThemeToggle() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </div>
   )
-} 
+}

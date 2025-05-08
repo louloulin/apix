@@ -13,7 +13,7 @@ const exampleProjects = [
   {
     id: 'chat-bot',
     title: 'AI Chat Application',
-    description: 'A full-featured chat application built with Next.js and Proksi AI Gateway.',
+    description: 'A full-featured chat application built with Next.js and APIX AI Gateway.',
     category: 'application',
     tags: ['nextjs', 'react', 'typescript'],
     level: 'beginner',
@@ -204,7 +204,7 @@ async function getCompletion() {
       { role: 'user', content: 'What is an AI gateway?' }
     ]
   });
-  
+
   console.log(response.choices[0].message.content);
 }
 
@@ -228,12 +228,12 @@ async function streamCompletion() {
       { role: 'user', content: 'Write a short story about AI.' }
     ]
   });
-  
+
   // In Node.js
   for await (const chunk of stream) {
     process.stdout.write(chunk.choices[0]?.delta?.content || '');
   }
-  
+
   // In the browser
   /*
   for await (const chunk of stream) {
@@ -258,20 +258,20 @@ async function vectorDemo() {
   // Upsert vectors
   await client.upsertVectors({
     vectors: [
-      { 
-        id: 'doc1', 
+      {
+        id: 'doc1',
         values: [0.1, 0.2, 0.3, ...], // Your embedding vector
-        metadata: { source: 'article', title: 'AI Basics' } 
+        metadata: { source: 'article', title: 'AI Basics' }
       }
     ]
   });
-  
+
   // Search for similar vectors
   const results = await client.searchVectors({
     queryVector: [0.2, 0.3, 0.4, ...], // Your query vector
     topK: 5
   });
-  
+
   console.log(results);
 }`
   },
@@ -294,7 +294,7 @@ async function multiProviderDemo() {
       { role: 'user', content: 'What is quantum computing?' }
     ]
   });
-  
+
   // Let Proksi decide based on routing rules
   const autoRoutedResponse = await client.completion({
     messages: [
@@ -302,7 +302,7 @@ async function multiProviderDemo() {
     ],
     routingStrategy: 'cost_optimized' // Other options: 'quality', 'speed'
   });
-  
+
   console.log('OpenAI:', openaiResponse.choices[0].message.content);
   console.log('Auto-routed:', autoRoutedResponse.choices[0].message.content);
 }`
@@ -316,17 +316,17 @@ export default function ExamplesPage() {
         <div>
           <h1 className="text-3xl font-bold">Examples & Templates</h1>
           <p className="text-muted-foreground">
-            Reference examples, starter templates and code snippets for integrating with Proksi AI Gateway
+            Reference examples, starter templates and code snippets for integrating with APIX AI Gateway
           </p>
         </div>
-        
+
         <Tabs defaultValue="examples" className="mt-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="examples">Example Projects</TabsTrigger>
             <TabsTrigger value="templates">Starter Templates</TabsTrigger>
             <TabsTrigger value="snippets">Code Snippets</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="examples" className="space-y-6">
             <div className="flex justify-between items-center">
               <div className="space-y-1">
@@ -334,10 +334,10 @@ export default function ExamplesPage() {
                   Example Projects
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Ready-to-use projects showcasing Proksi AI Gateway capabilities
+                  Ready-to-use projects showcasing APIX AI Gateway capabilities
                 </p>
               </div>
-              
+
               <div className="flex gap-2">
                 <Input
                   placeholder="Search examples..."
@@ -348,7 +348,7 @@ export default function ExamplesPage() {
                 </Button>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {exampleProjects.map((project) => (
                 <Card key={project.id} className="overflow-hidden flex flex-col">
@@ -361,13 +361,13 @@ export default function ExamplesPage() {
                       {project.category === 'tool' && <Bot className="h-16 w-16 text-primary/60" />}
                     </div>
                   </div>
-                  
+
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                       <CardTitle className="text-xl">{project.title}</CardTitle>
                       <Badge variant={
-                        project.level === 'beginner' ? 'default' : 
-                        project.level === 'intermediate' ? 'secondary' : 
+                        project.level === 'beginner' ? 'default' :
+                        project.level === 'intermediate' ? 'secondary' :
                         'outline'
                       }>
                         {project.level}
@@ -375,14 +375,14 @@ export default function ExamplesPage() {
                     </div>
                     <CardDescription>{project.description}</CardDescription>
                   </CardHeader>
-                  
+
                   <CardContent className="pb-0 flex-grow">
                     <div className="flex flex-wrap gap-1 mb-4">
                       {project.tags.map(tag => (
                         <Badge key={tag} variant="outline">{tag}</Badge>
                       ))}
                     </div>
-                    
+
                     <div className="space-y-1">
                       <h4 className="text-sm font-medium">Features:</h4>
                       <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
@@ -392,7 +392,7 @@ export default function ExamplesPage() {
                       </ul>
                     </div>
                   </CardContent>
-                  
+
                   <CardFooter className="pt-4 flex gap-2">
                     <Button className="flex-1" asChild>
                       <a href={project.githubUrl} target="_blank" rel="noopener noreferrer">
@@ -412,7 +412,7 @@ export default function ExamplesPage() {
               ))}
             </div>
           </TabsContent>
-          
+
           <TabsContent value="templates" className="space-y-6">
             <div className="space-y-1">
               <h2 className="text-2xl font-semibold tracking-tight">
@@ -422,7 +422,7 @@ export default function ExamplesPage() {
                 Get started quickly with these project templates
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {starterTemplates.map((template) => (
                 <Card key={template.id} className="flex flex-col">
@@ -438,13 +438,13 @@ export default function ExamplesPage() {
                       </div>
                     </div>
                   </CardHeader>
-                  
+
                   <CardContent className="flex-grow pb-0">
                     <div className="rounded-md bg-muted p-4 font-mono text-sm overflow-x-auto">
                       <code>{template.command}</code>
                     </div>
                   </CardContent>
-                  
+
                   <CardFooter className="pt-4">
                     <Button variant="outline" className="w-full">
                       <FileCode className="mr-2 h-4 w-4" />
@@ -455,7 +455,7 @@ export default function ExamplesPage() {
               ))}
             </div>
           </TabsContent>
-          
+
           <TabsContent value="snippets" className="space-y-6">
             <div className="space-y-1">
               <h2 className="text-2xl font-semibold tracking-tight">
@@ -465,7 +465,7 @@ export default function ExamplesPage() {
                 Ready-to-use code examples for common scenarios
               </p>
             </div>
-            
+
             <div className="space-y-6">
               {codeSnippets.map((snippet) => (
                 <Card key={snippet.id}>
@@ -475,13 +475,13 @@ export default function ExamplesPage() {
                       <Badge variant="outline">{snippet.language}</Badge>
                     </div>
                   </CardHeader>
-                  
+
                   <CardContent>
                     <div className="rounded-md bg-muted p-4 font-mono text-sm overflow-x-auto">
                       <pre><code>{snippet.code}</code></pre>
                     </div>
                   </CardContent>
-                  
+
                   <CardFooter className="flex justify-end">
                     <Button variant="ghost" size="sm" onClick={() => {
                       navigator.clipboard.writeText(snippet.code);
@@ -498,4 +498,4 @@ export default function ExamplesPage() {
       </div>
     </DashboardLayout>
   )
-} 
+}

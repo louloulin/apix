@@ -12,9 +12,9 @@ export default function DeveloperPortalPage() {
       <div className="flex flex-col gap-4">
         <h1 className="text-3xl font-bold">Developer Portal</h1>
         <p className="text-muted-foreground">
-          Resources and documentation for integrating with the Proksi AI Gateway.
+          Resources and documentation for integrating with the APIX AI Gateway.
         </p>
-        
+
         <Tabs defaultValue="getting-started" className="mt-6">
           <TabsList>
             <TabsTrigger value="getting-started">Getting Started</TabsTrigger>
@@ -23,11 +23,11 @@ export default function DeveloperPortalPage() {
             <TabsTrigger value="api-reference">API Reference</TabsTrigger>
             <TabsTrigger value="examples">Examples</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="getting-started" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Welcome to Proksi AI Gateway</CardTitle>
+                <CardTitle>Welcome to APIX AI Gateway</CardTitle>
                 <CardDescription>
                   Everything you need to get started with integrating our AI Gateway
                 </CardDescription>
@@ -45,7 +45,7 @@ export default function DeveloperPortalPage() {
                       <Button variant="outline" size="sm">View Guide</Button>
                     </CardFooter>
                   </Card>
-                  
+
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-lg">SDK Installation</CardTitle>
@@ -57,7 +57,7 @@ export default function DeveloperPortalPage() {
                       <Button variant="outline" size="sm">Installation Guide</Button>
                     </CardFooter>
                   </Card>
-                  
+
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-lg">Authentication</CardTitle>
@@ -70,32 +70,32 @@ export default function DeveloperPortalPage() {
                     </CardFooter>
                   </Card>
                 </div>
-                
+
                 <div className="pt-4">
                   <h3 className="text-xl font-semibold mb-2">Core Concepts</h3>
                   <p className="text-sm mb-4">
-                    Understand the key concepts and architecture of the Proksi AI Gateway
+                    Understand the key concepts and architecture of the APIX AI Gateway
                   </p>
-                  
+
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="flex flex-col space-y-2 rounded-lg border p-4">
                       <h4 className="font-medium">LLM Routing</h4>
                       <p className="text-sm text-muted-foreground">Route requests to different LLM providers based on content and requirements</p>
                       <Button variant="link" size="sm" className="self-start px-0">Learn more</Button>
                     </div>
-                    
+
                     <div className="flex flex-col space-y-2 rounded-lg border p-4">
                       <h4 className="font-medium">Prompt Transformation</h4>
                       <p className="text-sm text-muted-foreground">Enhance and standardize prompts before they reach LLM providers</p>
                       <Button variant="link" size="sm" className="self-start px-0">Learn more</Button>
                     </div>
-                    
+
                     <div className="flex flex-col space-y-2 rounded-lg border p-4">
                       <h4 className="font-medium">Vector Operations</h4>
                       <p className="text-sm text-muted-foreground">Store, retrieve, and search vector embeddings with multiple database options</p>
                       <Button variant="link" size="sm" className="self-start px-0">Learn more</Button>
                     </div>
-                    
+
                     <div className="flex flex-col space-y-2 rounded-lg border p-4">
                       <h4 className="font-medium">AI Security</h4>
                       <p className="text-sm text-muted-foreground">Protect your AI applications with content filtering and rate limiting</p>
@@ -106,13 +106,13 @@ export default function DeveloperPortalPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="documentation" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle>Documentation</CardTitle>
                 <CardDescription>
-                  Comprehensive guides and tutorials for using Proksi AI Gateway
+                  Comprehensive guides and tutorials for using APIX AI Gateway
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -135,7 +135,7 @@ export default function DeveloperPortalPage() {
                           <Button variant="ghost" size="sm">View Guides</Button>
                         </CardFooter>
                       </Card>
-                      
+
                       <Card>
                         <CardHeader className="pb-2">
                           <CardTitle className="text-base">Plugin Development</CardTitle>
@@ -151,7 +151,7 @@ export default function DeveloperPortalPage() {
                           <Button variant="ghost" size="sm">View Guides</Button>
                         </CardFooter>
                       </Card>
-                      
+
                       <Card>
                         <CardHeader className="pb-2">
                           <CardTitle className="text-base">Advanced Features</CardTitle>
@@ -169,7 +169,7 @@ export default function DeveloperPortalPage() {
                       </Card>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Tutorials</h3>
                     <div className="grid gap-4 md:grid-cols-2">
@@ -186,7 +186,7 @@ export default function DeveloperPortalPage() {
                           <Badge variant="outline" className="mt-2">Beginner</Badge>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-start space-x-4 rounded-lg border p-4">
                         <div className="bg-primary text-primary-foreground rounded-md p-2">
                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -206,7 +206,7 @@ export default function DeveloperPortalPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="sdk" className="space-y-4">
             <Card>
               <CardHeader>
@@ -222,11 +222,11 @@ export default function DeveloperPortalPage() {
                       <h3 className="text-lg font-semibold">JavaScript/TypeScript SDK</h3>
                       <Badge variant="outline" className="text-green-600 bg-green-50">Latest: v0.1.0</Badge>
                     </div>
-                    
+
                     <div className="mb-4 rounded-md bg-muted p-4">
                       <pre className="text-sm overflow-x-auto"><code>npm install proksi-sdk</code></pre>
                     </div>
-                    
+
                     <div className="mb-4 rounded-md border p-4">
                       <h4 className="font-medium mb-2">Quick Example</h4>
                       <pre className="text-sm overflow-x-auto"><code>{`import { ProksiClient } from 'proksi-sdk';
@@ -246,14 +246,14 @@ const response = await client.completion({
 
 console.log(response.choices[0].message.content);`}</code></pre>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <Button variant="outline">Documentation</Button>
                       <Button variant="outline">API Reference</Button>
                       <Button variant="outline">Examples</Button>
                     </div>
                   </div>
-                  
+
                   <div className="grid gap-4 md:grid-cols-2">
                     <Card>
                       <CardHeader>
@@ -264,14 +264,14 @@ console.log(response.choices[0].message.content);`}</code></pre>
                       </CardHeader>
                       <CardContent>
                         <p className="text-sm text-muted-foreground">
-                          Python client library for the Proksi AI Gateway, optimized for data science and ML workflows.
+                          Python client library for the APIX AI Gateway, optimized for data science and ML workflows.
                         </p>
                       </CardContent>
                       <CardFooter>
                         <Button variant="outline" disabled>Join Waitlist</Button>
                       </CardFooter>
                     </Card>
-                    
+
                     <Card>
                       <CardHeader>
                         <div className="flex items-center justify-between">
@@ -281,7 +281,7 @@ console.log(response.choices[0].message.content);`}</code></pre>
                       </CardHeader>
                       <CardContent>
                         <p className="text-sm text-muted-foreground">
-                          Go client library for the Proksi AI Gateway, ideal for backend and microservice integrations.
+                          Go client library for the APIX AI Gateway, ideal for backend and microservice integrations.
                         </p>
                       </CardContent>
                       <CardFooter>
@@ -293,7 +293,7 @@ console.log(response.choices[0].message.content);`}</code></pre>
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="api-reference" className="space-y-4">
             <Card>
               <CardHeader>
@@ -310,7 +310,7 @@ console.log(response.choices[0].message.content);`}</code></pre>
                       <pre className="text-sm"><code>https://your-proksi-instance.com</code></pre>
                     </div>
                   </div>
-                  
+
                   <div className="mb-4">
                     <h3 className="text-lg font-semibold mb-2">Authentication</h3>
                     <p className="text-sm text-muted-foreground mb-4">
@@ -320,10 +320,10 @@ console.log(response.choices[0].message.content);`}</code></pre>
                       <pre className="text-sm"><code>Authorization: Bearer YOUR_API_KEY</code></pre>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Endpoints</h3>
-                    
+
                     <div className="space-y-4">
                       <div className="rounded-lg border p-4">
                         <div className="flex items-center gap-2 mb-2">
@@ -335,7 +335,7 @@ console.log(response.choices[0].message.content);`}</code></pre>
                         </p>
                         <Button variant="outline" size="sm">View Documentation</Button>
                       </div>
-                      
+
                       <div className="rounded-lg border p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <Badge className="bg-blue-500">POST</Badge>
@@ -346,7 +346,7 @@ console.log(response.choices[0].message.content);`}</code></pre>
                         </p>
                         <Button variant="outline" size="sm">View Documentation</Button>
                       </div>
-                      
+
                       <div className="rounded-lg border p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <Badge className="bg-blue-500">POST</Badge>
@@ -357,7 +357,7 @@ console.log(response.choices[0].message.content);`}</code></pre>
                         </p>
                         <Button variant="outline" size="sm">View Documentation</Button>
                       </div>
-                      
+
                       <div className="rounded-lg border p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <Badge className="bg-blue-500">POST</Badge>
@@ -377,7 +377,7 @@ console.log(response.choices[0].message.content);`}</code></pre>
               </CardFooter>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="examples" className="space-y-4">
             <Card>
               <CardHeader>
@@ -406,7 +406,7 @@ console.log(response.choices[0].message.content);`}</code></pre>
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <Card>
                       <CardHeader className="pb-2">
                         <div className="flex justify-between items-start">
@@ -424,7 +424,7 @@ console.log(response.choices[0].message.content);`}</code></pre>
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <Card>
                       <CardHeader className="pb-2">
                         <div className="flex justify-between items-start">
@@ -443,7 +443,7 @@ console.log(response.choices[0].message.content);`}</code></pre>
                       </CardContent>
                     </Card>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Code Snippets</h3>
                     <div className="space-y-4">
@@ -467,7 +467,7 @@ for await (const chunk of stream) {
   process.stdout.write(chunk.choices[0]?.delta?.content || '');
 }`}</code></pre>
                       </div>
-                      
+
                       <div className="rounded-lg border p-4">
                         <h4 className="font-medium mb-2">Vector Database Operations</h4>
                         <pre className="text-sm overflow-x-auto bg-muted rounded-md p-3"><code>{`import { ProksiClient } from 'proksi-sdk';
@@ -480,10 +480,10 @@ const client = new ProksiClient({
 // Upsert vectors
 await client.upsertVectors({
   vectors: [
-    { 
-      id: 'doc1', 
-      values: [0.1, 0.2, 0.3, ...], 
-      metadata: { source: 'article', title: 'AI Basics' } 
+    {
+      id: 'doc1',
+      values: [0.1, 0.2, 0.3, ...],
+      metadata: { source: 'article', title: 'AI Basics' }
     }
   ]
 });
@@ -504,4 +504,4 @@ const results = await client.searchVectors({
       </div>
     </DashboardLayout>
   )
-} 
+}

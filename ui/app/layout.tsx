@@ -8,8 +8,8 @@ import { Toaster } from "@/components/ui/toaster";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Proksi AI Gateway",
-  description: "Control panel for Proksi AI Gateway",
+  title: "APIX AI Gateway",
+  description: "Control panel for APIX AI Gateway",
 };
 
 export default function RootLayout({

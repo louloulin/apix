@@ -12,7 +12,7 @@ describe('Examples and Templates Page', () => {
 
   it('should render the page description', () => {
     renderWithProviders(<ExamplesPage />)
-    expect(screen.getByText('Reference examples, starter templates and code snippets for integrating with Proksi AI Gateway')).toBeInTheDocument()
+    expect(screen.getByText('Reference examples, starter templates and code snippets for integrating with APIX AI Gateway')).toBeInTheDocument()
   })
 
   it('should render tabs for different content types', () => {
@@ -42,4 +42,4 @@ describe('Examples and Templates Page', () => {
     expect(screen.getAllByText('View Code').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Live Demo').length).toBeGreaterThan(0)
   })
-}) 
+})

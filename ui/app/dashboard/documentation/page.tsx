@@ -23,7 +23,7 @@ export default function DocumentationPage() {
     {
       id: "intro",
       title: "Introduction to Proksi",
-      description: "Learn about Proksi AI Gateway and its key features",
+      description: "Learn about APIX AI Gateway and its key features",
       category: "getting-started",
       href: "/docs/introduction"
     },
@@ -85,7 +85,7 @@ export default function DocumentationPage() {
     {
       id: "intro-video",
       title: "Introduction to Proksi (Video)",
-      description: "A video walkthrough of Proksi AI Gateway",
+      description: "A video walkthrough of APIX AI Gateway",
       category: "getting-started",
       href: "/videos/introduction",
       thumbnail: "/images/video-thumbnails/intro.jpg"
@@ -100,15 +100,15 @@ export default function DocumentationPage() {
     }
   ]
 
-  const filteredGuides = guides.filter(item => 
+  const filteredGuides = guides.filter(item =>
     (activeCategory === "all" || item.category === activeCategory) &&
-    (item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
      item.description.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
-  const filteredVideos = videos.filter(item => 
+  const filteredVideos = videos.filter(item =>
     (activeCategory === "all" || item.category === activeCategory) &&
-    (item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
      item.description.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
@@ -137,14 +137,14 @@ export default function DocumentationPage() {
         <div>
           <h1 className="text-3xl font-bold">Documentation</h1>
           <p className="text-muted-foreground">
-            Guides, tutorials, and API reference for Proksi AI Gateway
+            Guides, tutorials, and API reference for APIX AI Gateway
           </p>
         </div>
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row gap-4">
-            <Input 
-              placeholder="Search documentation..." 
+            <Input
+              placeholder="Search documentation..."
               className="max-w-md"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -163,8 +163,8 @@ export default function DocumentationPage() {
             </div>
           </div>
 
-          <Tabs 
-            defaultValue="guides" 
+          <Tabs
+            defaultValue="guides"
             className="w-full"
             onValueChange={handleValueChange}
           >
@@ -267,4 +267,4 @@ export default function DocumentationPage() {
       </div>
     </DashboardLayout>
   )
-} 
+}

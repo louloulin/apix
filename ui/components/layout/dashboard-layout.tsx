@@ -153,7 +153,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="px-2 py-6">
               <Link href="/" className="flex items-center gap-2 font-semibold">
                 <PackageIcon className="h-6 w-6" />
-                <span>Proksi AI Gateway</span>
+                <span>APIX AI Gateway</span>
               </Link>
             </div>
             <SidebarNav items={navItems} />
@@ -163,7 +163,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="hidden md:flex">
             <Link href="/" className="flex items-center gap-2 font-semibold">
               <PackageIcon className="h-6 w-6" />
-              <span>Proksi AI Gateway</span>
+              <span>APIX AI Gateway</span>
             </Link>
           </div>
           <NavigationMenu className="hidden md:flex">
@@ -293,4 +293,4 @@ function Bell(props: React.SVGProps<SVGSVGElement>) {
       <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
     </svg>
   )
-} 
+}

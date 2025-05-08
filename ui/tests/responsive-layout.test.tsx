@@ -34,44 +34,44 @@ describe('DashboardLayout', () => {
         <div>Content</div>
       </DashboardLayout>
     )
-    
+
     // The hamburger menu button should be visible
     const menuButton = screen.getByRole('button', { name: /toggle menu/i })
     expect(menuButton).toBeInTheDocument()
-    
+
     // The content should be rendered
     expect(screen.getByText('Content')).toBeInTheDocument()
-    
+
     // Sidebar should be hidden in mobile view
     const sidebar = document.querySelector('aside')
     expect(sidebar).toHaveClass('hidden')
   })
-  
+
   it('toggles mobile menu when hamburger is clicked', () => {
     render(
       <DashboardLayout>
         <div>Content</div>
       </DashboardLayout>
     )
-    
+
     // Click the hamburger menu
     const menuButton = screen.getByRole('button', { name: /toggle menu/i })
     fireEvent.click(menuButton)
-    
+
     // The mobile menu sheet should open
     // In a real test, we would check the actual sheet is visible
     // For now, we'll just check that the event is fired
     expect(menuButton).toBeInTheDocument()
   })
-  
+
   it('renders the logo and title', () => {
     render(
       <DashboardLayout>
         <div>Content</div>
       </DashboardLayout>
     )
-    
+
     // The logo text should be visible
-    expect(screen.getAllByText('Proksi AI Gateway').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('APIX AI Gateway').length).toBeGreaterThan(0)
   })
-}) 
+})

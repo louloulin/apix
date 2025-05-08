@@ -12,7 +12,7 @@ describe('Documentation Page', () => {
 
   it('should render the page description', () => {
     renderWithProviders(<DocumentationPage />)
-    expect(screen.getByText('Guides, tutorials, and API reference for Proksi AI Gateway')).toBeInTheDocument()
+    expect(screen.getByText('Guides, tutorials, and API reference for APIX AI Gateway')).toBeInTheDocument()
   })
 
   it('should render the search input', () => {
@@ -48,4 +48,4 @@ describe('Documentation Page', () => {
     expect(screen.getByText('Building a Basic RAG Application')).toBeInTheDocument()
     expect(screen.getByText('Streaming Chat Responses')).toBeInTheDocument()
   })
-}) 
+})

@@ -12,9 +12,9 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-4">
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome to the Proksi AI Gateway control panel.
+          Welcome to the APIX AI Gateway control panel.
         </p>
-        
+
         <Tabs defaultValue="overview" className="mt-6">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -295,7 +295,7 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             </div>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>LLM Provider Usage</CardTitle>
@@ -459,4 +459,4 @@ function DollarIcon(props: React.SVGProps<SVGSVGElement>) {
       <path d="M18 8v4a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" />
     </svg>
   )
-} 
+}

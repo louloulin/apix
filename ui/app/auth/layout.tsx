@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Authentication - Proksi AI Gateway',
-  description: 'Authentication page for Proksi AI Gateway',
+  title: 'Authentication - APIX AI Gateway',
+  description: 'Authentication page for APIX AI Gateway',
 }
 
 export default function AuthLayout({
@@ -25,4 +25,4 @@ export default function AuthLayout({
       </div>
     </div>
   )
-} 
+}

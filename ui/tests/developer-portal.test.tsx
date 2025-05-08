@@ -12,7 +12,7 @@ describe('Developer Portal', () => {
 
   it('should render the portal description', () => {
     renderWithProviders(<DeveloperPortalPage />)
-    expect(screen.getByText('Resources and documentation for integrating with the Proksi AI Gateway.')).toBeInTheDocument()
+    expect(screen.getByText('Resources and documentation for integrating with the APIX AI Gateway.')).toBeInTheDocument()
   })
 
   it('should render the tabs navigation', () => {
@@ -26,7 +26,7 @@ describe('Developer Portal', () => {
 
   it('should show getting started content by default', () => {
     renderWithProviders(<DeveloperPortalPage />)
-    expect(screen.getByText('Welcome to Proksi AI Gateway')).toBeInTheDocument()
+    expect(screen.getByText('Welcome to APIX AI Gateway')).toBeInTheDocument()
     expect(screen.getByText('Everything you need to get started with integrating our AI Gateway')).toBeInTheDocument()
   })
 
@@ -38,4 +38,4 @@ describe('Developer Portal', () => {
     expect(screen.getByText('Vector Operations')).toBeInTheDocument()
     expect(screen.getByText('AI Security')).toBeInTheDocument()
   })
-}) 
+})
