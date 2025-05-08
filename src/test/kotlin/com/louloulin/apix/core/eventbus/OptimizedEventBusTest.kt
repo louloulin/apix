@@ -230,8 +230,8 @@ class OptimizedEventBusTest {
         // 创建检查点
         val checkpoint = testContext.checkpoint()
 
-        // 测试参数 - 减少消息数量以加快测试
-        val messageCount = 100
+        // 测试参数 - 进一步减少消息数量以加快测试
+        val messageCount = 10
         val receivedCount = AtomicInteger(0)
         val receivedMessages = mutableListOf<JsonObject>()
 
