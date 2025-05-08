@@ -1,6 +1,8 @@
 package com.louloulin.apix.plugins
 
 import com.louloulin.apix.core.PluginChain
+import com.louloulin.apix.plugins.dependency.PluginDependencyManager
+import com.louloulin.apix.plugins.metrics.PluginMetrics
 import com.louloulin.apix.plugins.version.PluginVersion
 import io.vertx.core.CompositeFuture
 import io.vertx.core.Future
@@ -25,6 +27,9 @@ class PluginRegistry(private val vertx: Vertx) {
 
     // 插件指标收集
     private val metrics = PluginMetrics.getInstance(vertx)
+
+    // 插件依赖管理器
+    private val dependencyManager = PluginDependencyManager.getInstance(vertx, this)
 
     /**
      * 注册插件工厂
@@ -102,6 +107,18 @@ class PluginRegistry(private val vertx: Vertx) {
                     p.fail(e)
                 }
             }).compose { plugin ->
+                // 解析插件依赖
+                val dependencies = pluginConfig.getJsonArray("dependencies")
+                    ?.map { it.toString() }
+                    ?.toSet() ?: emptySet()
+
+                // 添加依赖关系
+                if (dependencies.isNotEmpty()) {
+                    if (!dependencyManager.addDependencies(plugin.id, dependencies)) {
+                        return@compose Future.failedFuture<Plugin>("Failed to add dependencies for plugin: ${plugin.id}")
+                    }
+                }
+
                 // 初始化插件
                 plugin.initialize(vertx).map {
                     // 注册 EventBus 处理器
@@ -121,6 +138,7 @@ class PluginRegistry(private val vertx: Vertx) {
                             .put("id", plugin.id)
                             .put("type", plugin.type)
                             .put("version", pluginConfig.version.toString())
+                            .put("dependencies", dependencies.toList())
                             .put("timestamp", System.currentTimeMillis())
                     )
 
@@ -152,6 +170,12 @@ class PluginRegistry(private val vertx: Vertx) {
         if (plugin != null) {
             logger.info("Unloading plugin: {}", pluginId)
 
+            // 获取依赖于该插件的插件
+            val dependents = dependencyManager.getDependents(pluginId)
+            if (dependents.isNotEmpty()) {
+                logger.warn("Plugin {} is depended by other plugins: {}", pluginId, dependents)
+            }
+
             // 调用 shutdown 方法，并指定返回 Future
             val shutdownFuture = plugin.shutdown(true)
 
@@ -160,12 +184,16 @@ class PluginRegistry(private val vertx: Vertx) {
             if (shutdownFuture != null) {
                 shutdownFuture.onComplete { ar ->
                     if (ar.succeeded()) {
+                        // 移除依赖关系
+                        dependencyManager.removeDependencies(pluginId)
+
                         // 发布插件卸载事件
                         vertx.eventBus().publish(
                             "plugins.unloaded",
                             JsonObject()
                                 .put("id", plugin.id)
                                 .put("type", plugin.type)
+                                .put("dependents", dependents.toList())
                                 .put("timestamp", System.currentTimeMillis())
                         )
                         result.complete()
@@ -287,6 +315,57 @@ class PluginRegistry(private val vertx: Vertx) {
     fun isPluginCompatibleWith(pluginId: String, requiredVersion: PluginVersion): Boolean {
         val plugin = getPlugin(pluginId) ?: return false
         return (plugin.config as PluginConfig).isCompatibleWith(requiredVersion)
+    }
+
+    /**
+     * 加载插件及其依赖
+     *
+     * @param pluginId 插件ID
+     * @return 加载结果
+     */
+    fun loadPluginWithDependencies(pluginId: String): Future<Void> {
+        return dependencyManager.loadPluginWithDependencies(pluginId)
+    }
+
+    /**
+     * 卸载插件及其依赖项
+     *
+     * @param pluginId 插件ID
+     * @param unloadDependents 是否卸载依赖于该插件的插件
+     * @return 卸载结果
+     */
+    fun unloadPluginWithDependencies(pluginId: String, unloadDependents: Boolean = true): Future<Void> {
+        return dependencyManager.unloadPluginWithDependencies(pluginId, unloadDependents)
+    }
+
+    /**
+     * 获取插件的依赖
+     *
+     * @param pluginId 插件ID
+     * @return 依赖的插件ID列表
+     */
+    fun getPluginDependencies(pluginId: String): Set<String> {
+        return dependencyManager.getDependencies(pluginId)
+    }
+
+    /**
+     * 获取依赖于指定插件的插件列表
+     *
+     * @param pluginId 插件ID
+     * @return 依赖于该插件的插件ID列表
+     */
+    fun getPluginDependents(pluginId: String): Set<String> {
+        return dependencyManager.getDependents(pluginId)
+    }
+
+    /**
+     * 验证插件依赖关系
+     * 检查所有依赖的插件是否存在
+     *
+     * @return 验证结果，包含缺失的依赖
+     */
+    fun validatePluginDependencies(): Map<String, Set<String>> {
+        return dependencyManager.validateDependencies()
     }
 
     /**

@@ -146,7 +146,7 @@ abstract class BaseWasmPlugin(
         }
 
         // 返回参数列表，只有一个参数，即请求对象
-        return listOf(requestObj.encode())
+        return listOf(requestObj)
     }
 
     /**
@@ -154,8 +154,26 @@ abstract class BaseWasmPlugin(
      */
     override fun handleWasmResult(context: RoutingContext, result: Any) {
         try {
-            // 假设结果是 JSON 字符串
-            val resultJson = JsonObject(result.toString())
+            // 处理结果
+            val resultJson = when (result) {
+                is String -> {
+                    try {
+                        JsonObject(result)
+                    } catch (e: Exception) {
+                        // 如果不是 JSON，则创建一个简单的响应
+                        JsonObject()
+                            .put("statusCode", 200)
+                            .put("body", result)
+                    }
+                }
+                is JsonObject -> result
+                else -> {
+                    // 其他类型转换为字符串
+                    JsonObject()
+                        .put("statusCode", 200)
+                        .put("body", result.toString())
+                }
+            }
 
             // 处理状态码
             val statusCode = resultJson.getInteger("statusCode", 200)

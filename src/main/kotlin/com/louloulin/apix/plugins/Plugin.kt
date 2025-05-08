@@ -140,6 +140,7 @@ interface Plugin {
     /**
      * 注册EventBus处理器
      * 用于处理通过EventBus发送的请求
+     * 支持请求生命周期钩子
      *
      * @param vertx Vertx实例
      * @return 注册完成的Future
@@ -157,8 +158,22 @@ interface Plugin {
                         val contextJson = message.body()
                         val context = deserializeContext(vertx, contextJson)
 
-                        // 执行插件
-                        execute(context).onComplete { ar ->
+                        // 检查请求类型
+                        val requestType = contextJson.getString("_requestType", "execute")
+
+                        // 根据请求类型执行不同的钩子
+                        val future = when (requestType) {
+                            "onRequest" -> onRequest(context)
+                            "onResponse" -> onResponse(context)
+                            "onError" -> {
+                                val errorMsg = contextJson.getString("_errorMessage", "Unknown error")
+                                onError(context, Exception(errorMsg))
+                            }
+                            else -> execute(context) // 默认执行插件
+                        }
+
+                        // 处理执行结果
+                        future.onComplete { ar ->
                             if (ar.succeeded()) {
                                 // 返回成功响应
                                 message.reply(JsonObject()

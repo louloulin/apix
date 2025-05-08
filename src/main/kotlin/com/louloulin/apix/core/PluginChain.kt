@@ -25,7 +25,7 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
     private val executionCounts = ConcurrentHashMap<String, AtomicLong>()
 
     // 插件执行结果缓存
-    private val resultCache = ConcurrentHashMap<String, Future<Void>>()
+    private val resultCache = com.louloulin.apix.plugins.cache.PluginResultCache.getInstance(vertx)
 
     /**
      * 执行给定路由上下文的插件链。
@@ -187,8 +187,7 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
      */
     private fun executePlugin(context: RoutingContext, plugin: Plugin): Future<Void> {
         // 检查是否有缓存的结果
-        val cacheKey = getCacheKey(context, plugin)
-        val cachedResult = resultCache[cacheKey]
+        val cachedResult = resultCache.get(context, plugin)
         if (cachedResult != null) {
             logger.debug("使用缓存的插件执行结果: {}", plugin.id)
             return cachedResult
@@ -220,9 +219,7 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
                 metrics.recordSuccess(plugin.id, executionTime)
 
                 // 缓存成功的结果
-                if (isCacheable(plugin)) {
-                    resultCache[cacheKey] = resultFuture
-                }
+                resultCache.put(context, plugin, resultFuture)
             } else {
                 logger.error("插件 {} 执行失败，耗时 {} ms", plugin.id, executionTime, ar.cause())
                 metrics.recordFailure(plugin.id, executionTime, ar.cause())
@@ -237,16 +234,44 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
 
     /**
      * 通过 EventBus 执行插件
+     * 使用请求生命周期钩子
      */
     private fun executeViaEventBus(context: RoutingContext, plugin: Plugin, address: String): Future<Void> {
         val promise = Promise.promise<Void>()
 
         try {
+            // 添加响应处理器来调用 onResponse 钩子
+            context.addBodyEndHandler {
+                try {
+                    plugin.onResponse(context).onFailure { err ->
+                        logger.error("插件 {} 的 onResponse 钩子执行失败", plugin.id, err)
+                    }
+                } catch (e: Exception) {
+                    logger.error("插件 {} 的 onResponse 钩子抛出异常", plugin.id, e)
+                }
+            }
+
+            // 添加错误处理器来调用 onError 钩子
+            context.addEndHandler { ar ->
+                if (ar.failed()) {
+                    try {
+                        plugin.onError(context, ar.cause()).onFailure { err ->
+                            logger.error("插件 {} 的 onError 钩子执行失败", plugin.id, err)
+                        }
+                    } catch (e: Exception) {
+                        logger.error("插件 {} 的 onError 钩子抛出异常", plugin.id, e)
+                    }
+                }
+            }
+
             // 序列化上下文
             val contextJson = plugin.serializeContext(context)
 
             // 通过 EventBus 发送请求
             logger.debug("通过 EventBus 执行插件: {}, 地址: {}", plugin.id, address)
+
+            // 添加请求类型标识
+            contextJson.put("_requestType", "onRequest")
 
             vertx.eventBus().request<JsonObject>(address, contextJson) { ar ->
                 if (ar.succeeded()) {
@@ -265,18 +290,46 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
                     } else {
                         // 处理失败响应
                         val error = response.getString("error", "Unknown error")
-                        promise.fail(error)
+                        val errorObj = Exception(error)
+
+                        // 尝试调用 onError 钩子
+                        try {
+                            plugin.onError(context, errorObj).onComplete { _ ->
+                                promise.fail(errorObj)
+                            }
+                        } catch (ex: Exception) {
+                            logger.error("插件 {} 的 onError 钩子抛出异常", plugin.id, ex)
+                            promise.fail(errorObj)
+                        }
                     }
                 } else {
                     // EventBus 请求失败
                     logger.error("通过 EventBus 执行插件失败: {}", plugin.id, ar.cause())
-                    promise.fail(ar.cause())
+
+                    // 尝试调用 onError 钩子
+                    try {
+                        plugin.onError(context, ar.cause()).onComplete { _ ->
+                            promise.fail(ar.cause())
+                        }
+                    } catch (ex: Exception) {
+                        logger.error("插件 {} 的 onError 钩子抛出异常", plugin.id, ex)
+                        promise.fail(ar.cause())
+                    }
                 }
             }
         } catch (e: Exception) {
             // 异常处理
             logger.error("通过 EventBus 执行插件异常: {}", plugin.id, e)
-            promise.fail(e)
+
+            // 尝试调用 onError 钩子
+            try {
+                plugin.onError(context, e).onComplete { _ ->
+                    promise.fail(e)
+                }
+            } catch (ex: Exception) {
+                logger.error("插件 {} 的 onError 钩子抛出异常", plugin.id, ex)
+                promise.fail(e)
+            }
         }
 
         return promise.future()
@@ -284,16 +337,52 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
 
     /**
      * 直接执行插件
+     * 使用请求生命周期钩子
      */
     private fun executeDirectly(context: RoutingContext, plugin: Plugin): Future<Void> {
         try {
             // 直接执行插件
             logger.debug("直接执行插件: {}", plugin.id)
-            return plugin.execute(context)
+
+            // 添加响应处理器来调用 onResponse 钩子
+            context.addBodyEndHandler {
+                try {
+                    plugin.onResponse(context).onFailure { err ->
+                        logger.error("插件 {} 的 onResponse 钩子执行失败", plugin.id, err)
+                    }
+                } catch (e: Exception) {
+                    logger.error("插件 {} 的 onResponse 钩子抛出异常", plugin.id, e)
+                }
+            }
+
+            // 添加错误处理器来调用 onError 钩子
+            context.addEndHandler { ar ->
+                if (ar.failed()) {
+                    try {
+                        plugin.onError(context, ar.cause()).onFailure { err ->
+                            logger.error("插件 {} 的 onError 钩子执行失败", plugin.id, err)
+                        }
+                    } catch (e: Exception) {
+                        logger.error("插件 {} 的 onError 钩子抛出异常", plugin.id, e)
+                    }
+                }
+            }
+
+            // 执行插件的 onRequest 钩子
+            return plugin.onRequest(context)
         } catch (e: Exception) {
             // 插件执行异常
             logger.error("插件执行异常: {}", plugin.id, e)
-            return Future.failedFuture(e)
+
+            // 尝试调用 onError 钩子
+            try {
+                return plugin.onError(context, e).compose { _ ->
+                    Future.failedFuture<Void>(e)
+                }
+            } catch (ex: Exception) {
+                logger.error("插件 {} 的 onError 钩子抛出异常", plugin.id, ex)
+                return Future.failedFuture(e)
+            }
         }
     }
 
@@ -350,24 +439,7 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
         vertx.eventBus().publish("metrics.plugin.execution", event)
     }
 
-    /**
-     * 判断插件结果是否可缓存
-     */
-    private fun isCacheable(plugin: Plugin): Boolean {
-        // 从插件配置中获取是否可缓存
-        return plugin.config.getBoolean("cacheable") ?: false
-    }
-
-    /**
-     * 生成缓存键
-     */
-    private fun getCacheKey(context: RoutingContext, plugin: Plugin): String {
-        // 简单实现，可以根据需要扩展
-        val request = context.request()
-        val path = request?.path() ?: "/unknown"
-        val method = request?.method()?.toString() ?: "UNKNOWN"
-        return "${plugin.id}:${path}:${method}"
-    }
+    // 已移除缓存相关方法，使用 PluginResultCache 类代替
 
     /**
      * 获取插件执行统计信息
@@ -393,9 +465,15 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
 
     /**
      * 清除缓存
+     *
+     * @param plugin 插件，如果为null则清除所有缓存
      */
-    fun clearCache() {
-        resultCache.clear()
-        logger.info("插件执行结果缓存已清除")
+    fun clearCache(plugin: Plugin? = null) {
+        resultCache.clear(plugin)
+        if (plugin == null) {
+            logger.info("所有插件执行结果缓存已清除")
+        } else {
+            logger.info("插件 {} 的执行结果缓存已清除", plugin.id)
+        }
     }
 }
