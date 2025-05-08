@@ -26,10 +26,15 @@ class AdminVerticleTest {
     private lateinit var webClient: WebClient
 
     @BeforeEach
-    fun setUp(testContext: VertxTestContext) {
-        vertx = Vertx.vertx()
+    fun setUp(vertx: Vertx, testContext: VertxTestContext) {
+        this.vertx = vertx
 
         // 部署测试所需的 Verticle
+        val deploymentTimeout = testContext.checkpoint()
+
+        // 使用超时设置
+        testContext.awaitCompletion(60, TimeUnit.SECONDS)
+
         vertx.deployVerticle(ConfigVerticle())
             .compose { vertx.deployVerticle(MonitorVerticle()) }
             .compose { vertx.deployVerticle(PluginVerticle()) }
@@ -43,7 +48,7 @@ class AdminVerticleTest {
                         .setDefaultPort(8081)
                     )
 
-                    testContext.completeNow()
+                    deploymentTimeout.flag()
                 } else {
                     testContext.failNow(ar.cause())
                 }
@@ -52,11 +57,22 @@ class AdminVerticleTest {
 
     @AfterEach
     fun tearDown(testContext: VertxTestContext) {
-        vertx.close().onComplete { testContext.completeNow() }
+        // 不再关闭 Vertx 实例，由 VertxExtension 管理
+        // 只清理资源
+        if (::webClient.isInitialized) {
+            webClient.close()
+        }
+        testContext.completeNow()
     }
 
     @Test
     fun testHealthEndpoint(testContext: VertxTestContext) {
+        // 创建检查点
+        val checkpoint = testContext.checkpoint()
+
+        // 设置超时
+        // 注意：awaitCompletion 应该在测试方法的末尾调用，这里只是声明超时时间
+
         webClient.get("/health")
             .send()
             .onComplete { ar ->
@@ -66,7 +82,8 @@ class AdminVerticleTest {
                         assert(response.statusCode() == 200) { "Expected status code 200 but got ${response.statusCode()}" }
                         val body = response.bodyAsJsonObject()
                         assert(body.getString("status") == "UP") { "Expected status to be UP but got ${body.getString("status")}" }
-                        testContext.completeNow()
+                        // 标记检查点完成而不是直接完成测试
+                        checkpoint.flag()
                     }
                 } else {
                     testContext.failNow(ar.cause())

@@ -21,6 +21,7 @@ import org.mockito.Mockito.doAnswer
 import io.vertx.core.http.HttpServerResponse
 import io.vertx.core.json.JsonObject
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 @ExtendWith(VertxExtension::class)
@@ -483,6 +484,7 @@ class PluginChainTest {
     }
 
     @Test
+    @org.junit.jupiter.api.Timeout(value = 30, unit = TimeUnit.SECONDS)
     fun `should cache plugin execution results`(testContext: VertxTestContext) {
         // Create test plugins with caching enabled
         val plugin1 = TestPlugin("plugin1", "auth", 10, cacheable = false)
@@ -579,6 +581,7 @@ class PluginChainTest {
     }
 
     @Test
+    @org.junit.jupiter.api.Timeout(value = 30, unit = TimeUnit.SECONDS)
     fun `should get plugin execution stats`(testContext: VertxTestContext) {
         // Create test plugins
         val plugin1 = TestPlugin("plugin1", "auth", 10)

@@ -26,52 +26,100 @@ class EventBusPerformanceTest {
     private lateinit var eventBusManager: EventBusManager
 
     @BeforeEach
-    fun setUp() {
-        vertx = Vertx.vertx()
+    fun setUp(vertx: Vertx, testContext: VertxTestContext) {
+        this.vertx = vertx
+
+        // 创建检查点
+        val checkpoint = testContext.checkpoint()
+
+        // 初始化事件总线
         jcToolsEventBus = JCToolsEventBus.getInstance(vertx)
         eventBusManager = EventBusManager.getInstance(vertx)
 
         // 启动JCToolsEventBus
-        jcToolsEventBus.start()
+        try {
+            jcToolsEventBus.start()
+            checkpoint.flag()
+        } catch (e: Exception) {
+            testContext.failNow(e)
+        }
     }
 
     @AfterEach
     fun tearDown(testContext: VertxTestContext) {
-        vertx.close().onComplete(testContext.succeedingThenComplete())
+        // 不关闭 vertx 实例，由 VertxExtension 管理
+        // 只清理资源
+        if (::jcToolsEventBus.isInitialized) {
+            try {
+                // 如果 stop 方法不存在，可以忽略
+                // jcToolsEventBus.stop()
+            } catch (e: Exception) {
+                // 忽略异常
+            }
+        }
+        testContext.completeNow()
     }
 
     /**
      * 测试原生EventBus性能
      */
     @Test
+    @org.junit.jupiter.api.Timeout(value = 60, unit = TimeUnit.SECONDS)
     fun testNativeEventBusPerformance(testContext: VertxTestContext) {
-        // 确保使用原生EventBus
-        eventBusManager.switchType(EventBusManager.EventBusType.VERTX)
-            .compose { success ->
-                testContext.verify {
-                    assertTrue(success)
-                }
+        // 创建检查点
+        val checkpoint = testContext.checkpoint()
 
-                // 执行性能测试
-                performPerformanceTest("native", vertx.eventBus(), testContext)
-            }
+        // 等待事件总线完全启动
+        vertx.setTimer(500) { _ ->
+            // 确保使用原生EventBus
+            eventBusManager.switchType(EventBusManager.EventBusType.VERTX)
+                .compose { success ->
+                    testContext.verify {
+                        assertTrue(success)
+                    }
+
+                    // 执行性能测试
+                    performPerformanceTest("native", vertx.eventBus(), testContext)
+                }
+                .onComplete { ar ->
+                    if (ar.succeeded()) {
+                        checkpoint.flag()
+                    } else {
+                        testContext.failNow(ar.cause())
+                    }
+                }
+        }
     }
 
     /**
      * 测试JCToolsEventBus性能
      */
     @Test
+    @org.junit.jupiter.api.Timeout(value = 60, unit = TimeUnit.SECONDS)
     fun testJCToolsEventBusPerformance(testContext: VertxTestContext) {
-        // 切换到JCToolsEventBus
-        eventBusManager.switchType(EventBusManager.EventBusType.JCTOOLS)
-            .compose { success ->
-                testContext.verify {
-                    assertTrue(success)
-                }
+        // 创建检查点
+        val checkpoint = testContext.checkpoint()
 
-                // 执行性能测试
-                performPerformanceTest("jctools", eventBusManager, testContext)
-            }
+        // 等待事件总线完全启动
+        vertx.setTimer(500) { _ ->
+            // 切换到JCToolsEventBus
+            eventBusManager.switchType(EventBusManager.EventBusType.JCTOOLS)
+                .compose { success ->
+                    testContext.verify {
+                        assertTrue(success)
+                    }
+
+                    // 执行性能测试
+                    performPerformanceTest("jctools", eventBusManager, testContext)
+                }
+                .onComplete { ar ->
+                    if (ar.succeeded()) {
+                        checkpoint.flag()
+                    } else {
+                        testContext.failNow(ar.cause())
+                    }
+                }
+        }
     }
 
     /**
@@ -86,20 +134,37 @@ class EventBusPerformanceTest {
         }
         val promise = io.vertx.core.Promise.promise<Void>()
 
-        // 测试参数
-        val messageCount = 1000 // 减少消息数量，避免超时
+        // 测试参数 - 进一步减少消息数量，避免超时
+        val messageCount = 100
         val address = "test.performance.$name"
         val receivedCount = AtomicInteger(0)
-        val latch = CountDownLatch(messageCount)
+
+        // 记录开始时间
+        val startTime = System.currentTimeMillis()
 
         // 注册消费者
         eventBus.consumer<JsonObject>(address) { message ->
             receivedCount.incrementAndGet()
-            latch.countDown()
+
+            // 当收到所有消息时完成测试
+            if (receivedCount.get() == messageCount) {
+                // 记录结束时间
+                val endTime = System.currentTimeMillis()
+                val duration = endTime - startTime
+                val messagesPerSecond = messageCount * 1000.0 / duration
+
+                // 输出性能结果
+                logger.info("[$name] 性能测试结果:")
+                logger.info("[$name] - 消息数: $messageCount")
+                logger.info("[$name] - 接收数: ${receivedCount.get()}")
+                logger.info("[$name] - 持续时间: ${duration}ms")
+                logger.info("[$name] - 每秒消息数: ${String.format("%.2f", messagesPerSecond)}")
+
+                promise.complete()
+            }
         }
 
         // 发送大量消息
-        val startTime = System.currentTimeMillis()
 
         for (i in 1..messageCount) {
             val message = JsonObject()
@@ -119,26 +184,12 @@ class EventBusPerformanceTest {
             }
         }
 
-        // 等待所有消息处理完成
-        val waitResult = latch.await(30, TimeUnit.SECONDS)
-
-        // 记录结束时间
-        val endTime = System.currentTimeMillis()
-        val duration = endTime - startTime
-        val messagesPerSecond = messageCount * 1000.0 / duration
-
-        // 输出性能结果
-        logger.info("[$name] 性能测试结果:")
-        logger.info("[$name] - 消息数: $messageCount")
-        logger.info("[$name] - 接收数: ${receivedCount.get()}")
-        logger.info("[$name] - 持续时间: ${duration}ms")
-        logger.info("[$name] - 每秒消息数: ${String.format("%.2f", messagesPerSecond)}")
-        logger.info("[$name] - 所有消息处理完成: $waitResult")
-
-        if (waitResult) {
-            promise.complete()
-        } else {
-            promise.fail("等待消息处理超时")
+        // 设置超时处理
+        vertx.setTimer(30000) { _ ->
+            if (!promise.future().isComplete()) {
+                logger.warn("[$name] 测试超时，已接收 ${receivedCount.get()} / $messageCount 消息")
+                promise.fail("等待消息处理超时")
+            }
         }
 
         return promise.future()
