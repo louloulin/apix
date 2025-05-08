@@ -19,6 +19,7 @@ import org.mockito.Mockito.*
 import io.vertx.core.http.HttpServerResponse
 import io.vertx.core.json.JsonObject
 import org.slf4j.LoggerFactory
+import java.util.concurrent.atomic.AtomicBoolean
 
 @ExtendWith(VertxExtension::class)
 class PluginChainTest {
@@ -42,17 +43,26 @@ class PluginChainTest {
         val plugin2 = TestPlugin("plugin2", "transform", 20)
         val plugin3 = TestPlugin("plugin3", "logging", 30)
 
-        // Create plugin chain
-        val pluginChain = PluginChain(listOf(plugin1, plugin2, plugin3))
-
         // Create mock routing context
         val routingContext = mock(RoutingContext::class.java)
+
+        // Setup vertx in the routing context
+        `when`(routingContext.vertx()).thenReturn(vertx)
+
+        // Create plugin chain with vertx instance
+        val pluginChain = PluginChain(vertx, listOf(plugin1, plugin2, plugin3))
         val response = mock(HttpServerResponse::class.java)
         val request = mock(io.vertx.core.http.HttpServerRequest::class.java)
 
         `when`(routingContext.response()).thenReturn(response)
         `when`(routingContext.request()).thenReturn(request)
-        `when`(response.ended()).thenReturn(false)
+        // 创建一个可变的响应状态
+        val responseEnded = AtomicBoolean(false)
+        `when`(response.ended()).thenAnswer { responseEnded.get() }
+        `when`(response.end()).thenAnswer {
+            responseEnded.set(true)
+            Future.succeededFuture<Void>()
+        }
         `when`(request.path()).thenReturn("/test")
         `when`(request.method()).thenReturn(io.vertx.core.http.HttpMethod.GET)
 
@@ -84,16 +94,25 @@ class PluginChainTest {
         val plugin3 = TestPlugin("plugin3", "logging", 20)
 
         // Create plugin chain
-        val pluginChain = PluginChain(listOf(plugin1, plugin2, plugin3))
+        val pluginChain = PluginChain(vertx, listOf(plugin1, plugin2, plugin3))
 
         // Create mock routing context
         val routingContext = mock(RoutingContext::class.java)
+
+        // Setup vertx in the routing context
+        `when`(routingContext.vertx()).thenReturn(vertx)
         val response = mock(HttpServerResponse::class.java)
         val request = mock(io.vertx.core.http.HttpServerRequest::class.java)
 
         `when`(routingContext.response()).thenReturn(response)
         `when`(routingContext.request()).thenReturn(request)
-        `when`(response.ended()).thenReturn(false)
+        // 创建一个可变的响应状态
+        val responseEnded = AtomicBoolean(false)
+        `when`(response.ended()).thenAnswer { responseEnded.get() }
+        `when`(response.end()).thenAnswer {
+            responseEnded.set(true)
+            Future.succeededFuture<Void>()
+        }
         `when`(request.path()).thenReturn("/test")
         `when`(request.method()).thenReturn(io.vertx.core.http.HttpMethod.GET)
 
@@ -126,16 +145,25 @@ class PluginChainTest {
         val plugin4 = TestPlugin("plugin4", "logging", 30, parallelExecution = false)
 
         // Create plugin chain
-        val pluginChain = PluginChain(listOf(plugin1, plugin2, plugin3, plugin4))
+        val pluginChain = PluginChain(vertx, listOf(plugin1, plugin2, plugin3, plugin4))
 
         // Create mock routing context
         val routingContext = mock(RoutingContext::class.java)
+
+        // Setup vertx in the routing context
+        `when`(routingContext.vertx()).thenReturn(vertx)
         val response = mock(HttpServerResponse::class.java)
         val request = mock(io.vertx.core.http.HttpServerRequest::class.java)
 
         `when`(routingContext.response()).thenReturn(response)
         `when`(routingContext.request()).thenReturn(request)
-        `when`(response.ended()).thenReturn(false)
+        // 创建一个可变的响应状态
+        val responseEnded = AtomicBoolean(false)
+        `when`(response.ended()).thenAnswer { responseEnded.get() }
+        `when`(response.end()).thenAnswer {
+            responseEnded.set(true)
+            Future.succeededFuture<Void>()
+        }
         `when`(request.path()).thenReturn("/test")
         `when`(request.method()).thenReturn(io.vertx.core.http.HttpMethod.GET)
 
@@ -172,16 +200,25 @@ class PluginChainTest {
         val plugin3 = TestPlugin("plugin3", "logging", 30, shouldExecuteValue = true)
 
         // Create plugin chain
-        val pluginChain = PluginChain(listOf(plugin1, plugin2, plugin3))
+        val pluginChain = PluginChain(vertx, listOf(plugin1, plugin2, plugin3))
 
         // Create mock routing context
         val routingContext = mock(RoutingContext::class.java)
+
+        // Setup vertx in the routing context
+        `when`(routingContext.vertx()).thenReturn(vertx)
         val response = mock(HttpServerResponse::class.java)
         val request = mock(io.vertx.core.http.HttpServerRequest::class.java)
 
         `when`(routingContext.response()).thenReturn(response)
         `when`(routingContext.request()).thenReturn(request)
-        `when`(response.ended()).thenReturn(false)
+        // 创建一个可变的响应状态
+        val responseEnded = AtomicBoolean(false)
+        `when`(response.ended()).thenAnswer { responseEnded.get() }
+        `when`(response.end()).thenAnswer {
+            responseEnded.set(true)
+            Future.succeededFuture<Void>()
+        }
         `when`(request.path()).thenReturn("/test")
         `when`(request.method()).thenReturn(io.vertx.core.http.HttpMethod.GET)
 
@@ -205,6 +242,8 @@ class PluginChainTest {
     fun `should stop execution if a plugin ends the response`(testContext: VertxTestContext) {
         // Create test plugins
         val plugin1 = TestPlugin("plugin1", "auth", 10)
+
+        // Plugin2 will end the response
         val plugin2 = TestPlugin("plugin2", "transform", 20)
         val plugin3 = TestPlugin("plugin3", "logging", 30)
 
@@ -221,23 +260,35 @@ class PluginChainTest {
             plugin2.executed = true
             plugin2.executionTime = System.currentTimeMillis()
 
-            // 设置响应已结束
-            `when`(context.response().ended()).thenReturn(true)
+            // 结束响应
+            // 直接设置 context.response().ended() 返回 true
+            val mockResponse = context.response()
+            `when`(mockResponse.ended()).thenReturn(true)
 
             Future.succeededFuture()
         }
 
         // Create plugin chain
-        val pluginChain = PluginChain(listOf(plugin1, plugin2, plugin3))
+        val pluginChain = PluginChain(vertx, listOf(plugin1, plugin2, plugin3))
 
         // Create mock routing context
         val routingContext = mock(RoutingContext::class.java)
+
+        // Setup vertx in the routing context
+        `when`(routingContext.vertx()).thenReturn(vertx)
         val response = mock(HttpServerResponse::class.java)
         val request = mock(io.vertx.core.http.HttpServerRequest::class.java)
 
+        // 创建一个可变的响应状态
+        val responseEnded = AtomicBoolean(false)
+
         `when`(routingContext.response()).thenReturn(response)
         `when`(routingContext.request()).thenReturn(request)
-        `when`(response.ended()).thenReturn(false) // 初始状态为未结束
+        `when`(response.ended()).thenAnswer { responseEnded.get() }
+        `when`(response.end()).thenAnswer {
+            responseEnded.set(true)
+            Future.succeededFuture<Void>()
+        }
 
         // Execute plugin chain
         pluginChain.execute(routingContext).onComplete { result ->
@@ -263,16 +314,25 @@ class PluginChainTest {
         val plugin3 = TestPlugin("plugin3", "logging", 30)
 
         // Create plugin chain
-        val pluginChain = PluginChain(listOf(plugin1, plugin2, plugin3))
+        val pluginChain = PluginChain(vertx, listOf(plugin1, plugin2, plugin3))
 
         // Create mock routing context
         val routingContext = mock(RoutingContext::class.java)
+
+        // Setup vertx in the routing context
+        `when`(routingContext.vertx()).thenReturn(vertx)
         val response = mock(HttpServerResponse::class.java)
         val request = mock(io.vertx.core.http.HttpServerRequest::class.java)
 
         `when`(routingContext.response()).thenReturn(response)
         `when`(routingContext.request()).thenReturn(request)
-        `when`(response.ended()).thenReturn(false)
+        // 创建一个可变的响应状态
+        val responseEnded = AtomicBoolean(false)
+        `when`(response.ended()).thenAnswer { responseEnded.get() }
+        `when`(response.end()).thenAnswer {
+            responseEnded.set(true)
+            Future.succeededFuture<Void>()
+        }
         `when`(request.path()).thenReturn("/test")
         `when`(request.method()).thenReturn(io.vertx.core.http.HttpMethod.GET)
 
@@ -301,16 +361,25 @@ class PluginChainTest {
         val plugin3 = TestPlugin("plugin3", "logging", 30, cacheable = false)
 
         // Create plugin chain
-        val pluginChain = PluginChain(listOf(plugin1, plugin2, plugin3))
+        val pluginChain = PluginChain(vertx, listOf(plugin1, plugin2, plugin3))
 
         // Create mock routing context and request
         val routingContext = mock(RoutingContext::class.java)
+
+        // Setup vertx in the routing context
+        `when`(routingContext.vertx()).thenReturn(vertx)
         val response = mock(HttpServerResponse::class.java)
         val request = mock(io.vertx.core.http.HttpServerRequest::class.java)
 
         `when`(routingContext.response()).thenReturn(response)
         `when`(routingContext.request()).thenReturn(request)
-        `when`(response.ended()).thenReturn(false)
+        // 创建一个可变的响应状态
+        val responseEnded = AtomicBoolean(false)
+        `when`(response.ended()).thenAnswer { responseEnded.get() }
+        `when`(response.end()).thenAnswer {
+            responseEnded.set(true)
+            Future.succeededFuture<Void>()
+        }
         `when`(request.path()).thenReturn("/test")
         `when`(request.method()).thenReturn(io.vertx.core.http.HttpMethod.GET)
 
@@ -345,16 +414,25 @@ class PluginChainTest {
         val plugin2 = TestPlugin("plugin2", "transform", 20)
 
         // Create plugin chain
-        val pluginChain = PluginChain(listOf(plugin1, plugin2))
+        val pluginChain = PluginChain(vertx, listOf(plugin1, plugin2))
 
         // Create mock routing context
         val routingContext = mock(RoutingContext::class.java)
+
+        // Setup vertx in the routing context
+        `when`(routingContext.vertx()).thenReturn(vertx)
         val response = mock(HttpServerResponse::class.java)
         val request = mock(io.vertx.core.http.HttpServerRequest::class.java)
 
         `when`(routingContext.response()).thenReturn(response)
         `when`(routingContext.request()).thenReturn(request)
-        `when`(response.ended()).thenReturn(false)
+        // 创建一个可变的响应状态
+        val responseEnded = AtomicBoolean(false)
+        `when`(response.ended()).thenAnswer { responseEnded.get() }
+        `when`(response.end()).thenAnswer {
+            responseEnded.set(true)
+            Future.succeededFuture<Void>()
+        }
         `when`(request.path()).thenReturn("/test")
         `when`(request.method()).thenReturn(io.vertx.core.http.HttpMethod.GET)
 
@@ -380,10 +458,13 @@ class PluginChainTest {
     @Test
     fun `should handle empty plugin chain`(testContext: VertxTestContext) {
         // Create empty plugin chain
-        val pluginChain = PluginChain(emptyList())
+        val pluginChain = PluginChain(vertx, emptyList())
 
         // Create mock routing context
         val routingContext = mock(RoutingContext::class.java)
+
+        // Setup vertx in the routing context
+        `when`(routingContext.vertx()).thenReturn(vertx)
 
         // Execute plugin chain
         pluginChain.execute(routingContext).onComplete { result ->

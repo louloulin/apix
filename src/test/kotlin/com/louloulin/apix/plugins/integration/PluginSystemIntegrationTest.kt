@@ -104,7 +104,7 @@ class PluginSystemIntegrationTest {
         newCondition.put("path", "/api/other")
         newCondition.put("method", "GET")
 
-        testPlugin.config.getJsonObject().put("condition", newCondition)
+        testPlugin.config.config.put("condition", newCondition)
 
         // 验证条件不匹配
         testContext.assertFalse(testPlugin.shouldExecute(context))
