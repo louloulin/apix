@@ -28,6 +28,16 @@ const navItems: NavItem[] = [
   {
     title: "Plugins",
     href: "/dashboard/plugins",
+    children: [
+      {
+        title: "Classic View",
+        href: "/dashboard/plugins",
+      },
+      {
+        title: "Modern View",
+        href: "/dashboard/plugins-new",
+      },
+    ],
   },
   {
     title: "Routes",
