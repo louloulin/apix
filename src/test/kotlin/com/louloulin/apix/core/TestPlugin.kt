@@ -90,4 +90,10 @@ class TestPlugin(
     override fun getEventBusAddress(): String? {
         return null // 测试插件不支持通过 EventBus 执行
     }
+
+    override fun onRequest(context: RoutingContext): Future<Void> {
+        executed = true
+        executionTime = System.currentTimeMillis()
+        return execute.invoke(context)
+    }
 }
