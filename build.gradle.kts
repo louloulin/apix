@@ -62,7 +62,9 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation("io.vertx:vertx-junit5")
     testImplementation("io.vertx:vertx-web-client")
+    testImplementation("io.vertx:vertx-unit")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:5.4.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
 }

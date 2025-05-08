@@ -213,26 +213,23 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
             val endTime = System.currentTimeMillis()
             val executionTime = endTime - startTime
 
-            // 更新统计信息
-            executionTimes.computeIfAbsent(plugin.id) { AtomicLong(0) }.addAndGet(executionTime)
-            executionCounts.computeIfAbsent(plugin.id) { AtomicLong(0) }.incrementAndGet()
-
+            // 使用 PluginMetrics 记录指标
+            val metrics = com.louloulin.apix.plugins.metrics.PluginMetrics.getInstance(vertx)
             if (ar.succeeded()) {
                 logger.debug("插件 {} 执行成功，耗时 {} ms", plugin.id, executionTime)
+                metrics.recordSuccess(plugin.id, executionTime)
 
                 // 缓存成功的结果
                 if (isCacheable(plugin)) {
                     resultCache[cacheKey] = resultFuture
                 }
-
-                // 发布插件执行成功事件
-                publishPluginExecutionEvent(plugin, context, executionTime, true, null)
             } else {
                 logger.error("插件 {} 执行失败，耗时 {} ms", plugin.id, executionTime, ar.cause())
-
-                // 发布插件执行失败事件
-                publishPluginExecutionEvent(plugin, context, executionTime, false, ar.cause()?.message)
+                metrics.recordFailure(plugin.id, executionTime, ar.cause())
             }
+
+            // 发布插件执行事件
+            publishPluginExecutionEvent(plugin, context, executionTime, ar.succeeded(), ar.cause()?.message)
         }
 
         return resultFuture

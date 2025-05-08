@@ -100,6 +100,10 @@ class ApixVerticle : BaseVerticle() {
                         adminApiHandler.setupRoutes(adminRouter)
                         mainRouter.mountSubRouter("/admin", adminRouter)
 
+                        // 设置插件指标API路由
+                        val metricsHandler = com.louloulin.apix.plugins.metrics.MetricsHandler(vertx)
+                        metricsHandler.registerRoutes(mainRouter)
+
                         // Gateway routes are set up automatically by the RouteManager
 
                         // Add Hello World endpoints for performance testing

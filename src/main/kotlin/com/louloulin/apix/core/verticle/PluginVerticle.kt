@@ -5,8 +5,11 @@ import com.louloulin.apix.core.common.EventBusAddresses
 import com.louloulin.apix.plugins.Plugin
 import com.louloulin.apix.plugins.PluginConfig
 import com.louloulin.apix.plugins.PluginFactory
+import com.louloulin.apix.plugins.PluginRegistry
 import com.louloulin.apix.plugins.PluginState
 import com.louloulin.apix.plugins.ai.ResponseCachePluginFactory
+import com.louloulin.apix.plugins.deploy.PluginHotDeployer
+import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
@@ -38,6 +41,12 @@ class PluginVerticle : BaseVerticle() {
     // 插件目录
     private lateinit var pluginsDir: File
 
+    // 插件注册表
+    private lateinit var pluginRegistry: PluginRegistry
+
+    // 插件热部署管理器
+    private lateinit var pluginHotDeployer: PluginHotDeployer
+
     override fun registerEventBusHandlers() {
         // 插件管理相关处理器
         vertx.eventBus().consumer<JsonObject>(EventBusAddresses.PLUGIN_GET_ALL, this::handleGetAllPlugins)
@@ -66,19 +75,30 @@ class PluginVerticle : BaseVerticle() {
             pluginsDir.mkdirs()
         }
 
+        // 初始化插件注册表
+        pluginRegistry = PluginRegistry.getInstance(vertx)
+
+        // 初始化插件热部署管理器
+        pluginHotDeployer = PluginHotDeployer.getInstance(vertx, pluginRegistry, pluginsDirPath)
+
         // 注册内置插件工厂
         registerBuiltInPluginFactories()
 
         // 加载配置中的插件
-        loadPluginsFromConfig().onComplete { ar ->
-            if (ar.succeeded()) {
-                logger.info("PluginVerticle started successfully")
-                startPromise.complete()
-            } else {
-                logger.error("Failed to start PluginVerticle", ar.cause())
-                startPromise.fail(ar.cause())
+        loadPluginsFromConfig()
+            .compose { _ ->
+                // 启动插件热部署
+                pluginHotDeployer.start()
             }
-        }
+            .onComplete { ar ->
+                if (ar.succeeded()) {
+                    logger.info("PluginVerticle started successfully")
+                    startPromise.complete()
+                } else {
+                    logger.error("Failed to start PluginVerticle", ar.cause())
+                    startPromise.fail(ar.cause())
+                }
+            }
     }
 
     /**
@@ -703,21 +723,32 @@ class PluginVerticle : BaseVerticle() {
     override fun stop(stopPromise: Promise<Void>) {
         logger.info("Stopping PluginVerticle...")
 
-        // 关闭所有插件
-        plugins.forEach { (id, plugin) ->
-            try {
-                plugin.shutdown()
-                logger.info("Shut down plugin: {}", id)
-            } catch (e: Exception) {
-                logger.error("Error shutting down plugin: {}", id, e)
+        // 停止插件热部署
+        pluginHotDeployer.stop().compose<Void> { _ ->
+            // 关闭所有插件
+            plugins.forEach { (id, plugin) ->
+                try {
+                    plugin.shutdown()
+                    logger.info("Shut down plugin: {}", id)
+                } catch (e: Exception) {
+                    logger.error("Error shutting down plugin: {}", id, e)
+                }
+            }
+
+            plugins.clear()
+            pluginFactories.clear()
+            pluginStates.clear()
+            pluginDependencies.clear()
+
+            Future.succeededFuture<Void>()
+        }.onComplete { ar ->
+            if (ar.succeeded()) {
+                logger.info("PluginVerticle stopped successfully")
+                stopPromise.complete()
+            } else {
+                logger.error("Error stopping PluginVerticle", ar.cause())
+                stopPromise.fail(ar.cause())
             }
         }
-
-        plugins.clear()
-        pluginFactories.clear()
-        pluginStates.clear()
-        pluginDependencies.clear()
-
-        stopPromise.complete()
     }
 }

@@ -26,6 +26,10 @@ class GraalWasmContext(private val vertx: Vertx) {
         .engine(engine)
         .allowAllAccess(false) // 安全限制
         .option("wasm.Builtins", "wasi_snapshot_preview1")
+        .option("wasm.StackSize", "16777216") // 16MB 栈大小
+        .option("wasm.Memory.Limit", "268435456") // 256MB 内存限制
+        .option("wasm.Table.Limit", "65536") // 64K 表项限制
+        .option("wasm.Async.Compilation", "true") // 异步编译
         .build()
 
     // 已加载的 WebAssembly 模块
@@ -92,8 +96,9 @@ class GraalWasmContext(private val vertx: Vertx) {
             try {
                 logger.debug("Instantiating WebAssembly module")
                 // 实例化模块
-                // 注意：实际实现中需要使用 GraalVM 的 API
-                // 这里简化处理，直接返回模块本身
+                // 注意：在实际实现中，我们应该使用 GraalVM 的 API 来实例化模块
+                // 由于当前版本的 GraalVM 可能不支持 instantiate() 方法
+                // 我们这里简化处理，直接返回模块本身
                 val instance = module
                 p.complete(instance)
             } catch (e: Exception) {

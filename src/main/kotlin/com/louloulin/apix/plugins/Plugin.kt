@@ -60,11 +60,8 @@ interface Plugin {
             return true
         }
 
-        // TODO: 实现条件判断逻辑
-        // 这里可以根据条件配置和上下文判断是否应该执行插件
-        // 例如：根据请求路径、请求方法、请求头等条件判断
-
-        return true
+        // 使用条件解析器评估条件
+        return com.louloulin.apix.plugins.condition.ConditionParser.getInstance().evaluate(conditionConfig, context)
     }
 
     /**
