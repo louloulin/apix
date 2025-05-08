@@ -9,6 +9,7 @@ import org.graalvm.polyglot.Source
 import org.graalvm.polyglot.Value
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -91,15 +92,25 @@ class GraalWasmContext(private val vertx: Vertx) {
     fun instantiateModule(module: Value): Future<Value> {
         val promise = Promise.promise<Value>()
 
-        // 在后台线程中实例化模块
         vertx.executeBlocking<Value> { p ->
             try {
                 logger.debug("Instantiating WebAssembly module")
+
+                // 创建 WASI 实例
+                val wasi = context.getBindings("wasm").getMember("wasi_snapshot_preview1")
+
+                // 创建实例化参数
+                val importObject = context.eval("wasm", "({wasi_snapshot_preview1: wasi_snapshot_preview1})")
+
                 // 实例化模块
-                // 注意：在实际实现中，我们应该使用 GraalVM 的 API 来实例化模块
-                // 由于当前版本的 GraalVM 可能不支持 instantiate() 方法
-                // 我们这里简化处理，直接返回模块本身
-                val instance = module
+                val instance = if (module.hasMember("instantiate")) {
+                    // 使用模块的 instantiate 方法
+                    module.invokeMember("instantiate", importObject)
+                } else {
+                    // 如果没有 instantiate 方法，尝试直接使用模块
+                    module
+                }
+
                 p.complete(instance)
             } catch (e: Exception) {
                 logger.error("Failed to instantiate WebAssembly module", e)
@@ -131,7 +142,14 @@ class GraalWasmContext(private val vertx: Vertx) {
         vertx.executeBlocking<Any> { p ->
             try {
                 logger.debug("Invoking WebAssembly function: {}", functionName)
-                val function = instance.getMember(functionName)
+
+                // 获取导出函数
+                val exports = instance.getMember("exports")
+                if (exports == null) {
+                    throw IllegalArgumentException("WebAssembly instance has no exports")
+                }
+
+                val function = exports.getMember(functionName)
                 if (function == null || !function.canExecute()) {
                     throw IllegalArgumentException("Function not found or not executable: $functionName")
                 }
@@ -151,6 +169,112 @@ class GraalWasmContext(private val vertx: Vertx) {
         }
 
         return promise.future()
+    }
+
+    /**
+     * 获取 WebAssembly 内存
+     *
+     * @param instance WebAssembly 实例
+     * @return 内存缓冲区，如果不可用则返回 null
+     */
+    fun getMemory(instance: Value): ByteBuffer? {
+        try {
+            val exports = instance.getMember("exports")
+            if (exports == null) {
+                logger.warn("WebAssembly instance has no exports")
+                return null
+            }
+
+            val memory = exports.getMember("memory")
+            if (memory == null) {
+                logger.warn("WebAssembly instance has no memory export")
+                return null
+            }
+
+            // 注意：在实际实现中，需要根据 GraalVM 的 API 进行调整
+            // 这里我们简化处理，返回一个空的 ByteBuffer
+            try {
+                // 尝试使用反射获取内存
+                val method = memory.javaClass.getMethod("getBuffer")
+                return method.invoke(memory) as ByteBuffer
+            } catch (e: Exception) {
+                logger.warn("WebAssembly memory is not accessible as buffer: {}", e.message)
+                // 返回一个空的 ByteBuffer
+                return ByteBuffer.allocate(0)
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to get WebAssembly memory", e)
+            return null
+        }
+    }
+
+    /**
+     * 写入数据到 WebAssembly 内存
+     *
+     * @param memory 内存缓冲区
+     * @param offset 偏移量
+     * @param data 要写入的数据
+     * @return 写入后的偏移量，失败则返回 -1
+     */
+    fun writeToMemory(memory: ByteBuffer, offset: Int, data: ByteArray): Int {
+        try {
+            val position = memory.position()
+            memory.position(offset)
+            memory.put(data)
+            memory.position(position) // 恢复原始位置
+            return offset + data.size
+        } catch (e: Exception) {
+            logger.error("Failed to write to WebAssembly memory", e)
+            return -1
+        }
+    }
+
+    /**
+     * 从 WebAssembly 内存读取数据
+     *
+     * @param memory 内存缓冲区
+     * @param offset 偏移量
+     * @param length 要读取的长度
+     * @return 读取的数据，失败则返回空数组
+     */
+    fun readFromMemory(memory: ByteBuffer, offset: Int, length: Int): ByteArray {
+        try {
+            val position = memory.position()
+            memory.position(offset)
+            val result = ByteArray(length)
+            memory.get(result)
+            memory.position(position) // 恢复原始位置
+            return result
+        } catch (e: Exception) {
+            logger.error("Failed to read from WebAssembly memory", e)
+            return ByteArray(0)
+        }
+    }
+
+    /**
+     * 将字符串写入 WebAssembly 内存
+     *
+     * @param memory 内存缓冲区
+     * @param offset 偏移量
+     * @param str 要写入的字符串
+     * @return 写入后的偏移量，失败则返回 -1
+     */
+    fun writeStringToMemory(memory: ByteBuffer, offset: Int, str: String): Int {
+        val data = str.toByteArray(Charsets.UTF_8)
+        return writeToMemory(memory, offset, data)
+    }
+
+    /**
+     * 从 WebAssembly 内存读取字符串
+     *
+     * @param memory 内存缓冲区
+     * @param offset 偏移量
+     * @param length 要读取的长度
+     * @return 读取的字符串，失败则返回空字符串
+     */
+    fun readStringFromMemory(memory: ByteBuffer, offset: Int, length: Int): String {
+        val data = readFromMemory(memory, offset, length)
+        return String(data, Charsets.UTF_8)
     }
 
     /**

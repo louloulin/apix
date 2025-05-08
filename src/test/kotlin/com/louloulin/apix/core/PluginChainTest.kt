@@ -29,8 +29,9 @@ class PluginChainTest {
     private lateinit var vertx: Vertx
 
     @BeforeEach
-    fun setUp() {
+    fun setUp(testContext: VertxTestContext) {
         vertx = Vertx.vertx()
+        testContext.completeNow()
     }
 
     @AfterEach
@@ -45,26 +46,29 @@ class PluginChainTest {
         val plugin2 = TestPlugin("plugin2", "transform", 20)
         val plugin3 = TestPlugin("plugin3", "logging", 30)
 
+        // 创建检查点
+        val checkpoint = testContext.checkpoint(1)
+
         // 确保每个插件都有自己的执行逻辑
         plugin1.execute = { context ->
-            plugin1.executed = true
-            plugin1.executionTime = System.currentTimeMillis()
-            Thread.sleep(10) // 模拟处理时间
-            Future.succeededFuture()
+            // 使用 Vert.x 的异步模式替代 Thread.sleep
+            val promise = Promise.promise<Void>()
+            vertx.setTimer(10) { promise.complete() }
+            promise.future()
         }
 
         plugin2.execute = { context ->
-            plugin2.executed = true
-            plugin2.executionTime = System.currentTimeMillis()
-            Thread.sleep(10) // 模拟处理时间
-            Future.succeededFuture()
+            // 使用 Vert.x 的异步模式替代 Thread.sleep
+            val promise = Promise.promise<Void>()
+            vertx.setTimer(10) { promise.complete() }
+            promise.future()
         }
 
         plugin3.execute = { context ->
-            plugin3.executed = true
-            plugin3.executionTime = System.currentTimeMillis()
-            Thread.sleep(10) // 模拟处理时间
-            Future.succeededFuture()
+            // 使用 Vert.x 的异步模式替代 Thread.sleep
+            val promise = Promise.promise<Void>()
+            vertx.setTimer(10) { promise.complete() }
+            promise.future()
         }
 
         // Create mock routing context
@@ -98,28 +102,21 @@ class PluginChainTest {
         `when`(request.path()).thenReturn("/test")
         `when`(request.method()).thenReturn(io.vertx.core.http.HttpMethod.GET)
 
-        // 添加延迟确保插件有足够的时间执行
-        vertx.setTimer(100) { _ ->
-            // Execute plugin chain
-            pluginChain.execute(routingContext).onComplete { result ->
-                if (result.succeeded()) {
-                    // 添加延迟确保所有插件都有时间执行完成
-                    vertx.setTimer(100) { _ ->
-                        // Verify that all plugins were executed
-                        testContext.verify {
-                            assertTrue(plugin1.executed, "Plugin 1 should be executed")
-                            assertTrue(plugin2.executed, "Plugin 2 should be executed")
-                            assertTrue(plugin3.executed, "Plugin 3 should be executed")
+        // Execute plugin chain
+        pluginChain.execute(routingContext).onComplete { result ->
+            if (result.succeeded()) {
+                testContext.verify {
+                    assertTrue(plugin1.executed, "Plugin 1 should be executed")
+                    assertTrue(plugin2.executed, "Plugin 2 should be executed")
+                    assertTrue(plugin3.executed, "Plugin 3 should be executed")
 
-                            // Verify execution order by timestamp
-                            assertTrue(plugin1.executionTime <= plugin2.executionTime, "Plugin 1 should execute before Plugin 2")
-                            assertTrue(plugin2.executionTime <= plugin3.executionTime, "Plugin 2 should execute before Plugin 3")
-                        }
-                        testContext.completeNow()
-                    }
-                } else {
-                    testContext.failNow(result.cause())
+                    // Verify execution order by timestamp
+                    assertTrue(plugin1.executionTime <= plugin2.executionTime, "Plugin 1 should execute before Plugin 2")
+                    assertTrue(plugin2.executionTime <= plugin3.executionTime, "Plugin 2 should execute before Plugin 3")
                 }
+                checkpoint.flag() // 标记检查点完成
+            } else {
+                testContext.failNow(result.cause())
             }
         }
     }
@@ -190,33 +187,36 @@ class PluginChainTest {
         val plugin3 = TestPlugin("plugin3", "validation", 20, parallelExecution = true)
         val plugin4 = TestPlugin("plugin4", "logging", 30, parallelExecution = false)
 
+        // 创建检查点
+        val checkpoint = testContext.checkpoint(1)
+
         // 确保每个插件都有自己的执行逻辑
         plugin1.execute = { context ->
-            plugin1.executed = true
-            plugin1.executionTime = System.currentTimeMillis()
-            Thread.sleep(50) // 模拟处理时间
-            Future.succeededFuture()
+            // 使用 Vert.x 的异步模式替代 Thread.sleep
+            val promise = Promise.promise<Void>()
+            vertx.setTimer(50) { promise.complete() }
+            promise.future()
         }
 
         plugin2.execute = { context ->
-            plugin2.executed = true
-            plugin2.executionTime = System.currentTimeMillis()
-            Thread.sleep(100) // 模拟处理时间
-            Future.succeededFuture()
+            // 使用 Vert.x 的异步模式替代 Thread.sleep
+            val promise = Promise.promise<Void>()
+            vertx.setTimer(100) { promise.complete() }
+            promise.future()
         }
 
         plugin3.execute = { context ->
-            plugin3.executed = true
-            plugin3.executionTime = System.currentTimeMillis()
-            Thread.sleep(100) // 模拟处理时间
-            Future.succeededFuture()
+            // 使用 Vert.x 的异步模式替代 Thread.sleep
+            val promise = Promise.promise<Void>()
+            vertx.setTimer(100) { promise.complete() }
+            promise.future()
         }
 
         plugin4.execute = { context ->
-            plugin4.executed = true
-            plugin4.executionTime = System.currentTimeMillis()
-            Thread.sleep(50) // 模拟处理时间
-            Future.succeededFuture()
+            // 使用 Vert.x 的异步模式替代 Thread.sleep
+            val promise = Promise.promise<Void>()
+            vertx.setTimer(50) { promise.complete() }
+            promise.future()
         }
 
         // Create plugin chain
@@ -250,34 +250,28 @@ class PluginChainTest {
         `when`(request.path()).thenReturn("/test")
         `when`(request.method()).thenReturn(io.vertx.core.http.HttpMethod.GET)
 
-        // 添加延迟确保插件有足够的时间执行
-        vertx.setTimer(100) { _ ->
-            // Execute plugin chain
-            pluginChain.execute(routingContext).onComplete { result ->
-                if (result.succeeded()) {
-                    // 添加延迟确保所有插件都有时间执行完成
-                    vertx.setTimer(200) { _ ->
-                        testContext.verify {
-                            // Verify that all plugins were executed
-                            assertTrue(plugin1.executed, "Plugin 1 should be executed")
-                            assertTrue(plugin2.executed, "Plugin 2 should be executed")
-                            assertTrue(plugin3.executed, "Plugin 3 should be executed")
-                            assertTrue(plugin4.executed, "Plugin 4 should be executed")
+        // Execute plugin chain
+        pluginChain.execute(routingContext).onComplete { result ->
+            if (result.succeeded()) {
+                testContext.verify {
+                    // Verify that all plugins were executed
+                    assertTrue(plugin1.executed, "Plugin 1 should be executed")
+                    assertTrue(plugin2.executed, "Plugin 2 should be executed")
+                    assertTrue(plugin3.executed, "Plugin 3 should be executed")
+                    assertTrue(plugin4.executed, "Plugin 4 should be executed")
 
-                            // Verify execution order
-                            // plugin1 should be executed before plugin2 and plugin3
-                            assertTrue(plugin1.executionTime <= plugin2.executionTime || plugin1.executionTime <= plugin3.executionTime,
-                                "Plugin 1 should execute before Plugin 2 or Plugin 3")
+                    // Verify execution order
+                    // plugin1 should be executed before plugin2 and plugin3
+                    assertTrue(plugin1.executionTime <= plugin2.executionTime || plugin1.executionTime <= plugin3.executionTime,
+                        "Plugin 1 should execute before Plugin 2 or Plugin 3")
 
-                            // plugin2 and plugin3 should be executed before plugin4
-                            assertTrue(plugin2.executionTime <= plugin4.executionTime, "Plugin 2 should execute before Plugin 4")
-                            assertTrue(plugin3.executionTime <= plugin4.executionTime, "Plugin 3 should execute before Plugin 4")
-                        }
-                        testContext.completeNow()
-                    }
-                } else {
-                    testContext.failNow(result.cause())
+                    // plugin2 and plugin3 should be executed before plugin4
+                    assertTrue(plugin2.executionTime <= plugin4.executionTime, "Plugin 2 should execute before Plugin 4")
+                    assertTrue(plugin3.executionTime <= plugin4.executionTime, "Plugin 3 should execute before Plugin 4")
                 }
+                checkpoint.flag() // 标记检查点完成
+            } else {
+                testContext.failNow(result.cause())
             }
         }
     }
@@ -343,21 +337,30 @@ class PluginChainTest {
         val plugin2 = TestPlugin("plugin2", "transform", 20)
         val plugin3 = TestPlugin("plugin3", "logging", 30)
 
+        // 创建检查点
+        val checkpoint = testContext.checkpoint(1)
+
         // 自定义插件的执行逻辑
         plugin1.execute = { context ->
             // 标记为已执行
             plugin1.executed = true
             plugin1.executionTime = System.currentTimeMillis()
-            Thread.sleep(10) // 模拟处理时间
-            Future.succeededFuture()
+
+            // 使用 Vert.x 的异步模式替代 Thread.sleep
+            val promise = Promise.promise<Void>()
+            vertx.setTimer(10) { promise.complete() }
+            promise.future()
         }
 
         plugin3.execute = { context ->
             // 标记为已执行
             plugin3.executed = true
             plugin3.executionTime = System.currentTimeMillis()
-            Thread.sleep(10) // 模拟处理时间
-            Future.succeededFuture()
+
+            // 使用 Vert.x 的异步模式替代 Thread.sleep
+            val promise = Promise.promise<Void>()
+            vertx.setTimer(10) { promise.complete() }
+            promise.future()
         }
 
         // Create mock routing context
@@ -393,7 +396,10 @@ class PluginChainTest {
             // 结束响应
             context.response().end()
 
-            Future.succeededFuture()
+            // 使用 Vert.x 的异步模式
+            val promise = Promise.promise<Void>()
+            vertx.setTimer(5) { promise.complete() }
+            promise.future()
         }
 
 
@@ -405,24 +411,18 @@ class PluginChainTest {
         `when`(request.path()).thenReturn("/test")
         `when`(request.method()).thenReturn(io.vertx.core.http.HttpMethod.GET)
 
-        // 添加延迟确保插件有足够的时间执行
-        vertx.setTimer(100) { _ ->
-            // Execute plugin chain
-            pluginChain.execute(routingContext).onComplete { result ->
-                if (result.succeeded()) {
-                    // 添加延迟确保所有插件都有时间执行完成
-                    vertx.setTimer(100) { _ ->
-                        testContext.verify {
-                            // Verify that only the first two plugins were executed
-                            assertTrue(plugin1.executed, "Plugin 1 should be executed")
-                            assertTrue(plugin2.executed, "Plugin 2 should be executed")
-                            assertFalse(plugin3.executed, "Plugin 3 should not be executed")
-                        }
-                        testContext.completeNow()
-                    }
-                } else {
-                    testContext.failNow(result.cause())
+        // Execute plugin chain
+        pluginChain.execute(routingContext).onComplete { result ->
+            if (result.succeeded()) {
+                testContext.verify {
+                    // Verify that only the first two plugins were executed
+                    assertTrue(plugin1.executed, "Plugin 1 should be executed")
+                    assertTrue(plugin2.executed, "Plugin 2 should be executed")
+                    assertFalse(plugin3.executed, "Plugin 3 should not be executed")
                 }
+                checkpoint.flag() // 标记检查点完成
+            } else {
+                testContext.failNow(result.cause())
             }
         }
     }
@@ -489,26 +489,38 @@ class PluginChainTest {
         val plugin2 = TestPlugin("plugin2", "cache", 20, cacheable = true)
         val plugin3 = TestPlugin("plugin3", "logging", 30, cacheable = false)
 
+        // 创建检查点
+        val checkpoint = testContext.checkpoint(1)
+
         // 确保每个插件都有自己的执行逻辑
         plugin1.execute = { context ->
             plugin1.executed = true
             plugin1.executionTime = System.currentTimeMillis()
-            Thread.sleep(10) // 模拟处理时间
-            Future.succeededFuture()
+
+            // 使用 Vert.x 的异步模式替代 Thread.sleep
+            val promise = Promise.promise<Void>()
+            vertx.setTimer(10) { promise.complete() }
+            promise.future()
         }
 
         plugin2.execute = { context ->
             plugin2.executed = true
             plugin2.executionTime = System.currentTimeMillis()
-            Thread.sleep(10) // 模拟处理时间
-            Future.succeededFuture()
+
+            // 使用 Vert.x 的异步模式替代 Thread.sleep
+            val promise = Promise.promise<Void>()
+            vertx.setTimer(10) { promise.complete() }
+            promise.future()
         }
 
         plugin3.execute = { context ->
             plugin3.executed = true
             plugin3.executionTime = System.currentTimeMillis()
-            Thread.sleep(10) // 模拟处理时间
-            Future.succeededFuture()
+
+            // 使用 Vert.x 的异步模式替代 Thread.sleep
+            val promise = Promise.promise<Void>()
+            vertx.setTimer(10) { promise.complete() }
+            promise.future()
         }
 
         // Create plugin chain
@@ -542,39 +554,26 @@ class PluginChainTest {
         `when`(request.path()).thenReturn("/test")
         `when`(request.method()).thenReturn(io.vertx.core.http.HttpMethod.GET)
 
-        // 添加延迟确保插件有足够的时间执行
-        vertx.setTimer(100) { _ ->
-            // First execution
-            pluginChain.execute(routingContext).onComplete { firstResult ->
-                if (firstResult.succeeded()) {
-                    // Reset execution flags
-                    plugin1.executed = false
-                    plugin2.executed = false
-                    plugin3.executed = false
+        // First execution
+        pluginChain.execute(routingContext).compose { _ ->
+            // Reset execution flags
+            plugin1.executed = false
+            plugin2.executed = false
+            plugin3.executed = false
 
-                    // 添加延迟确保第一次执行完成
-                    vertx.setTimer(100) { _ ->
-                        // Second execution with same context
-                        pluginChain.execute(routingContext).onComplete { result ->
-                            if (result.succeeded()) {
-                                // 添加延迟确保第二次执行完成
-                                vertx.setTimer(100) { _ ->
-                                    testContext.verify {
-                                        // Verify that plugin1 and plugin3 were executed again
-                                        assertTrue(plugin1.executed, "Plugin 1 should be executed again")
-                                        assertFalse(plugin2.executed, "Plugin 2 should use cached result") // Should not be executed again (cached result was used)
-                                        assertTrue(plugin3.executed, "Plugin 3 should be executed again")
-                                    }
-                                    testContext.completeNow()
-                                }
-                            } else {
-                                testContext.failNow(result.cause())
-                            }
-                        }
-                    }
-                } else {
-                    testContext.failNow(firstResult.cause())
+            // Second execution with same context
+            pluginChain.execute(routingContext)
+        }.onComplete { result ->
+            if (result.succeeded()) {
+                testContext.verify {
+                    // Verify that plugin1 and plugin3 were executed again
+                    assertTrue(plugin1.executed, "Plugin 1 should be executed again")
+                    assertFalse(plugin2.executed, "Plugin 2 should use cached result") // Should not be executed again (cached result was used)
+                    assertTrue(plugin3.executed, "Plugin 3 should be executed again")
                 }
+                checkpoint.flag() // 标记检查点完成
+            } else {
+                testContext.failNow(result.cause())
             }
         }
     }
@@ -585,19 +584,28 @@ class PluginChainTest {
         val plugin1 = TestPlugin("plugin1", "auth", 10)
         val plugin2 = TestPlugin("plugin2", "transform", 20)
 
+        // 创建检查点
+        val checkpoint = testContext.checkpoint(1)
+
         // 确保每个插件都有自己的执行逻辑
         plugin1.execute = { context ->
             plugin1.executed = true
             plugin1.executionTime = System.currentTimeMillis()
-            Thread.sleep(10) // 模拟处理时间
-            Future.succeededFuture()
+
+            // 使用 Vert.x 的异步模式替代 Thread.sleep
+            val promise = Promise.promise<Void>()
+            vertx.setTimer(10) { promise.complete() }
+            promise.future()
         }
 
         plugin2.execute = { context ->
             plugin2.executed = true
             plugin2.executionTime = System.currentTimeMillis()
-            Thread.sleep(10) // 模拟处理时间
-            Future.succeededFuture()
+
+            // 使用 Vert.x 的异步模式替代 Thread.sleep
+            val promise = Promise.promise<Void>()
+            vertx.setTimer(10) { promise.complete() }
+            promise.future()
         }
 
         // Create plugin chain
@@ -631,30 +639,24 @@ class PluginChainTest {
         `when`(request.path()).thenReturn("/test")
         `when`(request.method()).thenReturn(io.vertx.core.http.HttpMethod.GET)
 
-        // 添加延迟确保插件有足够的时间执行
-        vertx.setTimer(100) { _ ->
-            // Execute plugin chain
-            pluginChain.execute(routingContext).onComplete { result ->
-                if (result.succeeded()) {
-                    // 添加延迟确保所有插件都有时间执行完成
-                    vertx.setTimer(100) { _ ->
-                        // Get execution stats
-                        val stats = pluginChain.getExecutionStats()
+        // Execute plugin chain
+        pluginChain.execute(routingContext).onComplete { result ->
+            if (result.succeeded()) {
+                // Get execution stats
+                val stats = pluginChain.getExecutionStats()
 
-                        testContext.verify {
-                            // Verify that stats contain entries for both plugins
-                            assertTrue(stats.containsKey("plugin1"), "Stats should contain plugin1")
-                            assertTrue(stats.containsKey("plugin2"), "Stats should contain plugin2")
+                testContext.verify {
+                    // Verify that stats contain entries for both plugins
+                    assertTrue(stats.containsKey("plugin1"), "Stats should contain plugin1")
+                    assertTrue(stats.containsKey("plugin2"), "Stats should contain plugin2")
 
-                            // Verify that execution counts are correct
-                            assertEquals(1L, stats["plugin1"]?.get("executionCount"), "Execution count for plugin1 should be 1")
-                            assertEquals(1L, stats["plugin2"]?.get("executionCount"), "Execution count for plugin2 should be 1")
-                        }
-                        testContext.completeNow()
-                    }
-                } else {
-                    testContext.failNow(result.cause())
+                    // Verify that execution counts are correct
+                    assertEquals(1L, stats["plugin1"]?.get("executionCount"), "Execution count for plugin1 should be 1")
+                    assertEquals(1L, stats["plugin2"]?.get("executionCount"), "Execution count for plugin2 should be 1")
                 }
+                checkpoint.flag() // 标记检查点完成
+            } else {
+                testContext.failNow(result.cause())
             }
         }
     }

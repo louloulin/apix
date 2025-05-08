@@ -92,8 +92,11 @@ class TestPlugin(
     }
 
     override fun onRequest(context: RoutingContext): Future<Void> {
+        // 标记为已执行
         executed = true
         executionTime = System.currentTimeMillis()
+
+        // 使用自定义执行逻辑
         return execute.invoke(context)
     }
 }

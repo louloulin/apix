@@ -22,6 +22,9 @@ class PluginResultCache(private val vertx: Vertx) {
     // 默认缓存过期时间（毫秒）
     private val defaultTtl = 60000L // 1分钟
 
+    // 缓存统计
+    private val stats = CacheStats()
+
     /**
      * 获取缓存的结果
      *
@@ -38,14 +41,17 @@ class PluginResultCache(private val vertx: Vertx) {
             if (System.currentTimeMillis() > entry.expiresAt) {
                 // 已过期，移除缓存
                 cache.remove(cacheKey)
+                stats.miss()
                 return null
             }
 
             logger.debug("Cache hit for plugin: {}", plugin.id)
+            stats.hit()
             return entry.value
         }
 
         logger.debug("Cache miss for plugin: {}", plugin.id)
+        stats.miss()
         return null
     }
 
@@ -55,14 +61,17 @@ class PluginResultCache(private val vertx: Vertx) {
      * @param context 路由上下文
      * @param plugin 插件
      * @param result 执行结果
-     * @param ttl 缓存过期时间（毫秒），默认为1分钟
      */
-    fun put(context: RoutingContext, plugin: Plugin, result: Future<Void>, ttl: Long = defaultTtl) {
+    fun put(context: RoutingContext, plugin: Plugin, result: Future<Void>) {
         // 检查插件是否可缓存
         if (!isCacheable(plugin)) {
             logger.debug("Plugin {} is not cacheable", plugin.id)
             return
         }
+
+        // 获取插件配置的缓存过期时间
+        val cacheConfig = plugin.config.getJsonObject("cache") ?: JsonObject()
+        val ttl = cacheConfig.getLong("ttl", defaultTtl)
 
         val cacheKey = generateCacheKey(context, plugin)
         val expiresAt = System.currentTimeMillis() + ttl
@@ -103,8 +112,25 @@ class PluginResultCache(private val vertx: Vertx) {
      * @return 缓存键
      */
     private fun generateCacheKey(context: RoutingContext, plugin: Plugin): String {
-        // 基本键：插件ID + 请求路径 + 请求方法
-        val baseKey = "${plugin.id}:${context.request().path()}:${context.request().method()}"
+        val request = context.request()
+        val method = request.method().name()
+        val path = request.path()
+        val query = request.query() ?: ""
+
+        // 对于POST请求，包含请求体哈希
+        val bodyHash = if (method == "POST") {
+            val body = context.body().buffer()
+            if (body != null) {
+                sha256(body.toString())
+            } else {
+                ""
+            }
+        } else {
+            ""
+        }
+
+        // 基本键：插件ID + 插件类型 + 请求方法 + 请求路径 + 查询参数 + 请求体哈希
+        val baseKey = "${plugin.id}:${plugin.type}:$method:$path:$query:$bodyHash"
 
         // 获取插件的缓存键生成配置
         val cacheConfig = plugin.config.getJsonObject("cache") ?: JsonObject()
@@ -139,6 +165,15 @@ class PluginResultCache(private val vertx: Vertx) {
     }
 
     /**
+     * 计算SHA-256哈希
+     */
+    private fun sha256(input: String): String {
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val hash = digest.digest(input.toByteArray())
+        return hash.joinToString("") { "%02x".format(it) }
+    }
+
+    /**
      * 检查插件是否可缓存
      *
      * @param plugin 插件
@@ -150,12 +185,96 @@ class PluginResultCache(private val vertx: Vertx) {
     }
 
     /**
+     * 获取缓存统计信息
+     *
+     * @return 缓存统计信息
+     */
+    fun getStats(): JsonObject {
+        return JsonObject()
+            .put("size", cache.size)
+            .put("hits", stats.hits)
+            .put("misses", stats.misses)
+            .put("hitRate", stats.hitRate())
+    }
+
+    /**
+     * 定期清理过期缓存
+     */
+    fun startCleanupTask(interval: Long = 60000L) { // 默认1分钟清理一次
+        vertx.setPeriodic(interval) {
+            val now = System.currentTimeMillis()
+            val expiredKeys = mutableListOf<String>()
+
+            // 查找过期的缓存条目
+            cache.forEach { (key, entry) ->
+                if (now > entry.expiresAt) {
+                    expiredKeys.add(key)
+                }
+            }
+
+            // 移除过期的缓存条目
+            expiredKeys.forEach { key ->
+                cache.remove(key)
+            }
+
+            if (expiredKeys.isNotEmpty()) {
+                logger.debug("Cleaned up {} expired cache entries", expiredKeys.size)
+            }
+        }
+    }
+
+    /**
      * 缓存条目
      */
     private data class CacheEntry<T>(
         val value: T,
         val expiresAt: Long
     )
+
+    /**
+     * 缓存统计
+     */
+    private class CacheStats {
+        var hits: Long = 0
+            private set
+
+        var misses: Long = 0
+            private set
+
+        /**
+         * 记录缓存命中
+         */
+        fun hit() {
+            hits++
+        }
+
+        /**
+         * 记录缓存未命中
+         */
+        fun miss() {
+            misses++
+        }
+
+        /**
+         * 计算缓存命中率
+         */
+        fun hitRate(): Double {
+            val total = hits + misses
+            return if (total > 0) {
+                hits.toDouble() / total
+            } else {
+                0.0
+            }
+        }
+
+        /**
+         * 重置统计信息
+         */
+        fun reset() {
+            hits = 0
+            misses = 0
+        }
+    }
 
     companion object {
         // 单例实例
@@ -167,7 +286,10 @@ class PluginResultCache(private val vertx: Vertx) {
          */
         fun getInstance(vertx: Vertx): PluginResultCache {
             return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: PluginResultCache(vertx).also { INSTANCE = it }
+                INSTANCE ?: PluginResultCache(vertx).also {
+                    it.startCleanupTask()
+                    INSTANCE = it
+                }
             }
         }
     }

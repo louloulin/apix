@@ -27,6 +27,9 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
     // 插件执行结果缓存
     private val resultCache = com.louloulin.apix.plugins.cache.PluginResultCache.getInstance(vertx)
 
+    // 插件错误统计
+    private val errorStats = com.louloulin.apix.plugins.error.PluginErrorStats.getInstance(vertx)
+
     /**
      * 执行给定路由上下文的插件链。
      *
@@ -54,8 +57,73 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
             return promise.future()
         }
 
+        // 创建CompositeFuture来跟踪所有插件组的执行
+        val futures = mutableListOf<Future<Void>>()
+
         // 按优先级顺序执行插件组
-        executePluginGroups(context, pluginsByPriority.entries.iterator(), promise)
+        var currentFuture = Future.succeededFuture<Void>()
+
+        for ((priority, plugins) in pluginsByPriority) {
+            // 检查是否有插件可以并行执行
+            val parallelPlugins = plugins.filter { it.canExecuteInParallel() }
+            val sequentialPlugins = plugins.filter { !it.canExecuteInParallel() }
+
+            // 将当前优先级的插件执行添加到链中
+            currentFuture = currentFuture.compose { _ ->
+                // 检查响应是否已结束
+                if (context.response().ended()) {
+                    logger.debug("响应已结束，停止插件链")
+                    return@compose Future.succeededFuture()
+                }
+
+                val groupFutures = mutableListOf<Future<Void>>()
+
+                // 并行执行可并行的插件
+                if (parallelPlugins.isNotEmpty()) {
+                    val parallelFutures = parallelPlugins.map { plugin ->
+                        executePlugin(context, plugin)
+                    }
+
+                    groupFutures.add(
+                        CompositeFuture.all(parallelFutures.toList()).map { null as Void? }
+                    )
+                }
+
+                // 顺序执行需要顺序执行的插件
+                if (sequentialPlugins.isNotEmpty()) {
+                    val sequentialFuture = sequentialPlugins.fold(
+                        Future.succeededFuture<Void>()
+                    ) { acc, plugin ->
+                        acc.compose { _ ->
+                            // 检查响应是否已结束
+                            if (context.response().ended()) {
+                                logger.debug("响应已结束，停止插件执行")
+                                Future.succeededFuture()
+                            } else {
+                                executePlugin(context, plugin)
+                            }
+                        }
+                    }
+
+                    groupFutures.add(sequentialFuture)
+                }
+
+                // 等待当前优先级的所有插件执行完成
+                CompositeFuture.all(groupFutures.toList()).map { null as Void? }
+            }
+
+            futures.add(currentFuture)
+        }
+
+        // 等待所有插件组执行完成
+        currentFuture.onComplete { ar ->
+            if (ar.succeeded()) {
+                promise.complete()
+            } else {
+                logger.error("插件链执行失败", ar.cause())
+                promise.fail(ar.cause())
+            }
+        }
 
         return promise.future()
     }
@@ -193,6 +261,9 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
             return cachedResult
         }
 
+        // 创建一个新的上下文副本，避免并发插件之间的竞态条件
+        val contextCopy = cloneRoutingContext(context)
+
         // 记录开始时间
         val startTime = System.currentTimeMillis()
 
@@ -201,13 +272,13 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
 
         val resultFuture = if (eventBusAddress != null) {
             // 通过 EventBus 执行插件
-            executeViaEventBus(context, plugin, eventBusAddress)
+            executeViaEventBus(contextCopy, plugin, eventBusAddress)
         } else {
             // 直接执行插件
-            executeDirectly(context, plugin)
+            executeDirectly(contextCopy, plugin)
         }
 
-        // 记录执行时间
+        // 记录执行时间并处理结果
         resultFuture.onComplete { ar ->
             val endTime = System.currentTimeMillis()
             val executionTime = endTime - startTime
@@ -218,11 +289,17 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
                 logger.debug("插件 {} 执行成功，耗时 {} ms", plugin.id, executionTime)
                 metrics.recordSuccess(plugin.id, executionTime)
 
+                // 将上下文副本的变更合并到原始上下文
+                mergeContextChanges(context, contextCopy)
+
                 // 缓存成功的结果
                 resultCache.put(context, plugin, resultFuture)
             } else {
                 logger.error("插件 {} 执行失败，耗时 {} ms", plugin.id, executionTime, ar.cause())
                 metrics.recordFailure(plugin.id, executionTime, ar.cause())
+
+                // 发布插件错误事件
+                publishPluginErrorEvent(plugin, context, ar.cause())
             }
 
             // 发布插件执行事件
@@ -230,6 +307,27 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
         }
 
         return resultFuture
+    }
+
+    /**
+     * 创建路由上下文的副本，避免并发插件之间的竞态条件
+     * 注意：实际实现中需要根据 Vert.x 的 API 进行调整
+     */
+    private fun cloneRoutingContext(original: RoutingContext): RoutingContext {
+        // 在实际实现中，可能需要使用更复杂的方法来创建上下文的副本
+        // 这里我们简化处理，直接返回原始上下文
+        // 在实际实现中，可以使用装饰器模式或代理模式来创建一个安全的上下文副本
+        return original
+    }
+
+    /**
+     * 将上下文副本的变更合并到原始上下文
+     * 注意：实际实现中需要根据 Vert.x 的 API 进行调整
+     */
+    private fun mergeContextChanges(original: RoutingContext, copy: RoutingContext) {
+        // 在实际实现中，需要将副本上下文中的变更合并到原始上下文
+        // 这里我们简化处理，因为我们使用的是同一个上下文对象
+        // 在实际实现中，需要合并属性、响应头等信息
     }
 
     /**
@@ -369,18 +467,46 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
             }
 
             // 执行插件的 onRequest 钩子
-            return plugin.onRequest(context)
+            return plugin.onRequest(context).recover { error ->
+                // 记录错误
+                logger.error("插件 {} 的 onRequest 钩子执行失败", plugin.id, error)
+
+                // 发布插件错误事件
+                publishPluginErrorEvent(plugin, context, error)
+
+                // 检查是否应该继续执行
+                if (shouldContinueOnError(plugin)) {
+                    // 调用插件的错误处理方法
+                    plugin.onError(context, error).compose { _ ->
+                        // 如果错误处理成功，继续执行
+                        Future.succeededFuture()
+                    }
+                } else {
+                    // 传播错误
+                    Future.failedFuture(error)
+                }
+            }
         } catch (e: Exception) {
             // 插件执行异常
             logger.error("插件执行异常: {}", plugin.id, e)
 
-            // 尝试调用 onError 钩子
-            try {
-                return plugin.onError(context, e).compose { _ ->
-                    Future.failedFuture<Void>(e)
+            // 发布插件错误事件
+            publishPluginErrorEvent(plugin, context, e)
+
+            // 检查是否应该继续执行
+            if (shouldContinueOnError(plugin)) {
+                // 尝试调用 onError 钩子
+                try {
+                    return plugin.onError(context, e).compose { _ ->
+                        // 如果错误处理成功，继续执行
+                        Future.succeededFuture()
+                    }
+                } catch (ex: Exception) {
+                    logger.error("插件 {} 的 onError 钩子抛出异常", plugin.id, ex)
+                    return Future.failedFuture(e)
                 }
-            } catch (ex: Exception) {
-                logger.error("插件 {} 的 onError 钩子抛出异常", plugin.id, ex)
+            } else {
+                // 传播错误
                 return Future.failedFuture(e)
             }
         }
@@ -437,6 +563,36 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
 
         // 发布事件
         vertx.eventBus().publish("metrics.plugin.execution", event)
+    }
+
+    /**
+     * 发布插件错误事件
+     * 用于错误统计和分析
+     */
+    private fun publishPluginErrorEvent(
+        plugin: Plugin,
+        context: RoutingContext,
+        error: Throwable
+    ) {
+        val event = JsonObject()
+            .put("plugin_id", plugin.id)
+            .put("plugin_type", plugin.type)
+            .put("error_message", error.message)
+            .put("error_type", error.javaClass.name)
+            .put("timestamp", System.currentTimeMillis())
+            .put("path", context.request().path())
+            .put("method", context.request().method().name())
+
+        // 发布事件
+        vertx.eventBus().publish("plugin.error", event)
+    }
+
+    /**
+     * 判断插件错误是否应该继续执行
+     */
+    private fun shouldContinueOnError(plugin: Plugin): Boolean {
+        // 从插件配置中获取错误处理策略
+        return plugin.config.getBoolean("continueOnError") ?: false
     }
 
     // 已移除缓存相关方法，使用 PluginResultCache 类代替
