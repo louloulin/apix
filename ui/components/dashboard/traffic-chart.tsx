@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useTranslations } from 'next-intl'
 import {
   LineChart,
@@ -14,31 +14,30 @@ import {
   Area,
   AreaChart
 } from 'recharts'
+import { TrafficDataPoint } from "@/lib/api-client/dashboard"
 
-// Mock data generation
-const generateMockData = () => {
-  const data = []
-  const now = new Date()
-
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(now)
-    date.setDate(date.getDate() - i)
-
-    data.push({
-      date: date.toLocaleDateString("en-US", { month: 'short', day: 'numeric' }),
-      requests: Math.floor(Math.random() * 500) + 1000,
-      successRate: 99.8 + (Math.random() * 0.2),
-      avgResponseTime: Math.floor(Math.random() * 100) + 250
-    })
+// 当没有数据时显示的空数据
+const emptyData = [
+  {
+    date: new Date().toLocaleDateString("en-US", { month: 'short', day: 'numeric' }),
+    requests: 0,
+    successRate: 0,
+    avgResponseTime: 0
   }
+]
 
-  return data
+interface TrafficChartProps {
+  data: TrafficDataPoint[]
 }
 
-export function TrafficChart() {
+export function TrafficChart({ data: externalData }: TrafficChartProps) {
   const t = useTranslations('dashboard')
-  const [data] = useState(generateMockData())
   const [activeView, setActiveView] = useState("requests")
+
+  // 使用外部数据或空数据
+  const data = useMemo(() => {
+    return externalData && externalData.length > 0 ? externalData : emptyData
+  }, [externalData])
 
   return (
     <div className="h-full w-full">

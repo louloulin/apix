@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useTranslations } from 'next-intl'
 import {
   BarChart,
@@ -15,17 +15,12 @@ import {
   Pie,
   Cell
 } from 'recharts'
+import { LlmUsageDataPoint } from "@/lib/api-client/dashboard"
 
-// Mock data generation
-const generateMockData = () => {
-  return [
-    { name: "OpenAI", requests: 7824, tokens: 1450000, color: "#10a37f" },
-    { name: "Anthropic", requests: 3452, tokens: 876000, color: "#b166e9" },
-    { name: "Google", requests: 2156, tokens: 498000, color: "#4285f4" },
-    { name: "Azure", requests: 1872, tokens: 423000, color: "#0078d4" },
-    { name: "Others", requests: 785, tokens: 102000, color: "#888888" }
-  ]
-}
+// 当没有数据时显示的空数据
+const emptyData = [
+  { name: "No Data", requests: 0, tokens: 0, color: "#cccccc" }
+]
 
 interface LabelProps {
   cx: number;
@@ -37,10 +32,18 @@ interface LabelProps {
   index: number;
 }
 
-export function LlmUsageChart() {
+interface LlmUsageChartProps {
+  data: LlmUsageDataPoint[]
+}
+
+export function LlmUsageChart({ data: externalData }: LlmUsageChartProps) {
   const t = useTranslations('dashboard')
-  const [data] = useState(generateMockData())
   const [activeView, setActiveView] = useState("requests")
+
+  // 使用外部数据或空数据
+  const data = useMemo(() => {
+    return externalData && externalData.length > 0 ? externalData : emptyData
+  }, [externalData])
 
   const RADIAN = Math.PI / 180
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: LabelProps) => {

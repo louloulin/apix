@@ -14,6 +14,7 @@ import { RoutesApiClient } from './api-client/routes';
 import { ServicesApiClient } from './api-client/services';
 import { AuthApiClient } from './api-client/auth';
 import { AIModelsApiClient } from './api-client/ai-models';
+import { DashboardApiClient } from './api-client/dashboard';
 
 // Create singleton instances
 export const aiApi = new AiApiClient();
@@ -24,3 +25,4 @@ export const routesApi = new RoutesApiClient();
 export const servicesApi = new ServicesApiClient();
 export const authApi = new AuthApiClient();
 export const aiModelsApi = new AIModelsApiClient();
+export const dashboardApi = new DashboardApiClient();
