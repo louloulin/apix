@@ -44,9 +44,25 @@ const navItems: NavItem[] = [
     href: "/dashboard/routes",
   },
   {
-    title: "AI Features",
-    href: "/dashboard/ai-features",
+    title: "Configuration",
+    href: "/dashboard/config",
+  },
+  {
+    title: "System Metrics",
+    href: "/dashboard/metrics",
+  },
+  {
+    title: "AI Management",
+    href: "/dashboard/ai",
     children: [
+      {
+        title: "Models",
+        href: "/dashboard/ai/models",
+      },
+      {
+        title: "Routing Rules",
+        href: "/dashboard/ai/routing",
+      },
       {
         title: "Prompt Templates",
         href: "/dashboard/ai-features/prompts",
@@ -55,252 +71,131 @@ const navItems: NavItem[] = [
         title: "Vector Databases",
         href: "/dashboard/ai-features/vector-db",
       },
-      {
-        title: "LLM Providers",
-        href: "/dashboard/ai-features/llm-providers",
-      },
     ],
-  },
-  {
-    title: "Tools",
-    href: "/dashboard/tools",
-    children: [
-      {
-        title: "API Configuration",
-        href: "/dashboard/tools/api-config",
-      },
-      {
-        title: "Request Builder",
-        href: "/dashboard/tools/request-builder",
-      },
-      {
-        title: "Prompt Debugger",
-        href: "/dashboard/tools/prompt-debugger",
-      },
-      {
-        title: "AI Request Analyzer",
-        href: "/dashboard/tools/ai-request-analyzer",
-      },
-    ],
-  },
-  {
-    title: "Developer Portal",
-    href: "/dashboard/developer-portal",
-    children: [
-      {
-        title: "Getting Started",
-        href: "/dashboard/developer-portal",
-      },
-      {
-        title: "SDK & Libraries",
-        href: "/dashboard/developer-portal?tab=sdk",
-      },
-      {
-        title: "API Reference",
-        href: "/dashboard/developer-portal?tab=api-reference",
-      },
-      {
-        title: "Examples",
-        href: "/dashboard/developer-portal?tab=examples",
-      },
-    ],
-  },
-  {
-    title: "Documentation",
-    href: "/dashboard/documentation",
-  },
-  {
-    title: "Examples & Templates",
-    href: "/dashboard/examples",
-  },
-  {
-    title: "Settings",
-    href: "/dashboard/settings",
   },
 ]
 
-interface SidebarNavProps {
-  items: NavItem[]
-}
-
-export function SidebarNav({ items }: SidebarNavProps) {
-  return (
-    <nav className="grid items-start gap-2">
-      {items.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-          )}
-        >
-          {item.icon}
-          <span>{item.title}</span>
-        </Link>
-      ))}
-    </nav>
-  )
-}
-
-interface DashboardLayoutProps {
-  children: ReactNode
-}
-
-export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [open, setOpen] = useState(false)
+export function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="md:hidden">
-              <MenuIcon className="h-5 w-5" />
-              <span className="sr-only">Toggle Menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-72">
-            <div className="px-2 py-6">
-              <Link href="/" className="flex items-center gap-2 font-semibold">
-                <PackageIcon className="h-6 w-6" />
-                <span>APIX AI Gateway</span>
-              </Link>
-            </div>
-            <SidebarNav items={navItems} />
-          </SheetContent>
-        </Sheet>
-        <div className="w-full flex justify-between">
-          <div className="hidden md:flex">
-            <Link href="/" className="flex items-center gap-2 font-semibold">
-              <PackageIcon className="h-6 w-6" />
-              <span>APIX AI Gateway</span>
+      <header className="sticky top-0 z-40 border-b bg-background">
+        <div className="container flex h-16 items-center justify-between py-4">
+          <div className="flex items-center gap-4">
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="md:hidden">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-5 w-5"
+                  >
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                  </svg>
+                  <span className="sr-only">Toggle Menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[240px] sm:w-[300px]">
+                <nav className="flex flex-col gap-4 py-4">
+                  {navItems.map((item, index) => (
+                    <div key={index}>
+                      {item.children ? (
+                        <div className="flex flex-col gap-2">
+                          <div className="font-medium">{item.title}</div>
+                          <div className="flex flex-col gap-1 pl-4">
+                            {item.children.map((child, childIndex) => (
+                              <Link
+                                key={childIndex}
+                                href={child.href}
+                                className="text-muted-foreground hover:text-foreground"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                {child.title}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          className="font-medium hover:text-foreground"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          {item.title}
+                        </Link>
+                      )}
+                    </div>
+                  ))}
+                </nav>
+              </SheetContent>
+            </Sheet>
+            <Link href="/" className="flex items-center gap-2">
+              <span className="font-bold">APIX AI Gateway</span>
             </Link>
           </div>
-          <NavigationMenu className="hidden md:flex">
-            <NavigationMenuList>
-              {navItems.map((item) =>
-                item.children ? (
-                  <NavigationMenuItem key={item.href}>
-                    <NavigationMenuTrigger>{item.title}</NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                        {item.children.map((child) => (
-                          <li key={child.href}>
-                            <NavigationMenuLink asChild>
-                              <Link
-                                href={child.href}
-                                className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                              >
-                                <div className="text-sm font-medium leading-none">
-                                  {child.title}
-                                </div>
-                              </Link>
-                            </NavigationMenuLink>
-                          </li>
-                        ))}
-                      </ul>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                ) : (
-                  <NavigationMenuItem key={item.href}>
-                    <NavigationMenuLink asChild>
+          <div className="hidden md:flex">
+            <NavigationMenu>
+              <NavigationMenuList>
+                {navItems.map((item, index) => (
+                  <NavigationMenuItem key={index}>
+                    {item.children ? (
+                      <>
+                        <NavigationMenuTrigger>{item.title}</NavigationMenuTrigger>
+                        <NavigationMenuContent>
+                          <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                            {item.children.map((child, childIndex) => (
+                              <li key={childIndex}>
+                                <NavigationMenuLink asChild>
+                                  <Link
+                                    href={child.href}
+                                    className={cn(
+                                      "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                                    )}
+                                  >
+                                    <div className="text-sm font-medium leading-none">
+                                      {child.title}
+                                    </div>
+                                  </Link>
+                                </NavigationMenuLink>
+                              </li>
+                            ))}
+                          </ul>
+                        </NavigationMenuContent>
+                      </>
+                    ) : (
                       <Link
                         href={item.href}
                         className={cn(
-                          "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                          "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                         )}
                       >
-                        {item.title}
+                        <div className="text-sm font-medium leading-none">
+                          {item.title}
+                        </div>
                       </Link>
-                    </NavigationMenuLink>
+                    )}
                   </NavigationMenuItem>
-                )
-              )}
-            </NavigationMenuList>
-          </NavigationMenu>
+                ))}
+              </NavigationMenuList>
+            </NavigationMenu>
+          </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button variant="outline" size="icon">
-              <Bell className="h-4 w-4" />
-              <span className="sr-only">Notifications</span>
-            </Button>
             <UserProfile />
           </div>
         </div>
       </header>
-      <div className="flex flex-1">
-        <aside className="hidden w-64 border-r md:block">
-          <div className="flex h-full flex-col gap-2 p-4">
-            <SidebarNav items={navItems} />
-          </div>
-        </aside>
-        <main className="flex-1 p-4 md:p-6">
-          {children}
-        </main>
-      </div>
+      <main className="flex-1 container py-6">{children}</main>
     </div>
-  )
-}
-
-function MenuIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="4" x2="20" y1="12" y2="12" />
-      <line x1="4" x2="20" y1="6" y2="6" />
-      <line x1="4" x2="20" y1="18" y2="18" />
-    </svg>
-  )
-}
-
-function PackageIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m7.5 4.27 9 5.15" />
-      <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-      <path d="m3.3 7 8.7 5 8.7-5" />
-      <path d="M12 22V12" />
-    </svg>
-  )
-}
-
-function Bell(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-    </svg>
   )
 }
