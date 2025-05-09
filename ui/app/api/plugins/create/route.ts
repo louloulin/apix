@@ -1,19 +1,17 @@
 import { NextResponse } from 'next/server'
 
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request) {
   try {
-    const id = params.id
-
+    const body = await request.json()
+    
     // 尝试调用后端 API
     try {
-      const response = await fetch(`${process.env.API_BASE_URL || 'http://localhost:8080'}/admin/plugins/${id}/reload`, {
+      const response = await fetch(`${process.env.API_BASE_URL || 'http://localhost:8080'}/admin/plugins`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify(body),
         signal: AbortSignal.timeout(2000)
       })
 
@@ -24,16 +22,25 @@ export async function POST(
     } catch (fetchError) {
       console.warn('Backend API not available, using mock response:', fetchError)
     }
-
+    
+    // 生成一个随机 ID
+    const id = body.id || `plugin-${Math.floor(Math.random() * 10000)}`
+    
     // 返回模拟成功响应
     return NextResponse.json({
       success: true,
-      message: `Plugin ${id} reloaded successfully`
+      plugin: {
+        ...body,
+        id: id,
+        status: body.status || 'enabled',
+        version: body.version || '1.0.0'
+      },
+      message: 'Plugin created successfully'
     })
   } catch (error) {
-    console.error('Error reloading plugin:', error)
+    console.error('Error creating plugin:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to reload plugin' },
+      { success: false, error: 'Failed to create plugin' },
       { status: 500 }
     )
   }
