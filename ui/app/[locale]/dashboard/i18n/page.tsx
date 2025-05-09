@@ -1,28 +1,26 @@
 "use client"
 
 import { useState } from "react"
-import { I18nDashboardLayout } from "@/components/layout/i18n-dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { useTranslations } from 'next-intl'
-import { 
-  Activity, 
-  BarChart3, 
-  Clock, 
-  Download, 
-  RefreshCw, 
-  Server, 
+import {
+  Activity,
+  BarChart3,
+  Clock,
+  Download,
+  RefreshCw,
+  Server,
   Zap
 } from "lucide-react"
 
 export default function I18nDashboardPage() {
   const t = useTranslations()
   const [activeTab, setActiveTab] = useState("overview")
-  
+
   return (
-    <I18nDashboardLayout>
-      <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">{t('dashboard.title')}</h1>
@@ -60,7 +58,7 @@ export default function I18nDashboardPage() {
               {t('dashboard.system')}
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="overview" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
@@ -120,7 +118,7 @@ export default function I18nDashboardPage() {
                 </CardContent>
               </Card>
             </div>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>{t('dashboard.recentActivity')}</CardTitle>
@@ -169,7 +167,7 @@ export default function I18nDashboardPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="performance" className="space-y-4">
             <Card>
               <CardHeader>
@@ -185,7 +183,7 @@ export default function I18nDashboardPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="ai" className="space-y-4">
             <Card>
               <CardHeader>
@@ -201,7 +199,7 @@ export default function I18nDashboardPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="system" className="space-y-4">
             <Card>
               <CardHeader>
@@ -219,6 +217,5 @@ export default function I18nDashboardPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </I18nDashboardLayout>
   )
 }

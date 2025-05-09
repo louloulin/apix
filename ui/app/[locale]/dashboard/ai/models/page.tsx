@@ -2,9 +2,8 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { useTranslations } from 'next-intl'
-import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { I18nDashboardLayout } from "@/components/layout/i18n-dashboard-layout"
+import { useTranslations, useLocale } from 'next-intl'
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -12,11 +11,11 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { 
-  PlusCircle, 
-  Pencil, 
-  Trash2, 
-  RefreshCw, 
+import {
+  PlusCircle,
+  Pencil,
+  Trash2,
+  RefreshCw,
   Search,
   Filter,
   Zap,
@@ -36,15 +35,16 @@ export default function AIModelsPage() {
   const { toast } = useToast()
   const t = useTranslations('ai.models')
   const common = useTranslations('common')
+  const locale = useLocale()
   const [activeTab, setActiveTab] = useState("all")
   const [providerFilter, setProviderFilter] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState("")
 
   // Fetch AI models data
-  const { 
-    data: modelsData, 
-    isLoading, 
-    error, 
+  const {
+    data: modelsData,
+    isLoading,
+    error,
     refetch,
     isRefetching
   } = useApiData(
@@ -61,8 +61,8 @@ export default function AIModelsPage() {
   )
 
   // Enable/disable model mutation
-  const { 
-    mutate: toggleModelStatus 
+  const {
+    mutate: toggleModelStatus
   } = useApiMutation(
     async ({ model, enabled }: { model: AIModel, enabled: boolean }) => {
       if (enabled) {
@@ -90,8 +90,8 @@ export default function AIModelsPage() {
   )
 
   // Delete model mutation
-  const { 
-    mutate: deleteModel 
+  const {
+    mutate: deleteModel
   } = useApiMutation(
     async (model: AIModel) => {
       return aiModelsApi.deleteModel(model.id)
@@ -131,13 +131,13 @@ export default function AIModelsPage() {
     // Filter by tab
     if (activeTab === "enabled" && !model.enabled) return false
     if (activeTab === "disabled" && model.enabled) return false
-    
+
     // Filter by provider
     if (providerFilter !== "all" && model.provider.toLowerCase() !== providerFilter) return false
-    
+
     // Filter by search query
     if (searchQuery && !model.name.toLowerCase().includes(searchQuery.toLowerCase())) return false
-    
+
     return true
   }) || []
 
@@ -172,8 +172,8 @@ export default function AIModelsPage() {
       header: common('status'),
       cell: ({ row }) => (
         <div className="flex items-center">
-          <Switch 
-            checked={row.original.enabled} 
+          <Switch
+            checked={row.original.enabled}
             onCheckedChange={() => handleStatusToggle(row.original)}
           />
           <span className="ml-2">
@@ -187,15 +187,15 @@ export default function AIModelsPage() {
       header: common('actions'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
-            onClick={() => router.push(`/dashboard/ai/models/${row.original.id}/edit`)}
+            onClick={() => router.push(`/${locale}/dashboard/ai/models/${row.original.id}/edit`)}
           >
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => handleDelete(row.original)}
           >
@@ -207,8 +207,7 @@ export default function AIModelsPage() {
   ]
 
   return (
-    <I18nDashboardLayout>
-      <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">{t('title')}</h1>
@@ -217,15 +216,15 @@ export default function AIModelsPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="icon" 
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => refetch()}
               disabled={isRefetching}
             >
               <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
             </Button>
-            <Button onClick={() => router.push('/dashboard/ai/models/create')}>
+            <Button onClick={() => router.push(`/${locale}/dashboard/ai/models/create`)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               {t('addModel')}
             </Button>
@@ -277,7 +276,7 @@ export default function AIModelsPage() {
                   <TabsTrigger value="enabled">{common('enabled')}</TabsTrigger>
                   <TabsTrigger value="disabled">{common('disabled')}</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="all" className="mt-4">
                   {isLoading ? (
                     <div className="flex justify-center py-8">
@@ -296,7 +295,7 @@ export default function AIModelsPage() {
                     />
                   )}
                 </TabsContent>
-                
+
                 {['enabled', 'disabled'].map(tabValue => (
                   <TabsContent key={tabValue} value={tabValue} className="mt-4">
                     {isLoading ? (
@@ -322,6 +321,5 @@ export default function AIModelsPage() {
           </CardContent>
         </Card>
       </div>
-    </I18nDashboardLayout>
   )
 }

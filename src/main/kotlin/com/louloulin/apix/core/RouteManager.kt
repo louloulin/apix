@@ -335,6 +335,48 @@ class RouteManager(
     }
 
     /**
+     * Gets routes with pagination.
+     */
+    fun getRoutes(offset: Int = 0, limit: Int = 100): List<Route> {
+        return routes.values.toList()
+            .drop(offset)
+            .take(limit)
+    }
+
+    /**
+     * Creates a new route.
+     */
+    fun createRoute(routeJson: JsonObject): Route {
+        val route = Route.fromJson(routeJson)
+        addRoute(route)
+        saveRoutesToConfig()
+        return route
+    }
+
+    /**
+     * Updates an existing route.
+     */
+    fun updateRoute(id: String, routeJson: JsonObject): Route? {
+        val existingRoute = getRoute(id) ?: return null
+
+        val updatedRoute = Route.fromJson(routeJson.copy().put("id", id))
+        addRoute(updatedRoute)
+        saveRoutesToConfig()
+        return updatedRoute
+    }
+
+    /**
+     * Deletes a route.
+     */
+    fun deleteRoute(id: String): Boolean {
+        val result = removeRoute(id)
+        if (result) {
+            saveRoutesToConfig()
+        }
+        return result
+    }
+
+    /**
      * Updates the configuration with the current routes.
      */
     fun saveRoutesToConfig() {

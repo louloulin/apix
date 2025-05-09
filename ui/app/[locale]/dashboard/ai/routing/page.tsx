@@ -2,18 +2,17 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { useTranslations } from 'next-intl'
-import { I18nDashboardLayout } from "@/components/layout/i18n-dashboard-layout"
+import { useTranslations, useLocale } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { 
-  PlusCircle, 
-  Pencil, 
-  Trash2, 
-  RefreshCw, 
+import {
+  PlusCircle,
+  Pencil,
+  Trash2,
+  RefreshCw,
   Search,
   ArrowUpDown,
   Filter
@@ -30,13 +29,14 @@ export default function AIRoutingPage() {
   const { toast } = useToast()
   const t = useTranslations('ai.routing')
   const common = useTranslations('common')
+  const locale = useLocale()
   const [searchQuery, setSearchQuery] = useState("")
 
   // Fetch routing rules data
-  const { 
-    data: rulesData, 
-    isLoading, 
-    error, 
+  const {
+    data: rulesData,
+    isLoading,
+    error,
     refetch,
     isRefetching
   } = useApiData(
@@ -53,7 +53,7 @@ export default function AIRoutingPage() {
   )
 
   // Fetch models data for displaying model names
-  const { 
+  const {
     data: modelsData
   } = useApiData(
     () => aiModelsApi.getModels(),
@@ -65,8 +65,8 @@ export default function AIRoutingPage() {
   )
 
   // Enable/disable rule mutation
-  const { 
-    mutate: toggleRuleStatus 
+  const {
+    mutate: toggleRuleStatus
   } = useApiMutation(
     async ({ rule, enabled }: { rule: AIRoutingRule, enabled: boolean }) => {
       if (enabled) {
@@ -94,8 +94,8 @@ export default function AIRoutingPage() {
   )
 
   // Delete rule mutation
-  const { 
-    mutate: deleteRule 
+  const {
+    mutate: deleteRule
   } = useApiMutation(
     async (rule: AIRoutingRule) => {
       return aiModelsApi.deleteRoutingRule(rule.id)
@@ -180,8 +180,8 @@ export default function AIRoutingPage() {
       header: common('status'),
       cell: ({ row }) => (
         <div className="flex items-center">
-          <Switch 
-            checked={row.original.enabled} 
+          <Switch
+            checked={row.original.enabled}
             onCheckedChange={() => handleStatusToggle(row.original)}
           />
           <span className="ml-2">
@@ -195,15 +195,15 @@ export default function AIRoutingPage() {
       header: common('actions'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
-            onClick={() => router.push(`/dashboard/ai/routing/${row.original.id}/edit`)}
+            onClick={() => router.push(`/${locale}/dashboard/ai/routing/${row.original.id}/edit`)}
           >
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => handleDelete(row.original)}
           >
@@ -215,8 +215,7 @@ export default function AIRoutingPage() {
   ]
 
   return (
-    <I18nDashboardLayout>
-      <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">{t('title')}</h1>
@@ -225,15 +224,15 @@ export default function AIRoutingPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="icon" 
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => refetch()}
               disabled={isRefetching}
             >
               <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
             </Button>
-            <Button onClick={() => router.push('/dashboard/ai/routing/create')}>
+            <Button onClick={() => router.push(`/${locale}/dashboard/ai/routing/create`)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               {t('addRule')}
             </Button>
@@ -282,6 +281,5 @@ export default function AIRoutingPage() {
           </CardContent>
         </Card>
       </div>
-    </I18nDashboardLayout>
   )
 }

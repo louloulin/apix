@@ -4,7 +4,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.auth.jwt.JWTAuth
-import io.vertx.ext.auth.jwt.JWTOptions
+import io.vertx.ext.auth.JWTOptions
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.UUID
@@ -14,7 +14,7 @@ import java.util.UUID
  */
 class AuthHandler(private val jwtAuth: JWTAuth) {
     private val logger = LoggerFactory.getLogger(AuthHandler::class.java)
-    
+
     // In-memory user store (replace with database in production)
     private val users = mutableMapOf(
         "admin" to JsonObject()
@@ -26,13 +26,13 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
             .put("password", "user123")
             .put("role", "user")
     )
-    
+
     /**
      * Sets up the authentication API routes.
      */
     fun setupRoutes(router: Router) {
         logger.info("Setting up authentication API routes...")
-        
+
         // Authentication endpoints
         router.post("/auth/login").handler(this::login)
         router.post("/auth/logout").handler(this::logout)
@@ -40,14 +40,14 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
         router.post("/auth/register").handler(this::register)
         router.put("/auth/change-password").handler(this::changePassword)
     }
-    
+
     /**
      * Handles user login.
      */
     private fun login(context: RoutingContext) {
         try {
             val body = context.body().asJsonObject()
-            
+
             // Validate required fields
             if (!body.containsKey("username") || !body.containsKey("password")) {
                 context.response()
@@ -60,13 +60,13 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                     )
                 return
             }
-            
+
             val username = body.getString("username")
             val password = body.getString("password")
-            
+
             // Check if user exists
             val user = users[username]
-            
+
             if (user == null) {
                 context.response()
                     .setStatusCode(401)
@@ -78,7 +78,7 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                     )
                 return
             }
-            
+
             // Check password
             if (user.getString("password") != password) {
                 context.response()
@@ -91,7 +91,7 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                     )
                 return
             }
-            
+
             // Generate JWT token
             val claims = JsonObject()
                 .put("sub", username)
@@ -99,9 +99,9 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                 .put("iat", Instant.now().epochSecond)
                 .put("exp", Instant.now().plusSeconds(3600).epochSecond) // 1 hour expiration
                 .put("jti", UUID.randomUUID().toString())
-            
+
             val token = jwtAuth.generateToken(claims, JWTOptions().setExpiresInSeconds(3600))
-            
+
             context.response()
                 .putHeader("Content-Type", "application/json")
                 .end(JsonObject()
@@ -115,7 +115,7 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                 )
         } catch (e: Exception) {
             logger.error("Error during login", e)
-            
+
             context.response()
                 .setStatusCode(500)
                 .putHeader("Content-Type", "application/json")
@@ -126,7 +126,7 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                 )
         }
     }
-    
+
     /**
      * Handles user logout.
      */
@@ -141,14 +141,14 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                 .encode()
             )
     }
-    
+
     /**
      * Gets the current user.
      */
     private fun getCurrentUser(context: RoutingContext) {
         try {
             val user = context.user()
-            
+
             if (user == null) {
                 context.response()
                     .setStatusCode(401)
@@ -160,11 +160,11 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                     )
                 return
             }
-            
+
             user.principal().let { principal ->
                 val username = principal.getString("sub")
                 val role = principal.getString("role")
-                
+
                 context.response()
                     .putHeader("Content-Type", "application/json")
                     .end(JsonObject()
@@ -177,7 +177,7 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
             }
         } catch (e: Exception) {
             logger.error("Error getting current user", e)
-            
+
             context.response()
                 .setStatusCode(500)
                 .putHeader("Content-Type", "application/json")
@@ -188,14 +188,14 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                 )
         }
     }
-    
+
     /**
      * Handles user registration.
      */
     private fun register(context: RoutingContext) {
         try {
             val body = context.body().asJsonObject()
-            
+
             // Validate required fields
             if (!body.containsKey("username") || !body.containsKey("password")) {
                 context.response()
@@ -208,10 +208,10 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                     )
                 return
             }
-            
+
             val username = body.getString("username")
             val password = body.getString("password")
-            
+
             // Check if user already exists
             if (users.containsKey(username)) {
                 context.response()
@@ -224,15 +224,15 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                     )
                 return
             }
-            
+
             // Create new user
             val user = JsonObject()
                 .put("username", username)
                 .put("password", password) // In production, use hashed passwords
                 .put("role", "user") // Default role
-            
+
             users[username] = user
-            
+
             context.response()
                 .setStatusCode(201)
                 .putHeader("Content-Type", "application/json")
@@ -243,7 +243,7 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                 )
         } catch (e: Exception) {
             logger.error("Error during registration", e)
-            
+
             context.response()
                 .setStatusCode(500)
                 .putHeader("Content-Type", "application/json")
@@ -254,14 +254,14 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                 )
         }
     }
-    
+
     /**
      * Handles password change.
      */
     private fun changePassword(context: RoutingContext) {
         try {
             val user = context.user()
-            
+
             if (user == null) {
                 context.response()
                     .setStatusCode(401)
@@ -273,9 +273,9 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                     )
                 return
             }
-            
+
             val body = context.body().asJsonObject()
-            
+
             // Validate required fields
             if (!body.containsKey("currentPassword") || !body.containsKey("newPassword")) {
                 context.response()
@@ -288,16 +288,16 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                     )
                 return
             }
-            
+
             val currentPassword = body.getString("currentPassword")
             val newPassword = body.getString("newPassword")
-            
+
             user.principal().let { principal ->
                 val username = principal.getString("sub")
-                
+
                 // Check if user exists
                 val userObj = users[username]
-                
+
                 if (userObj == null) {
                     context.response()
                         .setStatusCode(404)
@@ -309,7 +309,7 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                         )
                     return
                 }
-                
+
                 // Check current password
                 if (userObj.getString("password") != currentPassword) {
                     context.response()
@@ -322,11 +322,11 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
                         )
                     return
                 }
-                
+
                 // Update password
                 userObj.put("password", newPassword)
                 users[username] = userObj
-                
+
                 context.response()
                     .putHeader("Content-Type", "application/json")
                     .end(JsonObject()
@@ -337,7 +337,7 @@ class AuthHandler(private val jwtAuth: JWTAuth) {
             }
         } catch (e: Exception) {
             logger.error("Error changing password", e)
-            
+
             context.response()
                 .setStatusCode(500)
                 .putHeader("Content-Type", "application/json")

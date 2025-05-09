@@ -12,15 +12,15 @@ import { LanguageSelector } from '../ui/language-selector'
 import { SkipLink } from '../ui/a11y/skip-link'
 import { KeyboardShortcut } from '../ui/a11y/keyboard-shortcut'
 import { ScreenReaderText } from '../ui/a11y/screen-reader-text'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
-import { 
-  Menu, 
-  X, 
-  Home, 
-  BarChart2, 
-  Settings, 
-  LogOut, 
+import {
+  Menu,
+  X,
+  Home,
+  BarChart2,
+  Settings,
+  LogOut,
   HelpCircle,
   Search
 } from "lucide-react"
@@ -36,9 +36,10 @@ interface NavItem {
 export function A11yDashboardLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations('common')
   const router = useRouter()
+  const locale = useLocale()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  
+
   // Navigation items with translation keys, icons, and keyboard shortcuts
   const navItems: NavItem[] = [
     {
@@ -118,49 +119,49 @@ export function A11yDashboardLayout({ children }: { children: React.ReactNode })
       ],
     },
   ]
-  
+
   // Handle keyboard shortcuts
   const handleSearch = () => {
     setIsSearchOpen(true)
   }
-  
+
   const handleHelp = () => {
     // Open help dialog or navigate to help page
     alert("Help functionality")
   }
-  
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Skip link for keyboard users */}
       <SkipLink />
-      
+
       {/* Keyboard shortcuts */}
       <KeyboardShortcut keys={['/']} onTrigger={handleSearch} />
       <KeyboardShortcut keys={['?']} onTrigger={handleHelp} />
-      <KeyboardShortcut keys={['g', 'h']} onTrigger={() => router.push('/')} />
-      
+      <KeyboardShortcut keys={['g', 'h']} onTrigger={() => router.push(`/${locale}`)} />
+
       {/* Add keyboard shortcuts for navigation items */}
       {navItems.map((item, index) => {
         if (item.shortcut) {
           return (
-            <KeyboardShortcut 
-              key={index} 
-              keys={item.shortcut} 
-              onTrigger={() => router.push(item.href)} 
+            <KeyboardShortcut
+              key={index}
+              keys={item.shortcut}
+              onTrigger={() => router.push(`/${locale}${item.href}`)}
             />
           )
         }
         return null
       })}
-      
+
       <header className="sticky top-0 z-40 border-b bg-background" role="banner">
         <div className="container flex h-16 items-center justify-between py-4">
           <div className="flex items-center gap-4">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
+                <Button
+                  variant="outline"
+                  size="icon"
                   className="md:hidden"
                   aria-label={t('common.toggleMenu')}
                 >
@@ -169,12 +170,12 @@ export function A11yDashboardLayout({ children }: { children: React.ReactNode })
               </SheetTrigger>
               <SheetContent side="left" className="w-[240px] sm:w-[300px]">
                 <div className="flex items-center justify-between pr-4">
-                  <Link href="/" className="flex items-center" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link href={`/${locale}`} className="flex items-center" onClick={() => setIsMobileMenuOpen(false)}>
                     <span className="font-bold">APIX AI Gateway</span>
                   </Link>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setIsMobileMenuOpen(false)}
                     aria-label={t('common.closeMenu')}
                   >
@@ -198,7 +199,7 @@ export function A11yDashboardLayout({ children }: { children: React.ReactNode })
                             {item.children.map((child, childIndex) => (
                               <Link
                                 key={childIndex}
-                                href={child.href}
+                                href={`/${locale}${child.href}`}
                                 className="text-muted-foreground hover:text-foreground flex items-center"
                                 onClick={() => setIsMobileMenuOpen(false)}
                               >
@@ -210,7 +211,7 @@ export function A11yDashboardLayout({ children }: { children: React.ReactNode })
                         </div>
                       ) : (
                         <Link
-                          href={item.href}
+                          href={`/${locale}${item.href}`}
                           className="font-medium hover:text-foreground flex items-center"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
@@ -227,7 +228,7 @@ export function A11yDashboardLayout({ children }: { children: React.ReactNode })
                 </nav>
               </SheetContent>
             </Sheet>
-            <Link href="/" className="flex items-center gap-2">
+            <Link href={`/${locale}`} className="flex items-center gap-2">
               <span className="font-bold">APIX AI Gateway</span>
             </Link>
           </div>
@@ -250,7 +251,7 @@ export function A11yDashboardLayout({ children }: { children: React.ReactNode })
                               <li key={childIndex}>
                                 <NavigationMenuLink asChild>
                                   <Link
-                                    href={child.href}
+                                    href={`/${locale}${child.href}`}
                                     className={cn(
                                       "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                                     )}
@@ -268,7 +269,7 @@ export function A11yDashboardLayout({ children }: { children: React.ReactNode })
                       </>
                     ) : (
                       <Link
-                        href={item.href}
+                        href={`/${locale}${item.href}`}
                         className={cn(
                           "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                         )}
@@ -290,18 +291,18 @@ export function A11yDashboardLayout({ children }: { children: React.ReactNode })
             </NavigationMenu>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handleSearch}
               aria-label={t('common.search')}
             >
               <Search className="h-5 w-5" />
               <ScreenReaderText>(Press / to search)</ScreenReaderText>
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handleHelp}
               aria-label={t('common.help')}
             >

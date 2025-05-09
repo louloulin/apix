@@ -12,13 +12,13 @@ import com.louloulin.apix.core.ServiceManager
  */
 class ServiceHandler(private val serviceManager: ServiceManager) {
     private val logger = LoggerFactory.getLogger(ServiceHandler::class.java)
-    
+
     /**
      * Sets up the service management API routes.
      */
     fun setupRoutes(router: Router) {
         logger.info("Setting up service management API routes...")
-        
+
         // Service management endpoints
         router.get("/services").handler(this::getServices)
         router.post("/services").handler(this::createService)
@@ -27,7 +27,7 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
         router.delete("/services/:id").handler(this::deleteService)
         router.get("/services/:id/health").handler(this::getServiceHealth)
     }
-    
+
     /**
      * Gets all services.
      */
@@ -35,11 +35,11 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
         try {
             val services = serviceManager.getServices()
             val servicesArray = JsonArray()
-            
-            services.forEach { service ->
+
+            services.forEach { service: com.louloulin.apix.models.Service ->
                 servicesArray.add(service)
             }
-            
+
             context.response()
                 .putHeader("Content-Type", "application/json")
                 .end(JsonObject()
@@ -48,7 +48,7 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                 )
         } catch (e: Exception) {
             logger.error("Error getting services", e)
-            
+
             context.response()
                 .setStatusCode(500)
                 .putHeader("Content-Type", "application/json")
@@ -59,14 +59,14 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                 )
         }
     }
-    
+
     /**
      * Creates a new service.
      */
     private fun createService(context: RoutingContext) {
         try {
             val body = context.body().asJsonObject()
-            
+
             // Validate required fields
             if (!body.containsKey("name") || !body.containsKey("url")) {
                 context.response()
@@ -79,9 +79,9 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                     )
                 return
             }
-            
+
             val service = serviceManager.createService(body)
-            
+
             context.response()
                 .setStatusCode(201)
                 .putHeader("Content-Type", "application/json")
@@ -92,7 +92,7 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                 )
         } catch (e: Exception) {
             logger.error("Error creating service", e)
-            
+
             context.response()
                 .setStatusCode(500)
                 .putHeader("Content-Type", "application/json")
@@ -103,7 +103,7 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                 )
         }
     }
-    
+
     /**
      * Gets a service by ID.
      */
@@ -111,7 +111,7 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
         try {
             val id = context.pathParam("id")
             val service = serviceManager.getService(id)
-            
+
             if (service == null) {
                 context.response()
                     .setStatusCode(404)
@@ -123,7 +123,7 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                     )
                 return
             }
-            
+
             context.response()
                 .putHeader("Content-Type", "application/json")
                 .end(JsonObject()
@@ -132,7 +132,7 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                 )
         } catch (e: Exception) {
             logger.error("Error getting service", e)
-            
+
             context.response()
                 .setStatusCode(500)
                 .putHeader("Content-Type", "application/json")
@@ -143,7 +143,7 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                 )
         }
     }
-    
+
     /**
      * Updates a service.
      */
@@ -151,9 +151,9 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
         try {
             val id = context.pathParam("id")
             val body = context.body().asJsonObject()
-            
+
             val service = serviceManager.getService(id)
-            
+
             if (service == null) {
                 context.response()
                     .setStatusCode(404)
@@ -165,9 +165,9 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                     )
                 return
             }
-            
+
             val updatedService = serviceManager.updateService(id, body)
-            
+
             context.response()
                 .putHeader("Content-Type", "application/json")
                 .end(JsonObject()
@@ -177,7 +177,7 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                 )
         } catch (e: Exception) {
             logger.error("Error updating service", e)
-            
+
             context.response()
                 .setStatusCode(500)
                 .putHeader("Content-Type", "application/json")
@@ -188,16 +188,16 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                 )
         }
     }
-    
+
     /**
      * Deletes a service.
      */
     private fun deleteService(context: RoutingContext) {
         try {
             val id = context.pathParam("id")
-            
+
             val service = serviceManager.getService(id)
-            
+
             if (service == null) {
                 context.response()
                     .setStatusCode(404)
@@ -209,9 +209,9 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                     )
                 return
             }
-            
+
             serviceManager.deleteService(id)
-            
+
             context.response()
                 .putHeader("Content-Type", "application/json")
                 .end(JsonObject()
@@ -220,7 +220,7 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                 )
         } catch (e: Exception) {
             logger.error("Error deleting service", e)
-            
+
             context.response()
                 .setStatusCode(500)
                 .putHeader("Content-Type", "application/json")
@@ -231,7 +231,7 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                 )
         }
     }
-    
+
     /**
      * Gets the health status of a service.
      */
@@ -239,7 +239,7 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
         try {
             val id = context.pathParam("id")
             val service = serviceManager.getService(id)
-            
+
             if (service == null) {
                 context.response()
                     .setStatusCode(404)
@@ -251,15 +251,15 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                     )
                 return
             }
-            
+
             val health = serviceManager.getServiceHealth(id)
-            
+
             context.response()
                 .putHeader("Content-Type", "application/json")
                 .end(health.encode())
         } catch (e: Exception) {
             logger.error("Error getting service health", e)
-            
+
             context.response()
                 .setStatusCode(500)
                 .putHeader("Content-Type", "application/json")

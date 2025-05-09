@@ -12,13 +12,13 @@ import com.louloulin.apix.core.RouteManager
  */
 class RouteHandler(private val routeManager: RouteManager) {
     private val logger = LoggerFactory.getLogger(RouteHandler::class.java)
-    
+
     /**
      * Sets up the route management API routes.
      */
     fun setupRoutes(router: Router) {
         logger.info("Setting up route management API routes...")
-        
+
         // Route management endpoints
         router.get("/routes").handler(this::getRoutes)
         router.post("/routes").handler(this::createRoute)
@@ -26,7 +26,7 @@ class RouteHandler(private val routeManager: RouteManager) {
         router.put("/routes/:id").handler(this::updateRoute)
         router.delete("/routes/:id").handler(this::deleteRoute)
     }
-    
+
     /**
      * Gets all routes.
      */
@@ -34,11 +34,11 @@ class RouteHandler(private val routeManager: RouteManager) {
         try {
             val routes = routeManager.getRoutes()
             val routesArray = JsonArray()
-            
-            routes.forEach { route ->
+
+            routes.forEach { route: com.louloulin.apix.models.Route ->
                 routesArray.add(route)
             }
-            
+
             context.response()
                 .putHeader("Content-Type", "application/json")
                 .end(JsonObject()
@@ -47,7 +47,7 @@ class RouteHandler(private val routeManager: RouteManager) {
                 )
         } catch (e: Exception) {
             logger.error("Error getting routes", e)
-            
+
             context.response()
                 .setStatusCode(500)
                 .putHeader("Content-Type", "application/json")
@@ -58,14 +58,14 @@ class RouteHandler(private val routeManager: RouteManager) {
                 )
         }
     }
-    
+
     /**
      * Creates a new route.
      */
     private fun createRoute(context: RoutingContext) {
         try {
             val body = context.body().asJsonObject()
-            
+
             // Validate required fields
             if (!body.containsKey("path") || !body.containsKey("target")) {
                 context.response()
@@ -78,9 +78,9 @@ class RouteHandler(private val routeManager: RouteManager) {
                     )
                 return
             }
-            
+
             val route = routeManager.createRoute(body)
-            
+
             context.response()
                 .setStatusCode(201)
                 .putHeader("Content-Type", "application/json")
@@ -91,7 +91,7 @@ class RouteHandler(private val routeManager: RouteManager) {
                 )
         } catch (e: Exception) {
             logger.error("Error creating route", e)
-            
+
             context.response()
                 .setStatusCode(500)
                 .putHeader("Content-Type", "application/json")
@@ -102,7 +102,7 @@ class RouteHandler(private val routeManager: RouteManager) {
                 )
         }
     }
-    
+
     /**
      * Gets a route by ID.
      */
@@ -110,7 +110,7 @@ class RouteHandler(private val routeManager: RouteManager) {
         try {
             val id = context.pathParam("id")
             val route = routeManager.getRoute(id)
-            
+
             if (route == null) {
                 context.response()
                     .setStatusCode(404)
@@ -122,7 +122,7 @@ class RouteHandler(private val routeManager: RouteManager) {
                     )
                 return
             }
-            
+
             context.response()
                 .putHeader("Content-Type", "application/json")
                 .end(JsonObject()
@@ -131,7 +131,7 @@ class RouteHandler(private val routeManager: RouteManager) {
                 )
         } catch (e: Exception) {
             logger.error("Error getting route", e)
-            
+
             context.response()
                 .setStatusCode(500)
                 .putHeader("Content-Type", "application/json")
@@ -142,7 +142,7 @@ class RouteHandler(private val routeManager: RouteManager) {
                 )
         }
     }
-    
+
     /**
      * Updates a route.
      */
@@ -150,9 +150,9 @@ class RouteHandler(private val routeManager: RouteManager) {
         try {
             val id = context.pathParam("id")
             val body = context.body().asJsonObject()
-            
+
             val route = routeManager.getRoute(id)
-            
+
             if (route == null) {
                 context.response()
                     .setStatusCode(404)
@@ -164,9 +164,9 @@ class RouteHandler(private val routeManager: RouteManager) {
                     )
                 return
             }
-            
+
             val updatedRoute = routeManager.updateRoute(id, body)
-            
+
             context.response()
                 .putHeader("Content-Type", "application/json")
                 .end(JsonObject()
@@ -176,7 +176,7 @@ class RouteHandler(private val routeManager: RouteManager) {
                 )
         } catch (e: Exception) {
             logger.error("Error updating route", e)
-            
+
             context.response()
                 .setStatusCode(500)
                 .putHeader("Content-Type", "application/json")
@@ -187,16 +187,16 @@ class RouteHandler(private val routeManager: RouteManager) {
                 )
         }
     }
-    
+
     /**
      * Deletes a route.
      */
     private fun deleteRoute(context: RoutingContext) {
         try {
             val id = context.pathParam("id")
-            
+
             val route = routeManager.getRoute(id)
-            
+
             if (route == null) {
                 context.response()
                     .setStatusCode(404)
@@ -208,9 +208,9 @@ class RouteHandler(private val routeManager: RouteManager) {
                     )
                 return
             }
-            
+
             routeManager.deleteRoute(id)
-            
+
             context.response()
                 .putHeader("Content-Type", "application/json")
                 .end(JsonObject()
@@ -219,7 +219,7 @@ class RouteHandler(private val routeManager: RouteManager) {
                 )
         } catch (e: Exception) {
             logger.error("Error deleting route", e)
-            
+
             context.response()
                 .setStatusCode(500)
                 .putHeader("Content-Type", "application/json")

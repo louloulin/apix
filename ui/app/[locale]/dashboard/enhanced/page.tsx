@@ -2,19 +2,18 @@
 
 import { useState } from "react"
 import { useTranslations } from 'next-intl'
-import { I18nDashboardLayout } from "@/components/layout/i18n-dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { EnhancedAIUsageChart } from "@/components/dashboard/enhanced-ai-usage-chart"
 import { SystemHealthStatus } from "@/components/dashboard/system-health-status"
-import { 
-  Activity, 
-  BarChart3, 
-  Clock, 
-  Download, 
-  RefreshCw, 
-  Server, 
+import {
+  Activity,
+  BarChart3,
+  Clock,
+  Download,
+  RefreshCw,
+  Server,
   Zap,
   Cpu,
   Memory,
@@ -101,10 +100,9 @@ export default function EnhancedDashboardPage() {
   const t = useTranslations('dashboard')
   const common = useTranslations('common')
   const [activeTab, setActiveTab] = useState("overview")
-  
+
   return (
-    <I18nDashboardLayout>
-      <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">{t('title')}</h1>
@@ -122,7 +120,7 @@ export default function EnhancedDashboardPage() {
             </Button>
           </div>
         </div>
-        
+
         <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="overview" className="flex items-center gap-2">
@@ -138,7 +136,7 @@ export default function EnhancedDashboardPage() {
               {t('system')}
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="overview" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
@@ -198,12 +196,12 @@ export default function EnhancedDashboardPage() {
                 </CardContent>
               </Card>
             </div>
-            
+
             <div className="grid gap-4 md:grid-cols-2">
               <EnhancedAIUsageChart data={mockAIUsageData} />
               <SystemHealthStatus />
             </div>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>{t('recentActivity')}</CardTitle>
@@ -259,10 +257,10 @@ export default function EnhancedDashboardPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="ai" className="space-y-4">
             <EnhancedAIUsageChart data={mockAIUsageData} className="h-[500px]" />
-            
+
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -308,7 +306,7 @@ export default function EnhancedDashboardPage() {
               </Card>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="system" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
@@ -368,11 +366,10 @@ export default function EnhancedDashboardPage() {
                 </CardContent>
               </Card>
             </div>
-            
+
             <SystemHealthStatus className="h-[400px]" />
           </TabsContent>
         </Tabs>
       </div>
-    </I18nDashboardLayout>
   )
 }

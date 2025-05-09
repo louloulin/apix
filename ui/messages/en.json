@@ -44,7 +44,12 @@
     "theme": "Theme",
     "light": "Light",
     "dark": "Dark",
-    "system": "System"
+    "system": "System",
+    "back": "Back",
+    "overview": "Overview",
+    "configuration": "Configuration",
+    "metrics": "Metrics",
+    "version": "Version"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -170,7 +175,17 @@
     "repository": "Repository",
     "dependencies": "Dependencies",
     "settings": "Settings",
-    "deleteConfirm": "Are you sure you want to delete the plugin {name}?"
+    "deleteConfirm": "Are you sure you want to delete the plugin {name}?",
+    "enabledSuccess": "has been enabled successfully",
+    "disabledSuccess": "has been disabled successfully",
+    "enableError": "Failed to enable plugin",
+    "disableError": "Failed to disable plugin",
+    "deleteSuccess": "has been deleted successfully",
+    "deleteError": "Failed to delete plugin",
+    "adjustSearch": "Try adjusting your search.",
+    "notFound": "Plugin Not Found",
+    "notFoundDescription": "The plugin you're looking for doesn't exist or has been deleted.",
+    "backToPlugins": "Back to Plugins"
   },
   "routes": {
     "title": "Routes",

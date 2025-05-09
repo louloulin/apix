@@ -44,7 +44,12 @@
     "theme": "主题",
     "light": "浅色",
     "dark": "深色",
-    "system": "系统"
+    "system": "系统",
+    "back": "返回",
+    "overview": "概览",
+    "configuration": "配置",
+    "metrics": "指标",
+    "version": "版本"
   },
   "dashboard": {
     "title": "仪表盘",
@@ -170,7 +175,17 @@
     "repository": "仓库",
     "dependencies": "依赖",
     "settings": "设置",
-    "deleteConfirm": "确定要删除插件 {name} 吗？"
+    "deleteConfirm": "确定要删除插件 {name} 吗？",
+    "enabledSuccess": "已成功启用",
+    "disabledSuccess": "已成功禁用",
+    "enableError": "启用插件失败",
+    "disableError": "禁用插件失败",
+    "deleteSuccess": "已成功删除",
+    "deleteError": "删除插件失败",
+    "adjustSearch": "尝试调整搜索条件。",
+    "notFound": "未找到插件",
+    "notFoundDescription": "您查找的插件不存在或已被删除。",
+    "backToPlugins": "返回插件列表"
   },
   "routes": {
     "title": "路由",
