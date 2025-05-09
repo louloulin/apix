@@ -1,14 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+import { useTranslations } from 'next-intl'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -37,57 +38,58 @@ interface LabelProps {
 }
 
 export function LlmUsageChart() {
+  const t = useTranslations('dashboard')
   const [data] = useState(generateMockData())
   const [activeView, setActiveView] = useState("requests")
-  
+
   const RADIAN = Math.PI / 180
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: LabelProps) => {
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5
     const x = cx + radius * Math.cos(-midAngle * RADIAN)
     const y = cy + radius * Math.sin(-midAngle * RADIAN)
-  
+
     return (
-      <text 
-        x={x} 
-        y={y} 
-        fill="white" 
-        textAnchor={x > cx ? 'start' : 'end'} 
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor={x > cx ? 'start' : 'end'}
         dominantBaseline="central"
       >
         {`${(percent * 100).toFixed(0)}%`}
       </text>
     )
   }
-  
+
   return (
     <div className="h-full w-full">
       <div className="mb-4 flex items-center space-x-2">
-        <button 
+        <button
           onClick={() => setActiveView("requests")}
-          className={`px-3 py-1 text-sm rounded-md ${activeView === "requests" 
-            ? "bg-primary text-primary-foreground" 
+          className={`px-3 py-1 text-sm rounded-md ${activeView === "requests"
+            ? "bg-primary text-primary-foreground"
             : "bg-secondary text-secondary-foreground"}`}
         >
-          Requests
+          {t('requests')}
         </button>
-        <button 
+        <button
           onClick={() => setActiveView("tokens")}
-          className={`px-3 py-1 text-sm rounded-md ${activeView === "tokens" 
-            ? "bg-primary text-primary-foreground" 
+          className={`px-3 py-1 text-sm rounded-md ${activeView === "tokens"
+            ? "bg-primary text-primary-foreground"
             : "bg-secondary text-secondary-foreground"}`}
         >
-          Tokens
+          {t('totalTokens')}
         </button>
-        <button 
+        <button
           onClick={() => setActiveView("distribution")}
-          className={`px-3 py-1 text-sm rounded-md ${activeView === "distribution" 
-            ? "bg-primary text-primary-foreground" 
+          className={`px-3 py-1 text-sm rounded-md ${activeView === "distribution"
+            ? "bg-primary text-primary-foreground"
             : "bg-secondary text-secondary-foreground"}`}
         >
-          Distribution
+          {t('requestDistribution')}
         </button>
       </div>
-      
+
       <ResponsiveContainer width="100%" height={250}>
         {activeView === "requests" ? (
           <BarChart data={data}>
@@ -136,4 +138,4 @@ export function LlmUsageChart() {
       </ResponsiveContainer>
     </div>
   )
-} 
+}

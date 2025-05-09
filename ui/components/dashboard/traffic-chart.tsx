@@ -1,14 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+import { useTranslations } from 'next-intl'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
   Area,
   AreaChart
@@ -18,11 +19,11 @@ import {
 const generateMockData = () => {
   const data = []
   const now = new Date()
-  
+
   for (let i = 29; i >= 0; i--) {
     const date = new Date(now)
     date.setDate(date.getDate() - i)
-    
+
     data.push({
       date: date.toLocaleDateString("en-US", { month: 'short', day: 'numeric' }),
       requests: Math.floor(Math.random() * 500) + 1000,
@@ -30,43 +31,44 @@ const generateMockData = () => {
       avgResponseTime: Math.floor(Math.random() * 100) + 250
     })
   }
-  
+
   return data
 }
 
 export function TrafficChart() {
+  const t = useTranslations('dashboard')
   const [data] = useState(generateMockData())
   const [activeView, setActiveView] = useState("requests")
-  
+
   return (
     <div className="h-full w-full">
       <div className="mb-4 flex items-center space-x-2">
-        <button 
+        <button
           onClick={() => setActiveView("requests")}
-          className={`px-3 py-1 text-sm rounded-md ${activeView === "requests" 
-            ? "bg-primary text-primary-foreground" 
+          className={`px-3 py-1 text-sm rounded-md ${activeView === "requests"
+            ? "bg-primary text-primary-foreground"
             : "bg-secondary text-secondary-foreground"}`}
         >
-          Requests
+          {t('requests')}
         </button>
-        <button 
+        <button
           onClick={() => setActiveView("responseTimes")}
-          className={`px-3 py-1 text-sm rounded-md ${activeView === "responseTimes" 
-            ? "bg-primary text-primary-foreground" 
+          className={`px-3 py-1 text-sm rounded-md ${activeView === "responseTimes"
+            ? "bg-primary text-primary-foreground"
             : "bg-secondary text-secondary-foreground"}`}
         >
-          Response Times
+          {t('avgResponseTime')}
         </button>
-        <button 
+        <button
           onClick={() => setActiveView("successRate")}
-          className={`px-3 py-1 text-sm rounded-md ${activeView === "successRate" 
-            ? "bg-primary text-primary-foreground" 
+          className={`px-3 py-1 text-sm rounded-md ${activeView === "successRate"
+            ? "bg-primary text-primary-foreground"
             : "bg-secondary text-secondary-foreground"}`}
         >
-          Success Rate
+          {t('successRate')}
         </button>
       </div>
-      
+
       <ResponsiveContainer width="100%" height={250}>
         {activeView === "requests" ? (
           <AreaChart data={data}>
@@ -102,4 +104,4 @@ export function TrafficChart() {
       </ResponsiveContainer>
     </div>
   )
-} 
+}
