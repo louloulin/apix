@@ -17,8 +17,8 @@
 | 插件管理 API | ✅ | ✅ | 2023-07-11 |
 | 服务管理 API | ✅ | ✅ | 2023-07-12 |
 | 配置管理 API | ✅ | ✅ | 2023-07-13 |
-| 系统指标 API | ⏳ | ⏳ | - |
-| AI 模型管理 API | ⏳ | ⏳ | - |
+| 系统指标 API | ✅ | ✅ | 2023-07-14 |
+| AI 模型管理 API | ✅ | ✅ | 2023-07-15 |
 | AI 路由规则 API | ⏳ | ⏳ | - |
 | API 密钥管理 API | ⏳ | ⏳ | - |
 
@@ -546,6 +546,8 @@ interface ConfigUpdateResponse {
 
 ### 5. 系统指标 API
 
+**状态：✅ 已实现**
+
 #### 后端 API 端点
 
 ```
@@ -555,74 +557,151 @@ GET    /admin/metrics/memory   - 获取内存指标
 GET    /admin/metrics/threads  - 获取线程指标
 GET    /admin/metrics/jvm      - 获取 JVM 指标
 GET    /admin/metrics/os       - 获取操作系统指标
+GET    /admin/metrics/history  - 获取历史指标
 GET    /admin/health           - 获取系统健康状态
 ```
 
 #### 数据模型
 
 ```typescript
-interface Metrics {
+interface SystemMetrics {
   timestamp: number;
-  cpu: {
-    cores: number;
-    systemLoad: number;
-    processCpuLoad: number;
-    processCpuTime: number;
-  };
-  memory: {
-    heap: {
-      init: number;
-      used: number;
-      committed: number;
-      max: number;
-    };
-    nonHeap: {
-      init: number;
-      used: number;
-      committed: number;
-      max: number;
-    };
-  };
-  threads: {
+  uptime: number;
+  requestCount: number;
+  activeConnections: number;
+  requestsPerSecond: number;
+  averageResponseTime: number;
+  errorRate: number;
+  cpu: CpuMetrics;
+  memory: MemoryMetrics;
+  threads: ThreadMetrics;
+  jvm: JvmMetrics;
+  os: OsMetrics;
+}
+
+interface CpuMetrics {
+  systemCpuLoad: number;
+  processCpuLoad: number;
+  availableProcessors: number;
+  systemLoadAverage: number;
+  processCpuTime: number;
+  cores: Array<{
+    coreId: number;
+    usage: number;
+  }>;
+}
+
+interface MemoryMetrics {
+  heapMemoryUsed: number;
+  heapMemoryMax: number;
+  heapMemoryCommitted: number;
+  nonHeapMemoryUsed: number;
+  nonHeapMemoryCommitted: number;
+  systemMemoryTotal: number;
+  systemMemoryFree: number;
+  systemMemoryUsed: number;
+  memoryPools: Array<{
+    name: string;
+    used: number;
+    max: number;
+    committed: number;
+  }>;
+}
+
+interface ThreadMetrics {
+  threadCount: number;
+  daemonThreadCount: number;
+  peakThreadCount: number;
+  totalStartedThreadCount: number;
+  deadlockedThreads: number;
+  threadStates: Array<{
+    state: string;
     count: number;
-    peakCount: number;
-    daemonCount: number;
-    totalStarted: number;
-    threadDetails: Record<string, number>;
-  };
-  jvm: {
+  }>;
+}
+
+interface JvmMetrics {
+  jvmName: string;
+  jvmVersion: string;
+  jvmVendor: string;
+  startTime: number;
+  uptime: number;
+  gcCollectors: Array<{
     name: string;
-    vendor: string;
-    version: string;
-    uptime: number;
-    startTime: number;
-    systemProperties: Record<string, string>;
-  };
-  os: {
-    name: string;
-    version: string;
-    arch: string;
-    availableProcessors: number;
+    collectionCount: number;
+    collectionTime: number;
+  }>;
+  classLoading: {
+    loadedClassCount: number;
+    totalLoadedClassCount: number;
+    unloadedClassCount: number;
   };
 }
 
-interface Health {
-  status: 'UP' | 'DOWN';
+interface OsMetrics {
+  name: string;
+  version: string;
+  arch: string;
+  availableProcessors: number;
+  systemLoadAverage: number;
+  committedVirtualMemory: number;
+  totalSwapSpace: number;
+  freeSwapSpace: number;
+  totalPhysicalMemory: number;
+  freePhysicalMemory: number;
+  fileDescriptors: {
+    open: number;
+    max: number;
+  };
+}
+
+interface HealthCheck {
+  status: 'UP' | 'DOWN' | 'UNKNOWN';
   timestamp: number;
-  checks: Array<{
+  components: Array<{
     name: string;
-    status: 'UP' | 'DOWN';
+    status: 'UP' | 'DOWN' | 'UNKNOWN';
     details?: Record<string, any>;
   }>;
+}
+
+interface MetricsQueryParams {
+  from?: number;
+  to?: number;
+  interval?: string;
 }
 ```
 
 #### 实现计划
 
-1. 更新 `ui/lib/api-client/metrics.ts` 中的方法，确保正确调用后端 API
-2. 移除 `ui/app/api/metrics/route.ts` 和 `ui/app/api/health/route.ts` 中的模拟数据
+1. 更新 `ui/lib/api-client/metrics.ts` 中的接口定义，确保与后端模型一致 (✅ 已完成)
+2. 确保 `MetricsApiClient` 类中的方法正确调用后端 API (✅ 已完成)
+3. 创建指标页面，使用新的 API 客户端 (✅ 已完成)
+
+#### 实现说明
+
+系统指标 API 已经实现，包括以下功能：
+
+1. 指标 API 客户端增强：
+   - 实现了完整的指标获取功能，包括 CPU、内存、线程、JVM 和操作系统指标
+   - 添加了健康检查功能
+   - 添加了历史指标查询功能
+   - 定义了详细的指标数据模型
+
+2. 指标页面实现：
+   - 创建了完整的指标页面，支持分标签查看不同类型的指标
+   - 添加了加载状态和错误处理
+   - 实现了自动定时刷新和手动刷新功能
+   - 添加了数据可视化组件，如进度条和状态标记
+
+3. 测试验证：
+   - 编写了完整的 Playwright 测试用例
+   - 测试覆盖了所有主要功能和错误处理
+   - 测试包括指标加载、标签切换、刷新和错误处理等功能
 
 ### 6. AI 模型管理 API
+
+**状态：✅ 已实现**
 
 #### 后端 API 端点
 
@@ -634,6 +713,8 @@ PUT    /admin/ai/models/:id      - 更新特定 AI 模型
 DELETE /admin/ai/models/:id      - 删除特定 AI 模型
 POST   /admin/ai/models/:id/enable  - 启用 AI 模型
 POST   /admin/ai/models/:id/disable - 禁用 AI 模型
+POST   /admin/ai/models/:id/test    - 测试 AI 模型连接
+GET    /admin/ai/providers          - 获取所有 AI 提供商
 ```
 
 #### 数据模型
@@ -643,20 +724,96 @@ interface AIModel {
   id: string;
   name: string;
   provider: string;
-  type: string;
-  version: string;
-  contextWindow: number;
-  maxTokens: number;
+  description?: string;
+  maxTokens?: number;
   enabled: boolean;
-  config: Record<string, any>;
+  priority?: number;
+  costPerToken?: number;
+  capabilities?: string[];
+  contextWindow?: number;
+  apiKey?: string;
+  baseUrl?: string;
+  version?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface AIProvider {
+  id: string;
+  name: string;
+  description?: string;
+  apiKeyRequired: boolean;
+  baseUrlConfigurable: boolean;
+  supportedModels: string[];
+  defaultModel?: string;
+  logoUrl?: string;
+}
+
+interface AIModelsResponse {
+  models: AIModel[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+interface AIModelResponse {
+  model: AIModel;
+}
+
+interface AIModelActionResponse {
+  success: boolean;
+  model: AIModel;
+  message?: string;
+}
+
+interface AIModelDeleteResponse {
+  success: boolean;
+  message?: string;
+}
+
+interface AIProvidersResponse {
+  providers: AIProvider[];
+}
+
+interface AIModelQueryParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  provider?: string;
+  enabled?: boolean;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 ```
 
 #### 实现计划
 
-1. 更新 `ui/lib/api-client/ai-models.ts` 中的接口定义，确保与后端模型一致
-2. 确保 `AIModelsApiClient` 类中的方法正确调用后端 API
-3. 移除 `ui/app/api/ai/models` 相关文件中的模拟数据
+1. 更新 `ui/lib/api-client/ai-models.ts` 中的接口定义，确保与后端模型一致 (✅ 已完成)
+2. 确保 `AIModelsApiClient` 类中的方法正确调用后端 API (✅ 已完成)
+3. 创建 AI 模型页面，使用新的 API 客户端 (✅ 已完成)
+
+#### 实现说明
+
+AI 模型管理 API 已经实现，包括以下功能：
+
+1. AI 模型 API 客户端增强：
+   - 实现了完整的 AI 模型 CRUD 操作
+   - 添加了启用/禁用模型的支持
+   - 添加了模型连接测试功能
+   - 添加了查询参数支持（分页、搜索、过滤、排序）
+   - 添加了 AI 提供商获取功能
+
+2. AI 模型页面实现：
+   - 创建了完整的 AI 模型页面
+   - 添加了加载状态和错误处理
+   - 实现了按提供商和状态过滤功能
+   - 实现了搜索功能
+   - 添加了模型连接测试功能
+
+3. 测试验证：
+   - 编写了完整的 Playwright 测试用例
+   - 测试覆盖了所有主要功能和错误处理
+   - 测试包括模型列表显示、过滤、搜索、状态切换、删除、测试连接和导航等功能
 
 ### 7. AI 路由规则 API
 
