@@ -15,8 +15,8 @@
 | 基础 API 客户端 | ✅ | ✅ | 2023-07-10 |
 | 路由管理 API | ✅ | ✅ | 2023-07-10 |
 | 插件管理 API | ✅ | ✅ | 2023-07-11 |
-| 服务管理 API | ⏳ | ⏳ | - |
-| 配置管理 API | ⏳ | ⏳ | - |
+| 服务管理 API | ✅ | ✅ | 2023-07-12 |
+| 配置管理 API | ✅ | ✅ | 2023-07-13 |
 | 系统指标 API | ⏳ | ⏳ | - |
 | AI 模型管理 API | ⏳ | ⏳ | - |
 | AI 路由规则 API | ⏳ | ⏳ | - |
@@ -314,6 +314,8 @@ interface PluginQueryParams {
 
 ### 3. 服务管理 API
 
+**状态：✅ 已实现**
+
 #### 后端 API 端点
 
 ```
@@ -323,6 +325,8 @@ GET    /admin/services/:id      - 获取特定服务
 PUT    /admin/services/:id      - 更新特定服务
 DELETE /admin/services/:id      - 删除特定服务
 GET    /admin/services/:id/health - 获取服务健康状态
+POST   /admin/services/:id/enable  - 启用服务
+POST   /admin/services/:id/disable - 禁用服务
 ```
 
 #### 数据模型
@@ -341,6 +345,8 @@ interface Service {
   readTimeout: number;
   enabled: boolean;
   description?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface ServiceHealth {
@@ -348,56 +354,195 @@ interface ServiceHealth {
   timestamp: number;
   details?: Record<string, any>;
 }
+
+interface ServicesResponse {
+  services: Service[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+interface ServiceResponse {
+  service: Service;
+}
+
+interface ServiceActionResponse {
+  success: boolean;
+  service: Service;
+  message?: string;
+}
+
+interface ServiceDeleteResponse {
+  success: boolean;
+  message?: string;
+}
+
+interface ServiceQueryParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  enabled?: boolean;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
 ```
 
 #### 实现计划
 
-1. 更新 `ui/lib/api-client/services.ts` 中的接口定义，确保与后端模型一致
-2. 确保 `ServicesApiClient` 类中的方法正确调用后端 API
-3. 移除 `ui/app/api/services` 相关文件中的模拟数据
+1. 更新 `ui/lib/api-client/services.ts` 中的接口定义，确保与后端模型一致 (✅ 已完成)
+2. 确保 `ServicesApiClient` 类中的方法正确调用后端 API (✅ 已完成)
+3. 创建服务列表页面，使用新的 API 客户端 (✅ 已完成)
+
+#### 实现说明
+
+服务管理 API 已经实现，包括以下功能：
+
+1. 服务 API 客户端增强：
+   - 实现了完整的服务 CRUD 操作
+   - 添加了启用/禁用服务的支持
+   - 添加了服务健康检查功能
+   - 添加了查询参数支持（分页、搜索、过滤、排序）
+
+2. 服务列表页面实现：
+   - 创建了完整的服务列表页面
+   - 添加了加载状态和错误处理
+   - 添加了刷新功能
+   - 实现了过滤和搜索功能
+   - 实现了服务健康检查功能
+
+3. 测试验证：
+   - 编写了完整的 Playwright 测试用例
+   - 测试覆盖了所有主要功能和错误处理
+   - 测试包括列表显示、过滤、搜索、状态切换、删除、健康检查和导航等功能
 
 ### 4. 配置管理 API
+
+**状态：✅ 已实现**
 
 #### 后端 API 端点
 
 ```
 GET    /admin/config          - 获取系统配置
 PUT    /admin/config          - 更新系统配置
+POST   /admin/config/reload   - 重新加载配置
+POST   /admin/restart         - 重启网关
 ```
 
 #### 数据模型
 
-配置模型是一个复杂的嵌套 JSON 对象，包含以下主要部分：
-
 ```typescript
-interface Config {
+interface GatewayConfig {
   gateway: {
     host: string;
     port: number;
-    // 其他网关配置...
+    ssl?: {
+      enabled: boolean;
+      certPath?: string;
+      keyPath?: string;
+    };
+    cors?: {
+      enabled: boolean;
+      allowedOrigins?: string[];
+      allowedMethods?: string[];
+      allowedHeaders?: string[];
+      exposedHeaders?: string[];
+      allowCredentials?: boolean;
+      maxAge?: number;
+    };
+    compression?: {
+      enabled: boolean;
+      level?: number;
+      minSize?: number;
+    };
+    requestTimeout?: number;
+    idleTimeout?: number;
+    maxHeaderSize?: number;
+    maxBodySize?: number;
   };
   admin: {
     enabled: boolean;
     host: string;
     port: number;
-    // 其他管理 API 配置...
+    ssl?: {
+      enabled: boolean;
+      certPath?: string;
+      keyPath?: string;
+    };
+    auth?: {
+      enabled: boolean;
+      type: string;
+      users?: Array<{
+        username: string;
+        password: string;
+        roles: string[];
+      }>;
+    };
   };
-  plugins: Array<{
+  logging: {
+    level: string;
+    file?: string;
+    console: boolean;
+    format?: string;
+  };
+  metrics?: {
+    enabled: boolean;
+    prometheus?: {
+      enabled: boolean;
+      path?: string;
+    };
+  };
+  cluster?: {
+    enabled: boolean;
+    nodes?: string[];
+    nodeName?: string;
+  };
+  plugins?: Array<{
     id: string;
     type: string;
     config: Record<string, any>;
-    // 其他插件配置...
+    enabled: boolean;
   }>;
-  routes: Array<Route>;
-  services: Array<Service>;
-  // 其他配置部分...
+  routes?: Array<Route>;
+  services?: Array<Service>;
+}
+
+interface ConfigResponse {
+  config: GatewayConfig;
+}
+
+interface ConfigUpdateResponse {
+  success: boolean;
+  message?: string;
+  config?: GatewayConfig;
 }
 ```
 
 #### 实现计划
 
-1. 更新 `ui/lib/api-client/config.ts` 中的方法，确保正确调用后端 API
-2. 移除 `ui/app/api/config/route.ts` 中的模拟数据
+1. 更新 `ui/lib/api-client/config.ts` 中的接口定义，确保与后端模型一致 (✅ 已完成)
+2. 确保 `ConfigApiClient` 类中的方法正确调用后端 API (✅ 已完成)
+3. 创建配置页面，使用新的 API 客户端 (✅ 已完成)
+
+#### 实现说明
+
+配置管理 API 已经实现，包括以下功能：
+
+1. 配置 API 客户端增强：
+   - 实现了完整的配置获取和更新功能
+   - 添加了重新加载配置和重启网关的支持
+   - 定义了详细的配置数据模型
+
+2. 配置页面实现：
+   - 创建了完整的配置页面，支持分标签管理不同类型的配置
+   - 支持通过表单和 JSON 编辑器两种方式编辑配置
+   - 添加了加载状态和错误处理
+   - 实现了重新加载配置和重启网关功能
+   - 添加了 JSON 格式验证
+
+3. 测试验证：
+   - 编写了完整的 Playwright 测试用例
+   - 测试覆盖了所有主要功能和错误处理
+   - 测试包括配置加载、更新、JSON 编辑、重新加载和重启网关等功能
 
 ### 5. 系统指标 API
 

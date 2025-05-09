@@ -1,21 +1,31 @@
 /**
- * Services API client
+ * 服务管理 API 客户端
  */
 import { ApiClient } from "./base";
 
+/**
+ * 服务模型接口
+ */
 export interface Service {
   id: string;
   name: string;
   url: string;
-  protocol?: string;
-  port?: number;
-  path?: string;
-  retries?: number;
-  timeout?: number;
+  protocol: string;
+  host: string;
+  port: number;
+  path: string;
+  retries: number;
+  connectTimeout: number;
+  readTimeout: number;
   enabled: boolean;
   description?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
+/**
+ * 服务健康状态接口
+ */
 export interface ServiceHealth {
   status: 'UP' | 'DOWN' | 'UNKNOWN';
   timestamp: number;
@@ -23,51 +33,128 @@ export interface ServiceHealth {
 }
 
 /**
- * Services-specific API client
+ * 服务列表响应接口
+ */
+export interface ServicesResponse {
+  services: Service[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/**
+ * 服务详情响应接口
+ */
+export interface ServiceResponse {
+  service: Service;
+}
+
+/**
+ * 服务操作响应接口
+ */
+export interface ServiceActionResponse {
+  success: boolean;
+  service: Service;
+  message?: string;
+}
+
+/**
+ * 服务删除响应接口
+ */
+export interface ServiceDeleteResponse {
+  success: boolean;
+  message?: string;
+}
+
+/**
+ * 服务查询参数接口
+ */
+export interface ServiceQueryParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  enabled?: boolean;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+/**
+ * 服务管理 API 客户端类
  */
 export class ServicesApiClient extends ApiClient {
   /**
-   * Get all services
+   * 获取所有服务
+   * @param params 查询参数
+   * @returns 服务列表响应
    */
-  async getServices() {
-    return this.get<{ services: Service[] }>('/admin/services');
+  async getServices(params?: ServiceQueryParams) {
+    return this.get<ServicesResponse>('/admin/services', params);
   }
 
   /**
-   * Get a service by ID
+   * 根据 ID 获取服务
+   * @param id 服务 ID
+   * @returns 服务详情响应
    */
   async getService(id: string) {
-    return this.get<{ service: Service }>(`/admin/services/${id}`);
+    return this.get<ServiceResponse>(`/admin/services/${id}`);
   }
 
   /**
-   * Create a new service
+   * 创建新服务
+   * @param service 服务数据
+   * @returns 服务创建响应
    */
-  async createService(service: Omit<Service, 'id' | 'enabled'>) {
-    return this.post<{ success: boolean; service: Service }>('/admin/services', service);
+  async createService(service: Omit<Service, 'id' | 'enabled' | 'createdAt' | 'updatedAt'>) {
+    return this.post<ServiceActionResponse>('/admin/services', service);
   }
 
   /**
-   * Update a service
+   * 更新服务
+   * @param id 服务 ID
+   * @param service 服务数据
+   * @returns 服务更新响应
    */
-  async updateService(id: string, service: Partial<Service>) {
-    return this.put<{ success: boolean; service: Service }>(`/admin/services/${id}`, service);
+  async updateService(id: string, service: Partial<Omit<Service, 'id' | 'createdAt' | 'updatedAt'>>) {
+    return this.put<ServiceActionResponse>(`/admin/services/${id}`, service);
   }
 
   /**
-   * Delete a service
+   * 删除服务
+   * @param id 服务 ID
+   * @returns 服务删除响应
    */
   async deleteService(id: string) {
-    return this.delete<{ success: boolean }>(`/admin/services/${id}`);
+    return this.delete<ServiceDeleteResponse>(`/admin/services/${id}`);
   }
 
   /**
-   * Get service health
+   * 获取服务健康状态
+   * @param id 服务 ID
+   * @returns 服务健康状态
    */
   async getServiceHealth(id: string) {
     return this.get<ServiceHealth>(`/admin/services/${id}/health`);
   }
+
+  /**
+   * 启用服务
+   * @param id 服务 ID
+   * @returns 服务启用响应
+   */
+  async enableService(id: string) {
+    return this.post<ServiceActionResponse>(`/admin/services/${id}/enable`, {});
+  }
+
+  /**
+   * 禁用服务
+   * @param id 服务 ID
+   * @returns 服务禁用响应
+   */
+  async disableService(id: string) {
+    return this.post<ServiceActionResponse>(`/admin/services/${id}/disable`, {});
+  }
 }
 
-// Create singleton instance
+// 创建单例实例
 export const servicesApi = new ServicesApiClient();
