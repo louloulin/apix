@@ -303,7 +303,24 @@
     "adjustSearch": "尝试调整搜索条件。",
     "notFound": "未找到插件",
     "notFoundDescription": "您查找的插件不存在或已被删除。",
-    "backToPlugins": "返回插件列表"
+    "backToPlugins": "返回插件列表",
+    "createPlugin": "创建插件",
+    "addPluginDescription": "向网关添加新插件",
+    "configurePluginSettings": "配置新插件的设置",
+    "pluginId": "插件 ID",
+    "pluginIdPlaceholder": "my-plugin",
+    "pluginIdDescription": "插件的唯一标识符",
+    "pluginType": "插件类型",
+    "pluginTypeDescription": "插件类型决定其功能",
+    "selectPluginType": "选择插件类型",
+    "configuration": "配置",
+    "configurationDescription": "插件的 JSON 配置。配置模式取决于插件类型。",
+    "enableAfterCreation": "创建后启用",
+    "idTypeRequired": "插件 ID 和类型是必需的",
+    "invalidJson": "无效的 JSON 配置",
+    "pluginCreated": "插件已创建",
+    "hasBeenCreated": "已成功创建",
+    "createError": "创建插件失败"
   },
   "routes": {
     "title": "路由管理",
@@ -321,7 +338,11 @@
     "deleteConfirm": "确定要删除路由 {path} 吗？",
     "noRoutes": "未找到路由。",
     "routeInfo": "路由信息",
-    "methods": "方法"
+    "methods": "方法",
+    "notFound": "未找到路由",
+    "notFoundDescription": "您查找的路由不存在或已被删除。",
+    "adjustSearch": "尝试调整您的搜索或过滤条件。",
+    "backToRoutes": "返回路由列表"
   },
   "config": {
     "title": "网关配置",

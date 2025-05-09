@@ -386,7 +386,24 @@
     "adjustSearch": "Try adjusting your search.",
     "notFound": "Plugin Not Found",
     "notFoundDescription": "The plugin you're looking for doesn't exist or has been deleted.",
-    "backToPlugins": "Back to Plugins"
+    "backToPlugins": "Back to Plugins",
+    "createPlugin": "Create Plugin",
+    "addPluginDescription": "Add a new plugin to your gateway",
+    "configurePluginSettings": "Configure the settings for your new plugin",
+    "pluginId": "Plugin ID",
+    "pluginIdPlaceholder": "my-plugin",
+    "pluginIdDescription": "Unique identifier for the plugin",
+    "pluginType": "Plugin Type",
+    "pluginTypeDescription": "The type of plugin determines its functionality",
+    "selectPluginType": "Select plugin type",
+    "configuration": "Configuration",
+    "configurationDescription": "JSON configuration for the plugin. The schema depends on the plugin type.",
+    "enableAfterCreation": "Enable after creation",
+    "idTypeRequired": "Plugin ID and type are required",
+    "invalidJson": "Invalid JSON configuration",
+    "pluginCreated": "Plugin Created",
+    "hasBeenCreated": "has been created successfully",
+    "createError": "Failed to create plugin"
   },
   "routes": {
     "title": "Routes Management",
@@ -404,7 +421,11 @@
     "deleteConfirm": "Are you sure you want to delete the route {path}?",
     "noRoutes": "No routes found.",
     "routeInfo": "Route Information",
-    "methods": "Methods"
+    "methods": "Methods",
+    "notFound": "Route Not Found",
+    "notFoundDescription": "The route you're looking for doesn't exist or has been deleted.",
+    "adjustSearch": "Try adjusting your search or filter criteria.",
+    "backToRoutes": "Back to Routes"
   },
   "config": {
     "title": "Gateway Configuration",
