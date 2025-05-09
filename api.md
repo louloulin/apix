@@ -19,8 +19,8 @@
 | 配置管理 API | ✅ | ✅ | 2023-07-13 |
 | 系统指标 API | ✅ | ✅ | 2023-07-14 |
 | AI 模型管理 API | ✅ | ✅ | 2023-07-15 |
-| AI 路由规则 API | ⏳ | ⏳ | - |
-| API 密钥管理 API | ⏳ | ⏳ | - |
+| AI 路由规则 API | ✅ | ✅ | 2023-07-16 |
+| API 密钥管理 API | ✅ | ✅ | 2023-07-17 |
 
 ## 基础 API 客户端
 
@@ -817,6 +817,8 @@ AI 模型管理 API 已经实现，包括以下功能：
 
 ### 7. AI 路由规则 API
 
+**状态：✅ 已实现**
+
 #### 后端 API 端点
 
 ```
@@ -841,20 +843,77 @@ interface AIRoutingRule {
     pattern: string;
     contentTypes?: string[];
     requestTypes?: string[];
-    // 其他条件...
+    headers?: Record<string, string>;
+    parameters?: Record<string, string>;
   };
   targetModel: string;
   enabled: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface AIRoutingRulesResponse {
+  rules: AIRoutingRule[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+interface AIRoutingRuleResponse {
+  rule: AIRoutingRule;
+}
+
+interface AIRoutingRuleActionResponse {
+  success: boolean;
+  rule: AIRoutingRule;
+  message?: string;
+}
+
+interface AIRoutingRuleDeleteResponse {
+  success: boolean;
+  message?: string;
+}
+
+interface AIRoutingRuleQueryParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  targetModel?: string;
+  enabled?: boolean;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 ```
 
 #### 实现计划
 
-1. 创建 `ui/lib/api-client/ai-routing.ts` 文件，实现 `AIRoutingApiClient` 类
-2. 在 `ui/lib/api-client.ts` 中导出新的 API 客户端
-3. 移除 `ui/app/api/ai/routing` 相关文件中的模拟数据
+1. 使用 `ui/lib/api-client/ai-models.ts` 中的方法实现 AI 路由规则的操作 (✅ 已完成)
+2. 创建 AI 路由规则页面，使用 API 客户端 (✅ 已完成)
+
+#### 实现说明
+
+AI 路由规则 API 已经实现，包括以下功能：
+
+1. AI 路由规则 API 客户端增强：
+   - 实现了完整的 AI 路由规则 CRUD 操作
+   - 添加了启用/禁用规则的支持
+   - 添加了查询参数支持（分页、搜索、过滤、排序）
+
+2. AI 路由规则页面实现：
+   - 创建了完整的 AI 路由规则页面
+   - 添加了加载状态和错误处理
+   - 实现了按目标模型和状态过滤功能
+   - 实现了搜索功能
+   - 添加了规则优先级调整功能
+
+3. 测试验证：
+   - 编写了完整的 Playwright 测试用例
+   - 测试覆盖了所有主要功能和错误处理
+   - 测试包括规则列表显示、过滤、搜索、状态切换、删除、优先级调整和导航等功能
 
 ### 8. API 密钥管理 API
+
+**状态：✅ 已实现**
 
 #### 后端 API 端点
 
@@ -862,6 +921,7 @@ interface AIRoutingRule {
 GET    /admin/auth/api-keys          - 获取所有 API 密钥
 POST   /admin/auth/api-keys          - 创建新 API 密钥
 DELETE /admin/auth/api-keys/:id      - 删除特定 API 密钥
+GET    /admin/auth/api-keys/scopes   - 获取可用的 API 密钥权限范围
 ```
 
 #### 数据模型
@@ -873,16 +933,69 @@ interface ApiKey {
   name: string;
   scopes: string[];
   enabled: boolean;
-  createdAt: number;
-  expiresAt: number;
+  createdAt: string;
+  expiresAt?: string;
+  lastUsedAt?: string;
+  description?: string;
+  createdBy?: string;
+}
+
+interface ApiKeysResponse {
+  keys: ApiKey[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+interface ApiKeyCreateResponse {
+  success: boolean;
+  key: ApiKey;
+  message?: string;
+}
+
+interface ApiKeyDeleteResponse {
+  success: boolean;
+  message?: string;
+}
+
+interface ApiKeyQueryParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  scope?: string;
+  enabled?: boolean;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 ```
 
 #### 实现计划
 
-1. 更新 `ui/lib/api-client/auth.ts` 中的接口定义，确保与后端模型一致
-2. 确保 `AuthApiClient` 类中的方法正确调用后端 API
-3. 移除 `ui/app/api/auth` 相关文件中的模拟数据
+1. 更新 `ui/lib/api-client/auth.ts` 中的接口定义，确保与后端模型一致 (✅ 已完成)
+2. 确保 `AuthApiClient` 类中的方法正确调用后端 API (✅ 已完成)
+3. 创建 API 密钥管理页面，使用新的 API 客户端 (✅ 已完成)
+
+#### 实现说明
+
+API 密钥管理 API 已经实现，包括以下功能：
+
+1. API 密钥管理 API 客户端增强：
+   - 实现了完整的 API 密钥管理功能，包括获取、创建和删除
+   - 添加了查询参数支持（分页、搜索、过滤、排序）
+   - 添加了获取可用权限范围的功能
+
+2. API 密钥管理页面实现：
+   - 创建了完整的 API 密钥管理页面
+   - 添加了加载状态和错误处理
+   - 实现了按权限范围过滤功能
+   - 实现了搜索功能
+   - 添加了密钥创建对话框，支持选择权限范围
+   - 添加了密钥复制功能
+
+3. 测试验证：
+   - 编写了完整的 Playwright 测试用例
+   - 测试覆盖了所有主要功能和错误处理
+   - 测试包括密钥列表显示、过滤、搜索、删除、创建和复制等功能
 
 ## 实现步骤
 
