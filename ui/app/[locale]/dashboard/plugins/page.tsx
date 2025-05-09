@@ -6,19 +6,15 @@ import { useTranslations, useLocale } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { PlusIcon, PencilIcon, TrashIcon, RefreshCwIcon } from "lucide-react"
+import { PlusIcon, PencilIcon, TrashIcon, RefreshCwIcon, AlertCircle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { getPlugins, enablePlugin, disablePlugin, deletePlugin, reloadPlugin } from "@/lib/api/plugins"
-import { getPluginTypeDisplay, getPluginTypeColor, getStatusColor } from "@/lib/utils/plugins"
-
-// Import the Plugin type from our API client
-import { Plugin, PluginStatus } from "@/lib/api/plugins"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { pluginApi, Plugin, PluginStatus, PluginQueryParams } from "@/lib/api-client/plugins"
 
 interface PluginsListProps {
   plugins: Plugin[]
@@ -26,6 +22,7 @@ interface PluginsListProps {
   onDelete: (plugin: Plugin) => void
   onReload: (plugin: Plugin) => void
   onEdit: (plugin: Plugin) => void
+  isLoading: boolean
 }
 
 export default function PluginsPage() {
@@ -34,131 +31,213 @@ export default function PluginsPage() {
   const { toast } = useToast()
   const t = useTranslations('plugins')
   const common = useTranslations('common')
-  
+
   const [plugins, setPlugins] = useState<Plugin[]>([])
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPlugins, setTotalPlugins] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
+  const [sortBy, setSortBy] = useState("id")
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [statusFilter, setStatusFilter] = useState("all")
 
-  // Fetch plugins on component mount
-  useEffect(() => {
-    fetchPlugins()
-  }, [])
-
-  // Fetch plugins from API
-  const fetchPlugins = async () => {
-    setLoading(true)
+  // 加载插件数据
+  const loadPlugins = async () => {
     try {
-      const response = await getPlugins()
-      if (response.success) {
-        setPlugins(response.data)
-      } else {
-        toast({
-          title: common('error'),
-          description: response.error,
-          variant: "destructive"
-        })
+      setIsLoading(true)
+      setError(null)
+
+      // 构建查询参数
+      const params: PluginQueryParams = {
+        page: currentPage,
+        pageSize,
+        sortBy,
+        sortOrder
       }
-    } catch (error) {
+
+      // 添加搜索查询
+      if (searchQuery) {
+        params.search = searchQuery
+      }
+
+      // 添加类型过滤
+      if (activeTab !== "all") {
+        params.type = activeTab
+      }
+
+      // 添加状态过滤
+      if (statusFilter === "enabled") {
+        params.status = 'enabled'
+      } else if (statusFilter === "disabled") {
+        params.status = 'disabled'
+      } else if (statusFilter === "error") {
+        params.status = 'error'
+      }
+
+      // 调用 API
+      const response = await pluginApi.getPlugins(params)
+
+      // 更新状态
+      setPlugins(response.plugins)
+      setTotalPlugins(response.total)
+
+    } catch (err) {
+      console.error("Failed to load plugins:", err)
+      setError(err instanceof Error ? err : new Error('Failed to load plugins'))
       toast({
         title: common('error'),
-        description: "Failed to fetch plugins",
+        description: err instanceof Error ? err.message : 'Unknown error',
         variant: "destructive"
       })
     } finally {
-      setLoading(false)
+      setIsLoading(false)
+      setIsRefreshing(false)
     }
   }
 
-  // Handle plugin status toggle
+  // 初始加载和参数变化时重新加载
+  useEffect(() => {
+    loadPlugins()
+  }, [currentPage, pageSize, sortBy, sortOrder, activeTab, statusFilter])
+
+  // 搜索时使用防抖
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadPlugins()
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // 刷新插件数据
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+    loadPlugins()
+  }
+
+  // 切换插件状态
   const handleStatusToggle = async (plugin: Plugin) => {
     try {
-      const response = plugin.status === 'enabled' 
-        ? await disablePlugin(plugin.id)
-        : await enablePlugin(plugin.id)
-      
-      if (response.success) {
-        toast({
-          title: common('success'),
-          description: `Plugin ${plugin.id} ${plugin.status === 'enabled' ? 'disabled' : 'enabled'} successfully`
-        })
-        fetchPlugins() // Refresh the list
-      } else {
-        toast({
-          title: common('error'),
-          description: response.error,
-          variant: "destructive"
-        })
-      }
-    } catch (error) {
-      toast({
-        title: common('error'),
-        description: "Failed to update plugin status",
-        variant: "destructive"
-      })
-    }
-  }
-
-  // Handle plugin deletion
-  const handleDelete = async (plugin: Plugin) => {
-    if (confirm(`${t('deleteConfirm', { name: plugin.id })}`)) {
-      try {
-        const response = await deletePlugin(plugin.id)
+      if (plugin.status === 'enabled') {
+        // 禁用插件
+        const response = await pluginApi.disablePlugin(plugin.id)
         if (response.success) {
           toast({
             title: common('success'),
-            description: `Plugin ${plugin.id} deleted successfully`
+            description: t('disabledSuccess', { name: plugin.id })
           })
-          fetchPlugins() // Refresh the list
         } else {
-          toast({
-            title: common('error'),
-            description: response.error,
-            variant: "destructive"
-          })
+          throw new Error(response.message || t('disableError'))
         }
-      } catch (error) {
-        toast({
-          title: common('error'),
-          description: "Failed to delete plugin",
-          variant: "destructive"
-        })
-      }
-    }
-  }
-
-  // Handle plugin reload
-  const handleReload = async (plugin: Plugin) => {
-    try {
-      const response = await reloadPlugin(plugin.id)
-      if (response.success) {
-        toast({
-          title: common('success'),
-          description: `Plugin ${plugin.id} reloaded successfully`
-        })
-        fetchPlugins() // Refresh the list
       } else {
-        toast({
-          title: common('error'),
-          description: response.error,
-          variant: "destructive"
-        })
+        // 启用插件
+        const response = await pluginApi.enablePlugin(plugin.id)
+        if (response.success) {
+          toast({
+            title: common('success'),
+            description: t('enabledSuccess', { name: plugin.id })
+          })
+        } else {
+          throw new Error(response.message || t('enableError'))
+        }
       }
-    } catch (error) {
+
+      // 重新加载插件数据
+      loadPlugins()
+    } catch (err) {
+      console.error("Failed to toggle plugin status:", err)
       toast({
         title: common('error'),
-        description: "Failed to reload plugin",
+        description: err instanceof Error ? err.message : 'Unknown error',
         variant: "destructive"
       })
     }
   }
 
-  // Filter plugins based on active tab and search query
-  const filteredPlugins = plugins.filter(plugin => {
-    const matchesTab = activeTab === "all" || plugin.type === activeTab
-    const matchesSearch = plugin.id.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesTab && matchesSearch
-  })
+  // 删除插件
+  const handleDelete = async (plugin: Plugin) => {
+    if (confirm(t('deleteConfirm', { name: plugin.id }))) {
+      try {
+        const response = await pluginApi.deletePlugin(plugin.id)
+        if (response.success) {
+          toast({
+            title: common('success'),
+            description: t('deleteSuccess', { name: plugin.id })
+          })
+
+          // 重新加载插件数据
+          loadPlugins()
+        } else {
+          throw new Error(response.message || t('deleteError'))
+        }
+      } catch (err) {
+        console.error("Failed to delete plugin:", err)
+        toast({
+          title: common('error'),
+          description: err instanceof Error ? err.message : t('deleteError'),
+          variant: "destructive"
+        })
+      }
+    }
+  }
+
+  // 重新加载插件
+  const handleReload = async (plugin: Plugin) => {
+    try {
+      const response = await pluginApi.reloadPlugin(plugin.id)
+      if (response.success) {
+        toast({
+          title: common('success'),
+          description: `${plugin.id} ${t('reloadSuccess')}`
+        })
+
+        // 重新加载插件数据
+        loadPlugins()
+      } else {
+        throw new Error(response.message || t('reloadError'))
+      }
+    } catch (err) {
+      console.error("Failed to reload plugin:", err)
+      toast({
+        title: common('error'),
+        description: err instanceof Error ? err.message : t('reloadError'),
+        variant: "destructive"
+      })
+    }
+  }
+
+  // 编辑插件
+  const handleEdit = (plugin: Plugin) => {
+    router.push(`/${locale}/dashboard/plugins/${plugin.id}/edit`)
+  }
+
+  // 获取插件类型显示名称
+  const getPluginTypeDisplay = (type: string): string => {
+    switch (type) {
+      case 'authentication':
+        return 'Authentication'
+      case 'security':
+        return 'Security'
+      case 'transformation':
+        return 'Transformation'
+      case 'business-logic':
+        return 'Business Logic'
+      case 'ai-processing':
+        return 'AI Processing'
+      case 'caching':
+        return 'Caching'
+      case 'logging':
+        return 'Logging'
+      case 'monitoring':
+        return 'Monitoring'
+      default:
+        return type
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -169,11 +248,25 @@ export default function PluginsPage() {
             {t('description')}
           </p>
         </div>
-        <Button onClick={() => router.push(`/${locale}/dashboard/plugins/create`)}>
-          <PlusIcon className="mr-2 h-4 w-4" />
-          {t('addPlugin')}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCwIcon className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {common('refresh')}
+          </Button>
+          <Button onClick={() => router.push(`/${locale}/dashboard/plugins/create`)}>
+            <PlusIcon className="mr-2 h-4 w-4" />
+            {t('addPlugin')}
+          </Button>
+        </div>
       </div>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>{common('error')}</AlertTitle>
+          <AlertDescription>{error.message}</AlertDescription>
+        </Alert>
+      )}
 
       <Card className="mt-6">
         <CardHeader>
@@ -191,6 +284,7 @@ export default function PluginsPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-8"
+                  data-testid="plugin-search"
                 />
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -207,66 +301,38 @@ export default function PluginsPage() {
                   />
                 </svg>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={fetchPlugins}
-                disabled={loading}
-              >
-                <RefreshCwIcon className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                {common('refresh')}
-              </Button>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder={common('status')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('allStatuses')}</SelectItem>
+                  <SelectItem value="enabled">{common('enabled')}</SelectItem>
+                  <SelectItem value="disabled">{common('disabled')}</SelectItem>
+                  <SelectItem value="error">{common('error')}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab} className="w-full" onValueChange={setActiveTab}>
               <TabsList className="grid grid-cols-5 mb-4">
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="authentication">Authentication</TabsTrigger>
-                <TabsTrigger value="security">Security</TabsTrigger>
-                <TabsTrigger value="transformation">Transformation</TabsTrigger>
-                <TabsTrigger value="business-logic">Business Logic</TabsTrigger>
+                <TabsTrigger value="all">{t('all')}</TabsTrigger>
+                <TabsTrigger value="authentication">{getPluginTypeDisplay('authentication')}</TabsTrigger>
+                <TabsTrigger value="security">{getPluginTypeDisplay('security')}</TabsTrigger>
+                <TabsTrigger value="transformation">{getPluginTypeDisplay('transformation')}</TabsTrigger>
+                <TabsTrigger value="business-logic">{getPluginTypeDisplay('business-logic')}</TabsTrigger>
               </TabsList>
-              
-              <TabsContent value="all" className="mt-4">
-                {loading ? (
-                  <div className="flex justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  </div>
-                ) : filteredPlugins.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    {common('noData')} {searchQuery && t('adjustSearch')}
-                  </div>
-                ) : (
-                  <PluginsList
-                    plugins={filteredPlugins}
-                    onToggleStatus={handleStatusToggle}
-                    onDelete={handleDelete}
-                    onReload={handleReload}
-                    onEdit={(plugin) => router.push(`/${locale}/dashboard/plugins/${plugin.id}/edit`)}
-                  />
-                )}
+
+              <TabsContent value={activeTab} className="mt-4">
+                <PluginsList
+                  plugins={plugins}
+                  onToggleStatus={handleStatusToggle}
+                  onDelete={handleDelete}
+                  onReload={handleReload}
+                  onEdit={handleEdit}
+                  isLoading={isLoading}
+                />
               </TabsContent>
-              {['authentication', 'security', 'transformation', 'business-logic'].map(tabValue => (
-                <TabsContent key={tabValue} value={tabValue} className="mt-4">
-                  {loading ? (
-                    <div className="flex justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    </div>
-                  ) : filteredPlugins.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No {tabValue} plugins found.
-                    </div>
-                  ) : (
-                    <PluginsList
-                      plugins={filteredPlugins}
-                      onToggleStatus={handleStatusToggle}
-                      onDelete={handleDelete}
-                      onReload={handleReload}
-                      onEdit={(plugin) => router.push(`/${locale}/dashboard/plugins/${plugin.id}/edit`)}
-                    />
-                  )}
-                </TabsContent>
-              ))}
             </Tabs>
           </div>
         </CardContent>
@@ -275,60 +341,118 @@ export default function PluginsPage() {
   )
 }
 
-function PluginsList({ plugins, onToggleStatus, onDelete, onReload, onEdit }: PluginsListProps) {
+function PluginsList({ plugins, onToggleStatus, onDelete, onReload, onEdit, isLoading }: PluginsListProps) {
+  const t = useTranslations('plugins')
   const common = useTranslations('common')
-  
+
+  // 获取插件类型显示名称
+  const getPluginTypeDisplay = (type: string): string => {
+    switch (type) {
+      case 'authentication':
+        return 'Authentication'
+      case 'security':
+        return 'Security'
+      case 'transformation':
+        return 'Transformation'
+      case 'business-logic':
+        return 'Business Logic'
+      case 'ai-processing':
+        return 'AI Processing'
+      case 'caching':
+        return 'Caching'
+      case 'logging':
+        return 'Logging'
+      case 'monitoring':
+        return 'Monitoring'
+      default:
+        return type
+    }
+  }
+
+  // 获取状态颜色类名
+  const getStatusColorClass = (status: PluginStatus): string => {
+    switch (status) {
+      case 'enabled':
+        return 'text-green-600 dark:text-green-400'
+      case 'disabled':
+        return 'text-gray-600 dark:text-gray-400'
+      case 'error':
+        return 'text-red-600 dark:text-red-400'
+      default:
+        return 'text-gray-600 dark:text-gray-400'
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>ID</TableHead>
-          <TableHead>{common('type')}</TableHead>
-          <TableHead>{common('version')}</TableHead>
-          <TableHead>{common('status')}</TableHead>
-          <TableHead className="text-right">{common('actions')}</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {plugins.map(plugin => (
-          <TableRow key={plugin.id}>
-            <TableCell className="font-medium">{plugin.id}</TableCell>
-            <TableCell>
-              <Badge variant="outline" className={`bg-${getPluginTypeColor(plugin.type)}-100 text-${getPluginTypeColor(plugin.type)}-800 dark:bg-${getPluginTypeColor(plugin.type)}-900 dark:text-${getPluginTypeColor(plugin.type)}-300 border-${getPluginTypeColor(plugin.type)}-200`}>
-                {getPluginTypeDisplay(plugin.type)}
-              </Badge>
-            </TableCell>
-            <TableCell>{plugin.version || 'N/A'}</TableCell>
-            <TableCell>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={plugin.status === 'enabled'}
-                  onCheckedChange={() => onToggleStatus(plugin)}
-                />
-                <span className={`text-${getStatusColor(plugin.status)}-600 dark:text-${getStatusColor(plugin.status)}-400`}>
-                  {plugin.status === 'enabled' ? common('enabled') : common('disabled')}
-                </span>
-              </div>
-            </TableCell>
-            <TableCell className="text-right">
-              <div className="flex justify-end space-x-1">
-                <Button variant="ghost" size="icon" onClick={() => onEdit(plugin)}>
-                  <PencilIcon className="h-4 w-4" />
-                  <span className="sr-only">{common('edit')}</span>
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => onReload(plugin)}>
-                  <RefreshCwIcon className="h-4 w-4" />
-                  <span className="sr-only">{common('refresh')}</span>
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => onDelete(plugin)}>
-                  <TrashIcon className="h-4 w-4" />
-                  <span className="sr-only">{common('delete')}</span>
-                </Button>
-              </div>
-            </TableCell>
+    <div data-testid="plugins-table">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>ID</TableHead>
+            <TableHead>{common('type')}</TableHead>
+            <TableHead>{common('version')}</TableHead>
+            <TableHead>{common('status')}</TableHead>
+            <TableHead className="text-right">{common('actions')}</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {plugins.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                {t('noPlugins')} {t('adjustSearch')}
+              </TableCell>
+            </TableRow>
+          ) : (
+            plugins.map(plugin => (
+              <TableRow key={plugin.id} data-testid="plugin-row">
+                <TableCell className="font-medium">{plugin.id}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">
+                    {getPluginTypeDisplay(plugin.type)}
+                  </Badge>
+                </TableCell>
+                <TableCell>{plugin.version || 'N/A'}</TableCell>
+                <TableCell>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={plugin.status === 'enabled'}
+                      onCheckedChange={() => onToggleStatus(plugin)}
+                    />
+                    <span className={getStatusColorClass(plugin.status)}>
+                      {plugin.status === 'enabled' ? common('enabled') :
+                       plugin.status === 'disabled' ? common('disabled') : common('error')}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-1">
+                    <Button variant="ghost" size="icon" onClick={() => onEdit(plugin)}>
+                      <PencilIcon className="h-4 w-4" />
+                      <span className="sr-only">{common('edit')}</span>
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => onReload(plugin)}>
+                      <RefreshCwIcon className="h-4 w-4" />
+                      <span className="sr-only">{common('refresh')}</span>
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => onDelete(plugin)}>
+                      <TrashIcon className="h-4 w-4" />
+                      <span className="sr-only">{common('delete')}</span>
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
   )
 }

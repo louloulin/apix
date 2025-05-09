@@ -1,58 +1,141 @@
 /**
- * Routes API client
+ * 路由管理 API 客户端
  */
 import { ApiClient } from "./base";
 
+/**
+ * 路由模型接口
+ */
 export interface Route {
   id: string;
+  name?: string;
   path: string;
-  target: string;
-  methods?: string[];
-  plugins?: string[];
+  targetUrl: string;
+  methods: string[];
+  plugins: string[];
   enabled: boolean;
-  priority?: number;
+  priority: number;
+  type?: string;
   description?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /**
- * Routes-specific API client
+ * 路由列表响应接口
+ */
+export interface RoutesResponse {
+  routes: Route[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/**
+ * 路由详情响应接口
+ */
+export interface RouteResponse {
+  route: Route;
+}
+
+/**
+ * 路由创建/更新响应接口
+ */
+export interface RouteActionResponse {
+  success: boolean;
+  route: Route;
+  message?: string;
+}
+
+/**
+ * 路由删除响应接口
+ */
+export interface RouteDeleteResponse {
+  success: boolean;
+  message?: string;
+}
+
+/**
+ * 路由查询参数接口
+ */
+export interface RouteQueryParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  type?: string;
+  enabled?: boolean;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+/**
+ * 路由管理 API 客户端类
  */
 export class RoutesApiClient extends ApiClient {
   /**
-   * Get all routes
+   * 获取所有路由
+   * @param params 查询参数
+   * @returns 路由列表响应
    */
-  async getRoutes() {
-    return this.get<{ routes: Route[] }>('/admin/routes');
+  async getRoutes(params?: RouteQueryParams) {
+    return this.get<RoutesResponse>('/admin/routes', params);
   }
 
   /**
-   * Get a route by ID
+   * 根据 ID 获取路由
+   * @param id 路由 ID
+   * @returns 路由详情响应
    */
   async getRoute(id: string) {
-    return this.get<{ route: Route }>(`/admin/routes/${id}`);
+    return this.get<RouteResponse>(`/admin/routes/${id}`);
   }
 
   /**
-   * Create a new route
+   * 创建新路由
+   * @param route 路由数据
+   * @returns 路由创建响应
    */
-  async createRoute(route: Omit<Route, 'id' | 'enabled'>) {
-    return this.post<{ success: boolean; route: Route }>('/admin/routes', route);
+  async createRoute(route: Omit<Route, 'id' | 'createdAt' | 'updatedAt'>) {
+    return this.post<RouteActionResponse>('/admin/routes', route);
   }
 
   /**
-   * Update a route
+   * 更新路由
+   * @param id 路由 ID
+   * @param route 路由数据
+   * @returns 路由更新响应
    */
-  async updateRoute(id: string, route: Partial<Route>) {
-    return this.put<{ success: boolean; route: Route }>(`/admin/routes/${id}`, route);
+  async updateRoute(id: string, route: Partial<Omit<Route, 'id' | 'createdAt' | 'updatedAt'>>) {
+    return this.put<RouteActionResponse>(`/admin/routes/${id}`, route);
   }
 
   /**
-   * Delete a route
+   * 删除路由
+   * @param id 路由 ID
+   * @returns 路由删除响应
    */
   async deleteRoute(id: string) {
-    return this.delete<{ success: boolean }>(`/admin/routes/${id}`);
+    return this.delete<RouteDeleteResponse>(`/admin/routes/${id}`);
+  }
+
+  /**
+   * 启用路由
+   * @param id 路由 ID
+   * @returns 路由启用响应
+   */
+  async enableRoute(id: string) {
+    return this.post<RouteActionResponse>(`/admin/routes/${id}/enable`, {});
+  }
+
+  /**
+   * 禁用路由
+   * @param id 路由 ID
+   * @returns 路由禁用响应
+   */
+  async disableRoute(id: string) {
+    return this.post<RouteActionResponse>(`/admin/routes/${id}/disable`, {});
   }
 }
 
-// Create singleton instance
+// 创建单例实例
 export const routesApi = new RoutesApiClient();

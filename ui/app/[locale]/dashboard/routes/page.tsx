@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations, useLocale } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,24 +11,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { PlusIcon, PencilIcon, TrashIcon, RefreshCwIcon } from "lucide-react"
+import { PlusIcon, PencilIcon, TrashIcon, RefreshCwIcon, AlertCircle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-
-// Define the route type
-interface Route {
-  id: string
-  path: string
-  target: string
-  method: string
-  active: boolean
-  type: 'llm' | 'vector' | 'other'
-}
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { routesApi, Route } from "@/lib/api-client/routes"
 
 interface RoutesListProps {
   routes: Route[]
   onToggleStatus: (route: Route) => void
   onDelete: (route: Route) => void
   onEdit: (route: Route) => void
+  isLoading: boolean
 }
 
 export default function RoutesPage() {
@@ -37,85 +30,151 @@ export default function RoutesPage() {
   const { toast } = useToast()
   const t = useTranslations('routes')
   const common = useTranslations('common')
-  
+
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
-  
-  // Mock data - would come from API in real implementation
-  const routes: Route[] = [
-    {
-      id: "1",
-      path: "/v1/completions",
-      target: "https://api.openai.com/v1/completions",
-      method: "POST",
-      active: true,
-      type: "llm"
-    },
-    {
-      id: "2",
-      path: "/v1/chat/completions",
-      target: "https://api.openai.com/v1/chat/completions",
-      method: "POST",
-      active: true,
-      type: "llm"
-    },
-    {
-      id: "3",
-      path: "/v1/messages",
-      target: "https://api.anthropic.com/v1/messages",
-      method: "POST",
-      active: true,
-      type: "llm"
-    },
-    {
-      id: "4",
-      path: "/vectors/search",
-      target: "INTERNAL",
-      method: "POST",
-      active: true,
-      type: "vector"
-    },
-    {
-      id: "5",
-      path: "/vectors/upsert",
-      target: "INTERNAL",
-      method: "POST",
-      active: true,
-      type: "vector"
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+  const [routes, setRoutes] = useState<Route[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalRoutes, setTotalRoutes] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
+  const [sortBy, setSortBy] = useState("path")
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [statusFilter, setStatusFilter] = useState("all")
+
+  // 加载路由数据
+  const loadRoutes = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      // 构建查询参数
+      const params: any = {
+        page: currentPage,
+        pageSize,
+        sortBy,
+        sortOrder
+      }
+
+      // 添加搜索查询
+      if (searchQuery) {
+        params.search = searchQuery
+      }
+
+      // 添加类型过滤
+      if (activeTab !== "all") {
+        params.type = activeTab
+      }
+
+      // 添加状态过滤
+      if (statusFilter === "active") {
+        params.enabled = true
+      } else if (statusFilter === "inactive") {
+        params.enabled = false
+      }
+
+      // 调用 API
+      const response = await routesApi.getRoutes(params)
+
+      // 更新状态
+      setRoutes(response.routes)
+      setTotalRoutes(response.total)
+
+    } catch (err) {
+      console.error("Failed to load routes:", err)
+      setError(err instanceof Error ? err : new Error('Failed to load routes'))
+      toast({
+        title: common('error'),
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: "destructive"
+      })
+    } finally {
+      setIsLoading(false)
+      setIsRefreshing(false)
     }
-  ]
-  
-  // Filter routes based on active tab and search query
-  const filteredRoutes = routes.filter(route => {
-    const matchesTab = activeTab === "all" || route.type === activeTab
-    const matchesSearch = route.path.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         route.target.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesTab && matchesSearch
-  })
-  
-  // Handle route status toggle
-  const handleStatusToggle = (route: Route) => {
-    toast({
-      title: common('success'),
-      description: `Route ${route.path} ${route.active ? 'disabled' : 'enabled'} successfully`
-    })
   }
 
-  // Handle route deletion
-  const handleDelete = (route: Route) => {
-    if (confirm(`${t('deleteConfirm', { path: route.path })}`)) {
+  // 初始加载和参数变化时重新加载
+  useEffect(() => {
+    loadRoutes()
+  }, [currentPage, pageSize, sortBy, sortOrder, activeTab, statusFilter])
+
+  // 搜索时使用防抖
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadRoutes()
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // 刷新路由数据
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+    loadRoutes()
+  }
+
+  // 切换路由状态
+  const handleToggleStatus = async (route: Route) => {
+    try {
+      if (route.enabled) {
+        // 禁用路由
+        await routesApi.disableRoute(route.id)
+        toast({
+          title: common('success'),
+          description: t('routeDisabled', { path: route.path })
+        })
+      } else {
+        // 启用路由
+        await routesApi.enableRoute(route.id)
+        toast({
+          title: common('success'),
+          description: t('routeEnabled', { path: route.path })
+        })
+      }
+
+      // 重新加载路由数据
+      loadRoutes()
+    } catch (err) {
+      console.error("Failed to toggle route status:", err)
       toast({
-        title: common('success'),
-        description: `Route ${route.path} deleted successfully`
+        title: common('error'),
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: "destructive"
       })
     }
   }
 
-  // Handle route edit
+  // 删除路由
+  const handleDelete = async (route: Route) => {
+    if (confirm(t('deleteConfirm', { path: route.path }))) {
+      try {
+        await routesApi.deleteRoute(route.id)
+        toast({
+          title: common('success'),
+          description: t('routeDeleted', { path: route.path })
+        })
+
+        // 重新加载路由数据
+        loadRoutes()
+      } catch (err) {
+        console.error("Failed to delete route:", err)
+        toast({
+          title: common('error'),
+          description: err instanceof Error ? err.message : 'Unknown error',
+          variant: "destructive"
+        })
+      }
+    }
+  }
+
+  // 编辑路由
   const handleEdit = (route: Route) => {
     router.push(`/${locale}/dashboard/routes/${route.id}/edit`)
   }
-  
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -125,12 +184,26 @@ export default function RoutesPage() {
             {t('description')}
           </p>
         </div>
-        <Button onClick={() => router.push(`/${locale}/dashboard/routes/create`)}>
-          <PlusIcon className="mr-2 h-4 w-4" />
-          {t('addRoute')}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCwIcon className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {common('refresh')}
+          </Button>
+          <Button onClick={() => router.push(`/${locale}/dashboard/routes/create`)}>
+            <PlusIcon className="mr-2 h-4 w-4" />
+            {t('addRoute')}
+          </Button>
+        </div>
       </div>
-      
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>{common('error')}</AlertTitle>
+          <AlertDescription>{error.message}</AlertDescription>
+        </Alert>
+      )}
+
       <Card className="mt-6">
         <CardHeader>
           <CardTitle>{t('title')}</CardTitle>
@@ -163,7 +236,7 @@ export default function RoutesPage() {
                   />
                 </svg>
               </div>
-              <Select defaultValue="all">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder={common('status')} />
                 </SelectTrigger>
@@ -174,45 +247,22 @@ export default function RoutesPage() {
                 </SelectContent>
               </Select>
             </div>
-            
-            <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
+
+            <Tabs value={activeTab} className="w-full" onValueChange={setActiveTab}>
               <TabsList>
                 <TabsTrigger value="all">{t('allRoutes')}</TabsTrigger>
                 <TabsTrigger value="llm">{t('llmRoutes')}</TabsTrigger>
                 <TabsTrigger value="vector">{t('vectorRoutes')}</TabsTrigger>
                 <TabsTrigger value="other">{t('otherRoutes')}</TabsTrigger>
               </TabsList>
-              
-              <TabsContent value="all" className="mt-4">
-                <RoutesList 
-                  routes={filteredRoutes} 
-                  onToggleStatus={handleStatusToggle}
+
+              <TabsContent value={activeTab} className="mt-4">
+                <RoutesList
+                  routes={routes}
+                  onToggleStatus={handleToggleStatus}
                   onDelete={handleDelete}
                   onEdit={handleEdit}
-                />
-              </TabsContent>
-              <TabsContent value="llm" className="mt-4">
-                <RoutesList 
-                  routes={filteredRoutes} 
-                  onToggleStatus={handleStatusToggle}
-                  onDelete={handleDelete}
-                  onEdit={handleEdit}
-                />
-              </TabsContent>
-              <TabsContent value="vector" className="mt-4">
-                <RoutesList 
-                  routes={filteredRoutes} 
-                  onToggleStatus={handleStatusToggle}
-                  onDelete={handleDelete}
-                  onEdit={handleEdit}
-                />
-              </TabsContent>
-              <TabsContent value="other" className="mt-4">
-                <RoutesList 
-                  routes={filteredRoutes} 
-                  onToggleStatus={handleStatusToggle}
-                  onDelete={handleDelete}
-                  onEdit={handleEdit}
+                  isLoading={isLoading}
                 />
               </TabsContent>
             </Tabs>
@@ -223,17 +273,25 @@ export default function RoutesPage() {
   )
 }
 
-function RoutesList({ routes, onToggleStatus, onDelete, onEdit }: RoutesListProps) {
+function RoutesList({ routes, onToggleStatus, onDelete, onEdit, isLoading }: RoutesListProps) {
   const t = useTranslations('routes')
   const common = useTranslations('common')
-  
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>{t('path')}</TableHead>
           <TableHead>{t('target')}</TableHead>
-          <TableHead>{t('method')}</TableHead>
+          <TableHead>{t('methods')}</TableHead>
           <TableHead>{common('status')}</TableHead>
           <TableHead className="text-right">{common('actions')}</TableHead>
         </TableRow>
@@ -242,27 +300,31 @@ function RoutesList({ routes, onToggleStatus, onDelete, onEdit }: RoutesListProp
         {routes.length === 0 ? (
           <TableRow>
             <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-              {common('noData')} {t('noRoutes')}
+              {t('noRoutes')}
             </TableCell>
           </TableRow>
         ) : (
           routes.map(route => (
             <TableRow key={route.id}>
               <TableCell className="font-medium">{route.path}</TableCell>
-              <TableCell>{route.target}</TableCell>
+              <TableCell>{route.targetUrl}</TableCell>
               <TableCell>
-                <Badge variant="outline" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border-blue-200">
-                  {route.method}
-                </Badge>
+                <div className="flex flex-wrap gap-1">
+                  {route.methods.map(method => (
+                    <Badge key={method} variant="outline" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 border-blue-200">
+                      {method}
+                    </Badge>
+                  ))}
+                </div>
               </TableCell>
               <TableCell>
                 <div className="flex items-center space-x-2">
                   <Switch
-                    checked={route.active}
+                    checked={route.enabled}
                     onCheckedChange={() => onToggleStatus(route)}
                   />
-                  <span className={route.active ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
-                    {route.active ? common('active') : common('inactive')}
+                  <span className={route.enabled ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
+                    {route.enabled ? common('active') : common('inactive')}
                   </span>
                 </div>
               </TableCell>

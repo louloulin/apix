@@ -294,12 +294,14 @@
     "dependencies": "依赖",
     "settings": "设置",
     "deleteConfirm": "确定要删除插件 {name} 吗？",
-    "enabledSuccess": "已成功启用",
-    "disabledSuccess": "已成功禁用",
+    "enabledSuccess": "{name} 已成功启用",
+    "disabledSuccess": "{name} 已成功禁用",
     "enableError": "启用插件失败",
     "disableError": "禁用插件失败",
-    "deleteSuccess": "已成功删除",
+    "deleteSuccess": "{name} 已成功删除",
     "deleteError": "删除插件失败",
+    "reloadSuccess": "已成功重新加载",
+    "reloadError": "重新加载插件失败",
     "adjustSearch": "尝试调整搜索条件。",
     "notFound": "未找到插件",
     "notFoundDescription": "您查找的插件不存在或已被删除。",
@@ -320,7 +322,10 @@
     "invalidJson": "无效的 JSON 配置",
     "pluginCreated": "插件已创建",
     "hasBeenCreated": "已成功创建",
-    "createError": "创建插件失败"
+    "createError": "创建插件失败",
+    "all": "全部",
+    "allStatuses": "所有状态",
+    "noPlugins": "未找到插件。"
   },
   "routes": {
     "title": "路由管理",
@@ -369,7 +374,14 @@
     "enableRoute": "启用路由",
     "requiredFieldsMissing": "路径、目标和至少一种方法是必需的",
     "routeCreated": "路由已创建",
-    "routeCreatedDescription": "您的路由已成功创建"
+    "routeCreatedDescription": "您的路由已成功创建",
+    "routeEnabled": "路由已启用",
+    "routeDisabled": "路由已禁用",
+    "routeDeleted": "路由已删除",
+    "allRoutes": "所有路由",
+    "llmRoutes": "LLM 路由",
+    "vectorRoutes": "向量路由",
+    "otherRoutes": "其他路由"
   },
   "config": {
     "title": "网关配置",

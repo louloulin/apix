@@ -377,12 +377,14 @@
     "dependencies": "Dependencies",
     "settings": "Settings",
     "deleteConfirm": "Are you sure you want to delete the plugin {name}?",
-    "enabledSuccess": "has been enabled successfully",
-    "disabledSuccess": "has been disabled successfully",
+    "enabledSuccess": "{name} has been enabled successfully",
+    "disabledSuccess": "{name} has been disabled successfully",
     "enableError": "Failed to enable plugin",
     "disableError": "Failed to disable plugin",
-    "deleteSuccess": "has been deleted successfully",
+    "deleteSuccess": "{name} has been deleted successfully",
     "deleteError": "Failed to delete plugin",
+    "reloadSuccess": "has been reloaded successfully",
+    "reloadError": "Failed to reload plugin",
     "adjustSearch": "Try adjusting your search.",
     "notFound": "Plugin Not Found",
     "notFoundDescription": "The plugin you're looking for doesn't exist or has been deleted.",
@@ -403,7 +405,10 @@
     "invalidJson": "Invalid JSON configuration",
     "pluginCreated": "Plugin Created",
     "hasBeenCreated": "has been created successfully",
-    "createError": "Failed to create plugin"
+    "createError": "Failed to create plugin",
+    "all": "All",
+    "allStatuses": "All Statuses",
+    "noPlugins": "No plugins found."
   },
   "routes": {
     "title": "Routes Management",
@@ -452,7 +457,14 @@
     "enableRoute": "Enable Route",
     "requiredFieldsMissing": "Path, target, and at least one method are required",
     "routeCreated": "Route Created",
-    "routeCreatedDescription": "Your route has been created successfully"
+    "routeCreatedDescription": "Your route has been created successfully",
+    "routeEnabled": "Route Enabled",
+    "routeDisabled": "Route Disabled",
+    "routeDeleted": "Route Deleted",
+    "allRoutes": "All Routes",
+    "llmRoutes": "LLM Routes",
+    "vectorRoutes": "Vector Routes",
+    "otherRoutes": "Other Routes"
   },
   "config": {
     "title": "Gateway Configuration",
