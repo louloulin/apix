@@ -89,7 +89,7 @@ export class DashboardApiClient extends ApiClient {
    * @returns 仪表盘数据
    */
   async getDashboardData(period: 'day' | 'week' | 'month' = 'day'): Promise<DashboardData> {
-    return this.get<DashboardData>('/admin/dashboard/stats', { period });
+    return this.get<DashboardData>('/api/admin/dashboard/stats', { period });
   }
 
   /**
@@ -98,7 +98,7 @@ export class DashboardApiClient extends ApiClient {
    * @returns 流量数据
    */
   async getTrafficData(period: 'day' | 'week' | 'month' = 'day'): Promise<TrafficDataPoint[]> {
-    return this.get<{ data: TrafficDataPoint[] }>('/admin/dashboard/traffic', { period })
+    return this.get<{ data: TrafficDataPoint[] }>('/api/admin/dashboard/traffic', { period })
       .then(response => response.data);
   }
 
@@ -108,7 +108,7 @@ export class DashboardApiClient extends ApiClient {
    * @returns LLM 使用数据
    */
   async getLlmUsageData(period: 'day' | 'week' | 'month' = 'day'): Promise<LlmUsageDataPoint[]> {
-    return this.get<{ data: LlmUsageDataPoint[] }>('/admin/dashboard/llm-usage', { period })
+    return this.get<{ data: LlmUsageDataPoint[] }>('/api/admin/dashboard/llm-usage', { period })
       .then(response => response.data);
   }
 
@@ -118,7 +118,7 @@ export class DashboardApiClient extends ApiClient {
    * @returns 最近事件
    */
   async getRecentEvents(limit: number = 5): Promise<DashboardEvent[]> {
-    return this.get<{ events: DashboardEvent[] }>('/admin/dashboard/events', { limit })
+    return this.get<{ events: DashboardEvent[] }>('/api/admin/dashboard/events', { limit })
       .then(response => response.events);
   }
 }

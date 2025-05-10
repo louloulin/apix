@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState, useMemo } from "react"
-import { useTranslations } from 'next-intl'
+import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   LineChart,
   Line,
@@ -13,8 +13,8 @@ import {
   ResponsiveContainer,
   Area,
   AreaChart
-} from 'recharts'
-import { TrafficDataPoint } from "@/lib/api-client/dashboard"
+} from "recharts";
+import { TrafficDataPoint } from "@/lib/api-client/dashboard";
 
 // 当没有数据时显示的空数据
 const emptyData = [

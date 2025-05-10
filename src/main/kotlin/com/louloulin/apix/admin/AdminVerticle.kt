@@ -1,6 +1,7 @@
 package com.louloulin.apix.admin
 
 import com.louloulin.apix.core.PluginChain
+import com.louloulin.apix.metrics.MetricsCollector
 import com.louloulin.apix.plugins.Plugin
 import com.louloulin.apix.plugins.PluginConfig
 import com.louloulin.apix.plugins.PluginFactory
@@ -28,9 +29,13 @@ class AdminVerticle : AbstractVerticle() {
     private val logger = LoggerFactory.getLogger(AdminVerticle::class.java)
     private lateinit var server: HttpServer
     private lateinit var pluginManager: UnifiedPluginManager
+    private lateinit var metricsCollector: MetricsCollector
+    private lateinit var dashboardHandler: DashboardHandler
 
     override fun start(startPromise: Promise<Void>) {
         pluginManager = UnifiedPluginManager.getInstance(vertx)
+        metricsCollector = MetricsCollector(vertx)
+        dashboardHandler = DashboardHandler(metricsCollector)
 
         val router = Router.router(vertx)
 
@@ -61,6 +66,9 @@ class AdminVerticle : AbstractVerticle() {
 
         // 系统监控 API
         setupMonitoringRoutes(router)
+
+        // 仪表盘 API
+        setupDashboardRoutes(router)
 
         // 启动 HTTP 服务器
         server = vertx.createHttpServer()
@@ -586,6 +594,31 @@ class AdminVerticle : AbstractVerticle() {
                     .put("routes", routes)
                     .encode()
                 )
+        }
+    }
+
+    /**
+     * 设置仪表盘路由
+     */
+    private fun setupDashboardRoutes(router: Router) {
+        // 获取仪表盘统计数据
+        router.get("/api/admin/dashboard/stats").handler { ctx ->
+            dashboardHandler.handleGetDashboardStats(ctx)
+        }
+
+        // 获取流量数据
+        router.get("/api/admin/dashboard/traffic").handler { ctx ->
+            dashboardHandler.handleGetTrafficData(ctx)
+        }
+
+        // 获取 LLM 使用数据
+        router.get("/api/admin/dashboard/llm-usage").handler { ctx ->
+            dashboardHandler.handleGetLlmUsageData(ctx)
+        }
+
+        // 获取最近事件
+        router.get("/api/admin/dashboard/events").handler { ctx ->
+            dashboardHandler.handleGetRecentEvents(ctx)
         }
     }
 }
