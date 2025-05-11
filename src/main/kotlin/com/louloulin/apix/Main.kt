@@ -30,6 +30,8 @@ import com.louloulin.apix.core.verticle.EventBusEnhancerVerticle
 import com.louloulin.apix.core.verticle.HealthVerticle
 import com.louloulin.apix.core.verticle.HighAvailabilityVerticle
 import com.louloulin.apix.core.verticle.ModelRouterVerticle
+import com.louloulin.apix.cdn.CDNVerticle
+import com.louloulin.apix.dns.SmartDNSVerticle
 import com.louloulin.apix.core.verticle.MonitorVerticle
 import com.louloulin.apix.core.verticle.MultiLevelCacheVerticle
 import com.louloulin.apix.core.verticle.NodeModeVerticle
@@ -336,6 +338,14 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy EdgeControlPlaneVerticle
             deployVerticle(vertx, EdgeControlPlaneVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy CDNVerticle
+            deployVerticle(vertx, CDNVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy SmartDNSVerticle
+            deployVerticle(vertx, SmartDNSVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy PluginVerticle

@@ -322,6 +322,27 @@ object EventBusAddresses {
     // 向量生成相关
     const val VECTOR_GENERATE = "apix.vector.generate"
 
+    // CDN集成相关
+    const val CDN_STATUS_GET = "apix.cdn.status.get"
+    const val CDN_CACHE_PURGE = "apix.cdn.cache.purge"
+    const val CDN_CACHE_PREWARM = "apix.cdn.cache.prewarm"
+    const val CDN_CONFIG_UPDATE = "apix.cdn.config.update"
+    const val CDN_CACHE_TAG_ADD = "apix.cdn.cache.tag.add"
+    const val CDN_CACHE_TAG_PURGE = "apix.cdn.cache.tag.purge"
+    const val CDN_CONTENT_OPTIMIZE = "apix.cdn.content.optimize"
+    const val CDN_IMAGE_OPTIMIZE = "apix.cdn.image.optimize"
+
+    // 智能DNS相关
+    const val DNS_STATUS_GET = "apix.dns.status.get"
+    const val DNS_GEO_LOCATION_GET = "apix.dns.geo.location.get"
+    const val DNS_BEST_NODE_GET = "apix.dns.best.node.get"
+    const val DNS_RECORD_CREATE = "apix.dns.record.create"
+    const val DNS_RECORD_UPDATE = "apix.dns.record.update"
+    const val DNS_RECORD_DELETE = "apix.dns.record.delete"
+    const val DNS_RECORD_GET = "apix.dns.record.get"
+    const val DNS_RECORDS_GET = "apix.dns.records.get"
+    const val DNS_CONFIG_UPDATE = "apix.dns.config.update"
+
     // 集群相关
     const val CLUSTER_GET_LOCAL_NODE_ID = "apix.cluster.get.local.node.id"
     const val CLUSTER_GET_SHARD_ASSIGNMENT = "apix.cluster.get.shard.assignment"
