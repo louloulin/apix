@@ -10,26 +10,24 @@ import org.slf4j.LoggerFactory
  * 语义缓存Verticle，负责启动语义缓存服务。
  */
 class SemanticCacheVerticle : BaseVerticle() {
-    private val logger = LoggerFactory.getLogger(SemanticCacheVerticle::class.java)
+    // 使用父类的 logger
 
     // 语义缓存管理器
     private lateinit var semanticCacheManager: SemanticCacheManager
 
-    override fun start(startPromise: Promise<Void>) {
-        super.start(startPromise)
-
+    /**
+     * Verticle 启动时的自定义逻辑
+     */
+    override fun onStart(startPromise: Promise<Void>) {
         // 初始化语义缓存管理器
         semanticCacheManager = SemanticCacheManager.getInstance(vertx)
 
         // 获取配置
-        val cacheConfig = config.getJsonObject("semanticCache", JsonObject())
+        val cacheConfig = config().getJsonObject("semanticCache", JsonObject())
 
         // 初始化语义缓存管理器
         semanticCacheManager.initialize(cacheConfig)
             .onSuccess { _ ->
-                // 注册事件总线处理器
-                registerEventBusHandlers()
-
                 logger.info("语义缓存Verticle启动成功")
                 startPromise.complete()
             }
@@ -42,7 +40,7 @@ class SemanticCacheVerticle : BaseVerticle() {
     /**
      * 注册事件总线处理器。
      */
-    private fun registerEventBusHandlers() {
+    override fun registerEventBusHandlers() {
         // 处理语义查询请求
         vertx.eventBus().consumer<JsonObject>(EventBusAddresses.SEMANTIC_CACHE_QUERY) { message ->
             val request = message.body()
@@ -77,7 +75,7 @@ class SemanticCacheVerticle : BaseVerticle() {
 
             semanticCacheManager.semanticStore(query, result, vector)
                 .onSuccess { _ ->
-                    sendSuccess(message)
+                    sendSuccess(message, null)
                 }
                 .onFailure { cause ->
                     sendError(message, cause)
@@ -96,7 +94,7 @@ class SemanticCacheVerticle : BaseVerticle() {
 
             semanticCacheManager.semanticInvalidate(key)
                 .onSuccess { _ ->
-                    sendSuccess(message)
+                    sendSuccess(message, null)
                 }
                 .onFailure { cause ->
                     sendError(message, cause)
@@ -154,7 +152,7 @@ class SemanticCacheVerticle : BaseVerticle() {
         }
 
         // 处理语义缓存状态请求
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.CACHE_STATUS) { message ->
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.SEMANTIC_CACHE_STATUS) { message ->
             val status = semanticCacheManager.getStatus()
             sendSuccess(message, status)
         }

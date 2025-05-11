@@ -317,6 +317,7 @@ object EventBusAddresses {
     const val SEMANTIC_CACHE_SHARD = "apix.semantic.cache.shard"
     const val SEMANTIC_CACHE_QUERY_SHARD = "apix.semantic.cache.query.shard"
     const val SEMANTIC_CACHE_MIGRATE_SHARD = "apix.semantic.cache.migrate.shard"
+    const val SEMANTIC_CACHE_STATUS = "apix.semantic.cache.status"
 
     // 向量生成相关
     const val VECTOR_GENERATE = "apix.vector.generate"

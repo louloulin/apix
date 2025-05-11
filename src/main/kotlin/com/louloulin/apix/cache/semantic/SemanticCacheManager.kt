@@ -708,7 +708,7 @@ class SemanticCacheManager(private val vertx: Vertx) {
             .put("localShards", localShards.size)
             .put("remoteShards", remoteShards.size)
             .put("shardAssignment", JsonObject(shards))
-            .put("localShardSizes", JsonObject(localShardSizes))
+            .put("localShardSizes", JsonObject(localShardSizes.mapValues { it.value as Any }))
     }
 
     /**
