@@ -121,6 +121,18 @@ object EventBusAddresses {
     const val CLUSTER_SERVICES_SYNC = "apix.cluster.services.sync"
     const val CLUSTER_PLUGINS_SYNC = "apix.cluster.plugins.sync"
 
+    // 节点模式相关
+    const val NODE_MODE_GET = "apix.node.mode.get"
+    const val NODE_INFO_GET = "apix.node.info.get"
+    const val NODE_MODE_CHANGE = "apix.node.mode.change"
+
+    // EventBus增强相关
+    const val EVENTBUS_TYPE_GET = "apix.eventbus.type.get"
+    const val EVENTBUS_TYPE_SET = "apix.eventbus.type.set"
+    const val EVENTBUS_STATS_GET = "apix.eventbus.stats.get"
+    const val EVENTBUS_DISTRIBUTED_CONFIG = "apix.eventbus.distributed.config"
+    const val EVENTBUS_HIGHPERF_CONFIG = "apix.eventbus.highperf.config"
+
     // 并发控制相关
     const val CONCURRENCY_TRY_ACQUIRE = "apix.concurrency.try.acquire"
     const val CONCURRENCY_RELEASE = "apix.concurrency.release"

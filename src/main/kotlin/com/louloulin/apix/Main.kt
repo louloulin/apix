@@ -23,10 +23,13 @@ import com.louloulin.apix.core.verticle.CacheVerticle
 import com.louloulin.apix.core.verticle.ClusterVerticle
 import com.louloulin.apix.core.verticle.ConfigVerticle
 import com.louloulin.apix.core.verticle.BenchmarkVerticle
+import com.louloulin.apix.core.verticle.DBlessVerticle
 import com.louloulin.apix.core.verticle.DeploymentVerticle
+import com.louloulin.apix.core.verticle.EventBusEnhancerVerticle
 import com.louloulin.apix.core.verticle.HealthVerticle
 import com.louloulin.apix.core.verticle.ModelRouterVerticle
 import com.louloulin.apix.core.verticle.MonitorVerticle
+import com.louloulin.apix.core.verticle.NodeModeVerticle
 import com.louloulin.apix.core.verticle.PluginVerticle
 import com.louloulin.apix.core.verticle.PromptEnhancerVerticle
 import com.louloulin.apix.core.verticle.ConcurrencyControlVerticle
@@ -211,6 +214,9 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         futures.add(vertx.deployVerticle(ConfigVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(MonitorVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(HealthVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(NodeModeVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(DBlessVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(EventBusEnhancerVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ConcurrencyControlVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ApixVerticle::class.java.name, options))
 
@@ -234,6 +240,18 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy MonitorVerticle
             deployVerticle(vertx, MonitorVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy NodeModeVerticle
+            deployVerticle(vertx, NodeModeVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy DBlessVerticle
+            deployVerticle(vertx, DBlessVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy EventBusEnhancerVerticle
+            deployVerticle(vertx, EventBusEnhancerVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy ClusterVerticle if Vert.x is clustered

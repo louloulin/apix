@@ -24,6 +24,12 @@ class EventBusManager(private val vertx: Vertx) {
     // JCToolsEventBus实例
     private val jcToolsEventBus = JCToolsEventBus.getInstance(vertx)
 
+    // DistributedEventBus实例
+    private val distributedEventBus = DistributedEventBus.getInstance(vertx)
+
+    // HighPerformanceEventBus实例
+    private val highPerformanceEventBus = HighPerformanceEventBus.getInstance(vertx)
+
     // 性能统计
     private val messagesSent = AtomicLong(0)
     private val switchCount = AtomicLong(0)
@@ -36,7 +42,9 @@ class EventBusManager(private val vertx: Vertx) {
     enum class EventBusType {
         VERTX,      // 原生Vert.x EventBus
         SIMPLE,     // 简化版EventBus
-        JCTOOLS     // JCTools版EventBus（兼容模式）
+        JCTOOLS,    // JCTools版EventBus（兼容模式）
+        DISTRIBUTED, // 分布式增强版EventBus
+        HIGH_PERFORMANCE // 高性能EventBus
     }
 
     /**
@@ -54,6 +62,8 @@ class EventBusManager(private val vertx: Vertx) {
             EventBusType.VERTX -> vertx.eventBus()
             EventBusType.SIMPLE -> simpleEventBus.getOriginalEventBus()
             EventBusType.JCTOOLS -> jcToolsEventBus.getOriginalEventBus()
+            EventBusType.DISTRIBUTED -> distributedEventBus.getOriginalEventBus()
+            EventBusType.HIGH_PERFORMANCE -> highPerformanceEventBus.getOriginalEventBus()
         }
     }
 
@@ -68,6 +78,8 @@ class EventBusManager(private val vertx: Vertx) {
             EventBusType.VERTX -> vertx.eventBus().send(address, message)
             EventBusType.SIMPLE -> simpleEventBus.sendToQueue(address, message)
             EventBusType.JCTOOLS -> jcToolsEventBus.sendToQueue(address, message)
+            EventBusType.DISTRIBUTED -> distributedEventBus.send<Any>(address, message)
+            EventBusType.HIGH_PERFORMANCE -> highPerformanceEventBus.send<Any>(address, message)
         }
     }
 
@@ -78,8 +90,15 @@ class EventBusManager(private val vertx: Vertx) {
         // 更新统计信息
         messagesSent.incrementAndGet()
 
-        // 发布消息始终使用原生EventBus
-        vertx.eventBus().publish(address, message)
+        when (currentType.get()) {
+            EventBusType.VERTX, EventBusType.SIMPLE, EventBusType.JCTOOLS ->
+                // 原生或兼容模式使用原生EventBus
+                vertx.eventBus().publish(address, message)
+            EventBusType.DISTRIBUTED ->
+                distributedEventBus.publish(address, message)
+            EventBusType.HIGH_PERFORMANCE ->
+                highPerformanceEventBus.publish(address, message)
+        }
     }
 
     /**
@@ -123,6 +142,32 @@ class EventBusManager(private val vertx: Vertx) {
                     logger.info("Switched to JCToolsEventBus")
                     promise.complete(true)
                 }
+                EventBusType.DISTRIBUTED -> {
+                    // 切换到DistributedEventBus
+                    distributedEventBus.start()
+                        .onSuccess {
+                            currentType.set(EventBusType.DISTRIBUTED)
+                            logger.info("Switched to DistributedEventBus")
+                            promise.complete(true)
+                        }
+                        .onFailure { cause ->
+                            logger.error("Failed to start DistributedEventBus", cause)
+                            promise.fail(cause)
+                        }
+                }
+                EventBusType.HIGH_PERFORMANCE -> {
+                    // 切换到HighPerformanceEventBus
+                    highPerformanceEventBus.start()
+                        .onSuccess {
+                            currentType.set(EventBusType.HIGH_PERFORMANCE)
+                            logger.info("Switched to HighPerformanceEventBus")
+                            promise.complete(true)
+                        }
+                        .onFailure { cause ->
+                            logger.error("Failed to start HighPerformanceEventBus", cause)
+                            promise.fail(cause)
+                        }
+                }
             }
         } catch (e: Exception) {
             logger.error("Error switching EventBus type", e)
@@ -156,6 +201,16 @@ class EventBusManager(private val vertx: Vertx) {
         // 添加JCToolsEventBus统计信息
         if (currentType.get() == EventBusType.JCTOOLS) {
             stats.put("jctools", jcToolsEventBus.getStats())
+        }
+
+        // 添加DistributedEventBus统计信息
+        if (currentType.get() == EventBusType.DISTRIBUTED) {
+            stats.put("distributed", distributedEventBus.getStats())
+        }
+
+        // 添加HighPerformanceEventBus统计信息
+        if (currentType.get() == EventBusType.HIGH_PERFORMANCE) {
+            stats.put("highPerformance", highPerformanceEventBus.getStats())
         }
 
         return stats
