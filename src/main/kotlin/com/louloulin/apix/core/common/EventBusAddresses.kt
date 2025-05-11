@@ -189,6 +189,20 @@ object EventBusAddresses {
     const val CACHE_WARMUP_START = "apix.cache.warmup.start"
     const val CACHE_WARMUP_STATUS_GET = "apix.cache.warmup.status.get"
 
+    // 智能缓存策略相关
+    const val CACHE_ADAPTIVE_TTL_STATUS_GET = "apix.cache.adaptive.ttl.status.get"
+    const val CACHE_ADAPTIVE_TTL_GET = "apix.cache.adaptive.ttl.get"
+    const val CACHE_HOT_DATA_STATUS_GET = "apix.cache.hot.data.status.get"
+    const val CACHE_HOT_DATA_CHECK = "apix.cache.hot.data.check"
+    const val CACHE_HOT_DATA_GET_ALL = "apix.cache.hot.data.get.all"
+    const val CACHE_PROTECTION_STATUS_GET = "apix.cache.protection.status.get"
+    const val CACHE_PROTECTION_PENETRATION = "apix.cache.protection.penetration"
+    const val CACHE_PROTECTION_BREAKDOWN = "apix.cache.protection.breakdown"
+    const val CACHE_PROTECTION_AVALANCHE = "apix.cache.protection.avalanche"
+    const val CACHE_BLOOM_FILTER_STATUS_GET = "apix.cache.bloom.filter.status.get"
+    const val CACHE_BLOOM_FILTER_ADD = "apix.cache.bloom.filter.add"
+    const val CACHE_BLOOM_FILTER_CHECK = "apix.cache.bloom.filter.check"
+
     // 并发控制相关
     const val CONCURRENCY_TRY_ACQUIRE = "apix.concurrency.try.acquire"
     const val CONCURRENCY_RELEASE = "apix.concurrency.release"
