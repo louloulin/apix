@@ -250,6 +250,19 @@ object EventBusAddresses {
     const val EDGE_INTELLIGENCE_FEDERATED_UPDATE = "apix.edge.intelligence.federated.update"
     const val EDGE_INTELLIGENCE_FEDERATED_TRAIN = "apix.edge.intelligence.federated.train"
 
+    // 边缘控制平面相关
+    const val EDGE_CONTROL_PLANE_STATUS_GET = "apix.edge.control.plane.status.get"
+    const val EDGE_CONTROL_PLANE_NODES_GET = "apix.edge.control.plane.nodes.get"
+    const val EDGE_CONTROL_PLANE_CONFIG_VERSION_GET = "apix.edge.control.plane.config.version.get"
+    const val EDGE_CONTROL_PLANE_CONFIG_GET = "apix.edge.control.plane.config.get"
+    const val EDGE_CONTROL_PLANE_CONFIG_UPDATE = "apix.edge.control.plane.config.update"
+    const val EDGE_CONTROL_PLANE_CONFIG_ROLLBACK = "apix.edge.control.plane.config.rollback"
+    const val EDGE_CONTROL_PLANE_CONFIG_UPDATED = "apix.edge.control.plane.config.updated"
+    const val EDGE_CONTROL_PLANE_NODE_REGISTER = "apix.edge.control.plane.node.register"
+    const val EDGE_CONTROL_PLANE_NODE_HEARTBEAT = "apix.edge.control.plane.node.heartbeat"
+    const val EDGE_CONTROL_PLANE_NODE_REGISTERED = "apix.edge.control.plane.node.registered"
+    const val EDGE_CONTROL_PLANE_NODE_OFFLINE = "apix.edge.control.plane.node.offline"
+
     // 对象池管理相关
     const val OBJECT_POOL_CREATE = "apix.memory.object.pool.create"
     const val OBJECT_POOL_REMOVE = "apix.memory.object.pool.remove"

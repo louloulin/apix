@@ -42,6 +42,7 @@ import com.louloulin.apix.core.verticle.MemoryManagerVerticle
 import com.louloulin.apix.core.verticle.RateLimitVerticle
 import com.louloulin.apix.core.verticle.RequestQueueVerticle
 import com.louloulin.apix.edge.EdgeNodeVerticle
+import com.louloulin.apix.edge.EdgeControlPlaneVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.core.CompositeFuture
 import io.vertx.core.metrics.MetricsOptions
@@ -230,6 +231,7 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         futures.add(vertx.deployVerticle(SmartCacheVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ConcurrencyControlVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(EdgeNodeVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(EdgeControlPlaneVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ApixVerticle::class.java.name, options))
 
         // 等待所有Verticle部署完成
@@ -330,6 +332,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy EdgeNodeVerticle
             deployVerticle(vertx, EdgeNodeVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy EdgeControlPlaneVerticle
+            deployVerticle(vertx, EdgeControlPlaneVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy PluginVerticle
