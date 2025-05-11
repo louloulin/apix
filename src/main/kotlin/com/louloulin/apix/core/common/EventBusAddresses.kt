@@ -218,6 +218,38 @@ object EventBusAddresses {
     const val MEMORY_CRITICAL_NOTIFY = "apix.memory.critical.notify"
     const val MEMORY_RESTORED_NOTIFY = "apix.memory.restored.notify"
 
+    // 边缘节点相关
+    const val EDGE_STATUS_GET = "apix.edge.status.get"
+    const val EDGE_NODE_STATUS_GET = "apix.edge.node.status.get"
+    const val EDGE_NODE_RESOURCE_USAGE_GET = "apix.edge.node.resource.usage.get"
+    const val EDGE_NODE_RESOURCE_LIMITS_UPDATE = "apix.edge.node.resource.limits.update"
+    const val EDGE_NODE_STARTUP_OPTIMIZE = "apix.edge.node.startup.optimize"
+    const val EDGE_NODE_DEPENDENCIES_MINIMIZE = "apix.edge.node.dependencies.minimize"
+    const val EDGE_RESOURCE_LIMITS_UPDATE = "apix.edge.resource.limits.update"
+    const val EDGE_RESOURCE_USAGE_GET = "apix.edge.resource.usage.get"
+    const val EDGE_STARTUP_OPTIMIZE = "apix.edge.startup.optimize"
+    const val EDGE_DEPENDENCIES_MINIMIZE = "apix.edge.dependencies.minimize"
+    const val EDGE_RESOURCE_MEMORY_WARNING = "apix.edge.resource.memory.warning"
+    const val EDGE_RESOURCE_LIMITS_UPDATED = "apix.edge.resource.limits.updated"
+
+    // 边缘自治相关
+    const val EDGE_AUTONOMY_STATUS_GET = "apix.edge.autonomy.status.get"
+    const val EDGE_AUTONOMY_OFFLINE_ENTER = "apix.edge.autonomy.offline.enter"
+    const val EDGE_AUTONOMY_OFFLINE_EXIT = "apix.edge.autonomy.offline.exit"
+    const val EDGE_AUTONOMY_OFFLINE_MODE_CHANGED = "apix.edge.autonomy.offline.mode.changed"
+    const val EDGE_AUTONOMY_LOCAL_DECISION = "apix.edge.autonomy.local.decision"
+    const val EDGE_AUTONOMY_CACHE_UPDATE = "apix.edge.autonomy.cache.update"
+    const val EDGE_AUTONOMY_RATE_LIMIT = "apix.edge.autonomy.rate.limit"
+    const val EDGE_AUTONOMY_CIRCUIT_BREAK = "apix.edge.autonomy.circuit.break"
+
+    // 边缘智能相关
+    const val EDGE_INTELLIGENCE_STATUS_GET = "apix.edge.intelligence.status.get"
+    const val EDGE_INTELLIGENCE_INFERENCE = "apix.edge.intelligence.inference"
+    const val EDGE_INTELLIGENCE_DATA_PROCESS = "apix.edge.intelligence.data.process"
+    const val EDGE_INTELLIGENCE_ANALYTICS = "apix.edge.intelligence.analytics"
+    const val EDGE_INTELLIGENCE_FEDERATED_UPDATE = "apix.edge.intelligence.federated.update"
+    const val EDGE_INTELLIGENCE_FEDERATED_TRAIN = "apix.edge.intelligence.federated.train"
+
     // 对象池管理相关
     const val OBJECT_POOL_CREATE = "apix.memory.object.pool.create"
     const val OBJECT_POOL_REMOVE = "apix.memory.object.pool.remove"
