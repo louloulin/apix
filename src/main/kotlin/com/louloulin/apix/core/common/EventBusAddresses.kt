@@ -263,6 +263,32 @@ object EventBusAddresses {
     const val EDGE_CONTROL_PLANE_NODE_REGISTERED = "apix.edge.control.plane.node.registered"
     const val EDGE_CONTROL_PLANE_NODE_OFFLINE = "apix.edge.control.plane.node.offline"
 
+    // 边缘数据同步相关
+    const val EDGE_SYNC_REQUEST = "apix.edge.sync.request"
+    const val EDGE_SYNC_DIFF = "apix.edge.sync.diff"
+    const val EDGE_SYNC_MERGE = "apix.edge.sync.merge"
+    const val EDGE_SYNC_COMPRESS = "apix.edge.sync.compress"
+    const val EDGE_SYNC_DECOMPRESS = "apix.edge.sync.decompress"
+    const val EDGE_SYNC_RESUME = "apix.edge.sync.resume"
+    const val EDGE_SYNC_STATUS_GET = "apix.edge.sync.status.get"
+    const val EDGE_SYNC_BANDWIDTH_GET = "apix.edge.sync.bandwidth.get"
+    const val EDGE_SYNC_NETWORK_CONDITION_GET = "apix.edge.sync.network.condition.get"
+    const val EDGE_SYNC_STRATEGY_GET = "apix.edge.sync.strategy.get"
+    const val EDGE_SYNC_STRATEGY_SET = "apix.edge.sync.strategy.set"
+
+    // 控制平面数据同步相关
+    const val CONTROL_PLANE_GET_LATEST_VERSION = "apix.control.plane.get.latest.version"
+    const val CONTROL_PLANE_GET_FULL_DATA = "apix.control.plane.get.full.data"
+    const val CONTROL_PLANE_GET_DIFF = "apix.control.plane.get.diff"
+    const val CONTROL_PLANE_GET_DATA_BY_VERSION = "apix.control.plane.get.data.by.version"
+    const val CONTROL_PLANE_RATE_LIMITED_SYNC = "apix.control.plane.rate.limited.sync"
+
+    // 本地存储相关
+    const val LOCAL_STORAGE_GET = "apix.local.storage.get"
+    const val LOCAL_STORAGE_SAVE = "apix.local.storage.save"
+    const val LOCAL_STORAGE_DELETE = "apix.local.storage.delete"
+    const val LOCAL_STORAGE_LIST = "apix.local.storage.list"
+
     // 对象池管理相关
     const val OBJECT_POOL_CREATE = "apix.memory.object.pool.create"
     const val OBJECT_POOL_REMOVE = "apix.memory.object.pool.remove"
@@ -281,4 +307,25 @@ object EventBusAddresses {
     const val RATE_LIMIT_CREATE = "apix.ratelimit.create"
     const val RATE_LIMIT_DELETE = "apix.ratelimit.delete"
     const val RATE_LIMIT_STATUS = "apix.ratelimit.status"
+
+    // 语义缓存相关
+    const val SEMANTIC_CACHE_QUERY = "apix.semantic.cache.query"
+    const val SEMANTIC_CACHE_STORE = "apix.semantic.cache.store"
+    const val SEMANTIC_CACHE_INVALIDATE = "apix.semantic.cache.invalidate"
+    const val SEMANTIC_CACHE_SYNC = "apix.semantic.cache.sync"
+    const val SEMANTIC_CACHE_SYNC_RECEIVE = "apix.semantic.cache.sync.receive"
+    const val SEMANTIC_CACHE_SHARD = "apix.semantic.cache.shard"
+    const val SEMANTIC_CACHE_QUERY_SHARD = "apix.semantic.cache.query.shard"
+    const val SEMANTIC_CACHE_MIGRATE_SHARD = "apix.semantic.cache.migrate.shard"
+
+    // 向量生成相关
+    const val VECTOR_GENERATE = "apix.vector.generate"
+
+    // 集群相关
+    const val CLUSTER_GET_LOCAL_NODE_ID = "apix.cluster.get.local.node.id"
+    const val CLUSTER_GET_SHARD_ASSIGNMENT = "apix.cluster.get.shard.assignment"
+    const val CLUSTER_SET_SHARD_ASSIGNMENT = "apix.cluster.set.shard.assignment"
+    const val CLUSTER_GET_LOCAL_REGION = "apix.cluster.get.local.region"
+    const val CLUSTER_GET_REGIONS = "apix.cluster.get.regions"
+    const val CLUSTER_GET_NODES = "apix.cluster.get.nodes"
 }

@@ -2,8 +2,10 @@ package com.louloulin.apix.edge
 
 import io.vertx.core.Promise
 import io.vertx.core.json.JsonObject
+import io.vertx.core.buffer.Buffer
 import com.louloulin.apix.core.verticle.BaseVerticle
 import com.louloulin.apix.core.common.EventBusAddresses
+import com.louloulin.apix.edge.sync.EdgeSyncManager
 
 /**
  * 边缘节点Verticle，负责初始化和管理边缘节点功能。
@@ -19,6 +21,9 @@ class EdgeNodeVerticle : BaseVerticle() {
 
     // 边缘智能管理器
     private lateinit var edgeIntelligenceManager: EdgeIntelligenceManager
+
+    // 边缘同步管理器
+    private lateinit var edgeSyncManager: EdgeSyncManager
 
     override fun registerEventBusHandlers() {
         // 注册边缘节点相关的事件总线处理器
@@ -217,6 +222,93 @@ class EdgeNodeVerticle : BaseVerticle() {
             sendSuccess(message, status)
         }
 
+        // 注册边缘同步相关的事件总线处理器
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_SYNC_STATUS_GET) { message ->
+            val syncStatus = JsonObject()
+            val statusMap = edgeSyncManager.getSyncStatus()
+            for ((dataType, status) in statusMap) {
+                syncStatus.put(dataType, JsonObject()
+                    .put("status", status.status)
+                    .put("startVersion", status.startVersion)
+                    .put("endVersion", status.endVersion)
+                    .put("startTime", status.startTime)
+                    .put("endTime", status.endTime)
+                    .put("duration", status.getDuration())
+                    .put("error", status.error)
+                )
+            }
+
+            sendSuccess(message, syncStatus)
+        }
+
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_SYNC_BANDWIDTH_GET) { message ->
+            val bandwidthUsage = edgeSyncManager.getBandwidthUsage()
+            val result = JsonObject()
+                .put("bytesPerSecond", bandwidthUsage.bytesPerSecond)
+                .put("maxBandwidth", bandwidthUsage.maxBandwidth)
+                .put("usageRatio", bandwidthUsage.usageRatio)
+
+            sendSuccess(message, result)
+        }
+
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_SYNC_NETWORK_CONDITION_GET) { message ->
+            val networkCondition = edgeSyncManager.getNetworkCondition()
+            val result = JsonObject()
+                .put("status", networkCondition.status.toString())
+                .put("latency", networkCondition.latency)
+                .put("packetLoss", networkCondition.packetLoss)
+
+            sendSuccess(message, result)
+        }
+
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_SYNC_REQUEST) { message ->
+            val dataType = message.body().getString("dataType")
+            val version = message.body().getLong("version", 0L)
+
+            if (dataType == null) {
+                sendError(message, 400, "Missing dataType parameter")
+                return@consumer
+            }
+
+            edgeSyncManager.syncData(dataType, version)
+                .onSuccess { result ->
+                    sendSuccess(message, result)
+                }
+                .onFailure { cause ->
+                    sendError(message, cause)
+                }
+        }
+
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_SYNC_STRATEGY_GET) { message ->
+            val strategy = edgeSyncManager.getConfig().getJsonObject("strategy", JsonObject())
+            sendSuccess(message, strategy)
+        }
+
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_SYNC_STRATEGY_SET) { message ->
+            val strategy = message.body().getJsonObject("strategy")
+
+            if (strategy == null) {
+                sendError(message, 400, "Missing strategy parameter")
+                return@consumer
+            }
+
+            try {
+                // 更新同步策略
+                val config = edgeSyncManager.getConfig().copy()
+                config.put("strategy", strategy)
+
+                edgeSyncManager.initialize(config)
+                    .onSuccess { _ ->
+                        sendSuccess(message, JsonObject().put("updated", true))
+                    }
+                    .onFailure { cause ->
+                        sendError(message, cause)
+                    }
+            } catch (e: Exception) {
+                sendError(message, e)
+            }
+        }
+
         vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_INTELLIGENCE_INFERENCE) { message ->
             val modelId = message.body().getString("modelId")
             val input = message.body().getJsonObject("input")
@@ -367,6 +459,9 @@ class EdgeNodeVerticle : BaseVerticle() {
                     // 初始化边缘智能管理器
                     edgeIntelligenceManager = EdgeIntelligenceManager.getInstance(vertx)
 
+                    // 初始化边缘同步管理器
+                    edgeSyncManager = EdgeSyncManager.getInstance(vertx)
+
                     // 初始化边缘节点管理器
                     edgeNodeManager.initialize(config)
                         .compose { _ ->
@@ -377,8 +472,13 @@ class EdgeNodeVerticle : BaseVerticle() {
                             // 初始化边缘智能管理器
                             edgeIntelligenceManager.initialize(config)
                         }
+                        .compose { _ ->
+                            // 初始化边缘同步管理器
+                            val syncConfig = config.getJsonObject("node", JsonObject()).getJsonObject("edge", JsonObject()).getJsonObject("sync", JsonObject())
+                            edgeSyncManager.initialize(syncConfig)
+                        }
                         .onSuccess {
-                            logger.info("边缘节点管理器、自治管理器和智能管理器初始化成功")
+                            logger.info("边缘节点管理器、自治管理器、智能管理器和同步管理器初始化成功")
 
                             // 注册边缘节点组件状态
                             registerComponentStatus()
@@ -386,7 +486,7 @@ class EdgeNodeVerticle : BaseVerticle() {
                             startPromise.complete()
                         }
                         .onFailure { cause ->
-                            logger.error("边缘节点管理器、自治管理器或智能管理器初始化失败", cause)
+                            logger.error("边缘节点管理器、自治管理器、智能管理器或同步管理器初始化失败", cause)
                             startPromise.fail(cause)
                         }
                 } else {
@@ -430,6 +530,15 @@ class EdgeNodeVerticle : BaseVerticle() {
         vertx.eventBus().send(EventBusAddresses.HEALTH_COMPONENT_STATUS, JsonObject()
             .put("component", "edge-intelligence")
             .put("status", intelligenceEnabled)
+        )
+
+        // 向健康检查Verticle注册边缘同步组件状态
+        val syncStatus = edgeSyncManager.getSyncStatus()
+        val syncEnabled = !syncStatus.isEmpty()
+
+        vertx.eventBus().send(EventBusAddresses.HEALTH_COMPONENT_STATUS, JsonObject()
+            .put("component", "edge-sync")
+            .put("status", syncEnabled)
         )
     }
 }

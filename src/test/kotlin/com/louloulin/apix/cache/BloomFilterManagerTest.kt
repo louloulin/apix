@@ -18,17 +18,17 @@ import kotlin.test.assertTrue
  */
 @ExtendWith(VertxExtension::class)
 class BloomFilterManagerTest {
-    
+
     private lateinit var vertx: Vertx
     private lateinit var bloomFilterManager: BloomFilterManager
-    
+
     @BeforeEach
     fun setUp(vertx: Vertx, testContext: VertxTestContext) {
         this.vertx = vertx
-        
+
         // 创建布隆过滤器管理器
         bloomFilterManager = BloomFilterManager.getInstance(vertx)
-        
+
         // 初始化布隆过滤器管理器
         val config = JsonObject()
             .put("cache", JsonObject()
@@ -40,44 +40,44 @@ class BloomFilterManagerTest {
                 )
                 .put("cacheNamespace", "test")
             )
-        
+
         bloomFilterManager.initialize(config)
             .onComplete(testContext.succeedingThenComplete())
     }
-    
+
     @AfterEach
     fun tearDown(vertx: Vertx, testContext: VertxTestContext) {
         vertx.close().onComplete(testContext.succeedingThenComplete())
     }
-    
+
     @Test
     fun `test add and check bloom filter`(testContext: VertxTestContext) {
         // 添加元素到布隆过滤器
         bloomFilterManager.add("test-key", "test")
-            .compose { _ ->
+            .compose<Void> { _ ->
                 // 检查元素是否在布隆过滤器中
                 val mightContain = bloomFilterManager.mightContain("test-key", "test")
-                
+
                 testContext.verify {
                     assertTrue(mightContain)
-                    
+
                     // 检查不存在的元素
                     val mightContain2 = bloomFilterManager.mightContain("non-existent-key", "test")
                     assertEquals(false, mightContain2)
-                    
+
                     // 获取状态
                     val status = bloomFilterManager.getStatus()
                     assertNotNull(status)
-                    
+
                     testContext.completeNow()
                 }
-                
-                Future.succeededFuture<Void>()
+
+                io.vertx.core.Future.succeededFuture<Void>()
             }
             .onFailure { cause ->
                 testContext.failNow(cause)
             }
-        
+
         assertTrue(testContext.awaitCompletion(5, TimeUnit.SECONDS))
     }
 }

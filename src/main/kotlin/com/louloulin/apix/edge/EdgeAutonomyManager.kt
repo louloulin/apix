@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import com.louloulin.apix.core.common.EventBusAddresses
 import com.louloulin.apix.ha.DataPlaneAutonomyManager
+import com.louloulin.apix.edge.sync.EdgeSyncManager
 
 /**
  * 边缘自治管理器，负责边缘节点的离线工作模式、本地决策能力、本地缓存增强和本地限流熔断。
@@ -48,6 +49,9 @@ class EdgeAutonomyManager(private val vertx: Vertx) {
     // 数据平面自治管理器
     private lateinit var dataPlaneAutonomyManager: DataPlaneAutonomyManager
 
+    // 边缘同步管理器
+    private lateinit var edgeSyncManager: EdgeSyncManager
+
     /**
      * 初始化边缘自治管理器。
      *
@@ -74,6 +78,19 @@ class EdgeAutonomyManager(private val vertx: Vertx) {
 
         // 获取数据平面自治管理器
         dataPlaneAutonomyManager = DataPlaneAutonomyManager.getInstance(vertx)
+
+        // 获取边缘同步管理器
+        edgeSyncManager = EdgeSyncManager.getInstance(vertx)
+
+        // 初始化边缘同步管理器
+        val syncConfig = edgeConfig.getJsonObject("sync", JsonObject())
+        edgeSyncManager.initialize(syncConfig)
+            .onSuccess { _ ->
+                logger.info("边缘同步管理器初始化成功")
+            }
+            .onFailure { cause ->
+                logger.error("边缘同步管理器初始化失败", cause)
+            }
 
         // 注册事件总线处理器
         registerEventBusHandlers()
@@ -543,12 +560,47 @@ class EdgeAutonomyManager(private val vertx: Vertx) {
      * @return 包含状态信息的 JsonObject
      */
     fun getStatus(): JsonObject {
+        // 获取同步状态
+        val syncStatus = JsonObject()
+        val syncStatusMap = edgeSyncManager.getSyncStatus()
+        for ((dataType, status) in syncStatusMap) {
+            syncStatus.put(dataType, JsonObject()
+                .put("status", status.status)
+                .put("startVersion", status.startVersion)
+                .put("endVersion", status.endVersion)
+                .put("startTime", status.startTime)
+                .put("endTime", status.endTime)
+                .put("duration", status.getDuration())
+                .put("error", status.error)
+            )
+        }
+
+        // 获取带宽使用情况
+        val bandwidthUsage = edgeSyncManager.getBandwidthUsage()
+        val bandwidthInfo = JsonObject()
+            .put("bytesPerSecond", bandwidthUsage.bytesPerSecond)
+            .put("maxBandwidth", bandwidthUsage.maxBandwidth)
+            .put("usageRatio", bandwidthUsage.usageRatio)
+
+        // 获取网络条件
+        val networkCondition = edgeSyncManager.getNetworkCondition()
+        val networkInfo = JsonObject()
+            .put("status", networkCondition.status.toString())
+            .put("latency", networkCondition.latency)
+            .put("packetLoss", networkCondition.packetLoss)
+
         return JsonObject()
             .put("enabled", autonomyEnabled.get())
             .put("offlineMode", offlineMode.get())
             .put("lastCommunicationTime", lastCommunicationTime.get())
             .put("config", autonomyConfig.get())
             .put("timestamp", System.currentTimeMillis())
+            .put("sync", JsonObject()
+                .put("status", syncStatus)
+                .put("bandwidth", bandwidthInfo)
+                .put("network", networkInfo)
+                .put("dataVersions", JsonObject(edgeSyncManager.getDataVersions().mapValues { it.value }))
+            )
     }
 
     /**
