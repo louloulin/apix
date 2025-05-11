@@ -343,6 +343,21 @@ object EventBusAddresses {
     const val DNS_RECORDS_GET = "apix.dns.records.get"
     const val DNS_CONFIG_UPDATE = "apix.dns.config.update"
 
+    // Anycast网络相关
+    const val ANYCAST_STATUS_GET = "apix.anycast.status.get"
+    const val ANYCAST_IP_ADD = "apix.anycast.ip.add"
+    const val ANYCAST_IP_REMOVE = "apix.anycast.ip.remove"
+    const val ANYCAST_BGP_SESSION_ADD = "apix.anycast.bgp.session.add"
+    const val ANYCAST_BGP_SESSION_REMOVE = "apix.anycast.bgp.session.remove"
+    const val ANYCAST_CONFIG_UPDATE = "apix.anycast.config.update"
+
+    // 点对点加速相关
+    const val P2P_STATUS_GET = "apix.p2p.status.get"
+    const val P2P_ROUTE_GET = "apix.p2p.route.get"
+    const val P2P_NODE_ADD = "apix.p2p.node.add"
+    const val P2P_NODE_REMOVE = "apix.p2p.node.remove"
+    const val P2P_CONFIG_UPDATE = "apix.p2p.config.update"
+
     // 集群相关
     const val CLUSTER_GET_LOCAL_NODE_ID = "apix.cluster.get.local.node.id"
     const val CLUSTER_GET_SHARD_ASSIGNMENT = "apix.cluster.get.shard.assignment"

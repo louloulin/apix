@@ -33,6 +33,24 @@ abstract class BaseVerticle : AbstractVerticle() {
      */
     protected abstract fun onStart(startPromise: Promise<Void>)
 
+    override fun stop(stopPromise: Promise<Void>) {
+        logger.info("Stopping ${this.javaClass.simpleName}...")
+        try {
+            onStop(stopPromise)
+        } catch (e: Exception) {
+            logger.error("Failed to stop ${this.javaClass.simpleName}", e)
+            stopPromise.fail(e)
+        }
+    }
+
+    /**
+     * Verticle 停止时的自定义逻辑
+     */
+    protected open fun onStop(stopPromise: Promise<Void>) {
+        // 默认实现，什么都不做
+        stopPromise.complete()
+    }
+
     /**
      * 发送成功响应
      */
