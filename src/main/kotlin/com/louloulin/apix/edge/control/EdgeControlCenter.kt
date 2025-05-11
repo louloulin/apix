@@ -102,7 +102,7 @@ class EdgeControlCenter(private val vertx: Vertx) {
      */
     private fun registerEventBusHandlers() {
         // 处理边缘节点列表请求
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_CONTROL_CENTER_NODES_LIST) { message ->
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_NODES_GET) { message ->
             val request = message.body()
             val token = request.getString("token")
             val groupId = request.getString("groupId")
@@ -138,7 +138,7 @@ class EdgeControlCenter(private val vertx: Vertx) {
         }
 
         // 处理边缘节点详情请求
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_CONTROL_CENTER_NODE_DETAIL) { message ->
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_NODE_DETAILS_GET) { message ->
             val request = message.body()
             val token = request.getString("token")
             val nodeId = request.getString("nodeId")
@@ -179,7 +179,7 @@ class EdgeControlCenter(private val vertx: Vertx) {
         }
 
         // 处理边缘节点分组列表请求
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_CONTROL_CENTER_GROUPS_LIST) { message ->
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_NODE_GROUPS_GET) { message ->
             val request = message.body()
             val token = request.getString("token")
 
@@ -211,7 +211,7 @@ class EdgeControlCenter(private val vertx: Vertx) {
         }
 
         // 处理边缘节点标签列表请求
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_CONTROL_CENTER_TAGS_LIST) { message ->
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_NODES_GET) { message ->
             val request = message.body()
             val token = request.getString("token")
 
@@ -243,7 +243,7 @@ class EdgeControlCenter(private val vertx: Vertx) {
         }
 
         // 处理边缘节点批量操作请求
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_CONTROL_CENTER_BATCH_OPERATION) { message ->
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_NODES_BATCH_OPERATE) { message ->
             val request = message.body()
             val token = request.getString("token")
             val operation = request.getString("operation")
@@ -286,7 +286,7 @@ class EdgeControlCenter(private val vertx: Vertx) {
         }
 
         // 处理边缘节点监控数据请求
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_CONTROL_CENTER_MONITORING_DATA) { message ->
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_NODE_METRICS_GET) { message ->
             val request = message.body()
             val token = request.getString("token")
             val nodeId = request.getString("nodeId")
@@ -331,7 +331,7 @@ class EdgeControlCenter(private val vertx: Vertx) {
         }
 
         // 处理边缘节点告警列表请求
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_CONTROL_CENTER_ALERTS_LIST) { message ->
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_NODE_ALERTS_GET) { message ->
             val request = message.body()
             val token = request.getString("token")
             val nodeId = request.getString("nodeId")
@@ -368,7 +368,7 @@ class EdgeControlCenter(private val vertx: Vertx) {
         }
 
         // 处理边缘节点远程诊断请求
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_CONTROL_CENTER_REMOTE_DIAGNOSIS) { message ->
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_NODE_DIAGNOSE) { message ->
             val request = message.body()
             val token = request.getString("token")
             val nodeId = request.getString("nodeId")
@@ -411,7 +411,7 @@ class EdgeControlCenter(private val vertx: Vertx) {
         }
 
         // 处理边缘节点远程更新请求
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_CONTROL_CENTER_REMOTE_UPDATE) { message ->
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_NODE_UPDATE_SOFTWARE) { message ->
             val request = message.body()
             val token = request.getString("token")
             val nodeIds = request.getJsonArray("nodeIds")
@@ -455,7 +455,7 @@ class EdgeControlCenter(private val vertx: Vertx) {
         }
 
         // 处理审计日志列表请求
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_CONTROL_CENTER_AUDIT_LOGS) { message ->
+        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.EDGE_AUDIT_LOGS_GET) { message ->
             val request = message.body()
             val token = request.getString("token")
             val userId = request.getString("userId")
@@ -512,4 +512,3 @@ class EdgeControlCenter(private val vertx: Vertx) {
             .put("timestamp", System.currentTimeMillis())
     }
 }
-*/
