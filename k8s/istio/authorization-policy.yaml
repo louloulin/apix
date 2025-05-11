@@ -1,0 +1,19 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: apix-admin-authz
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: apix
+      app.kubernetes.io/component: admin
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        namespaces: ["default"]
+    to:
+    - operation:
+        methods: ["GET", "POST", "PUT", "DELETE"]
+        paths: ["/admin/*"]

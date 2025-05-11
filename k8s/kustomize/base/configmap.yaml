@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apix-config
+data:
+  config.yaml: |
+    mode: hybrid
+    log_level: info
+    dbless: true
+    
+    admin:
+      listen: 0.0.0.0:8001
+    
+    proxy:
+      listen: 0.0.0.0:8000
+    
+    eventbus:
+      cluster_name: apix-cluster
+      cluster_type: hazelcast
+    
+    plugins:
+      enabled:
+        - name: rate-limiting
+          config:
+            limit: 100
+            period: minute
+        - name: cors
+          config:
+            origins:
+              - "*"
+            methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            headers:
+              - Content-Type
+              - Authorization
+            credentials: true
+            maxAge: 3600

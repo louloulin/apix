@@ -1,0 +1,231 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: routes.apix.louloulin.com
+spec:
+  group: apix.louloulin.com
+  names:
+    kind: Route
+    listKind: RouteList
+    plural: routes
+    singular: route
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - hosts
+                - paths
+                - upstream
+              properties:
+                hosts:
+                  type: array
+                  items:
+                    type: string
+                  description: "List of hosts that this route should match"
+                paths:
+                  type: array
+                  items:
+                    type: string
+                  description: "List of paths that this route should match"
+                methods:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - GET
+                      - POST
+                      - PUT
+                      - DELETE
+                      - PATCH
+                      - HEAD
+                      - OPTIONS
+                      - CONNECT
+                      - TRACE
+                  description: "List of HTTP methods that this route should match"
+                protocols:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - http
+                      - https
+                      - grpc
+                      - grpcs
+                      - tcp
+                      - tls
+                  default:
+                    - http
+                    - https
+                  description: "List of protocols this route should match"
+                upstream:
+                  type: object
+                  required:
+                    - targets
+                  properties:
+                    targets:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                          - host
+                          - port
+                        properties:
+                          host:
+                            type: string
+                            description: "Target hostname or IP"
+                          port:
+                            type: integer
+                            minimum: 1
+                            maximum: 65535
+                            description: "Target port"
+                          weight:
+                            type: integer
+                            minimum: 0
+                            maximum: 1000
+                            default: 100
+                            description: "Weight of this target (for load balancing)"
+                    loadBalancing:
+                      type: string
+                      enum:
+                        - round-robin
+                        - consistent-hashing
+                        - least-connections
+                        - random
+                      default: round-robin
+                      description: "Load balancing algorithm to use"
+                    healthChecks:
+                      type: object
+                      properties:
+                        active:
+                          type: object
+                          properties:
+                            enabled:
+                              type: boolean
+                              default: true
+                            timeout:
+                              type: integer
+                              minimum: 1
+                              default: 5
+                              description: "Timeout in seconds for active health checks"
+                            interval:
+                              type: integer
+                              minimum: 1
+                              default: 10
+                              description: "Interval in seconds between active health checks"
+                            httpPath:
+                              type: string
+                              default: "/"
+                              description: "HTTP path to use for active health checks"
+                            healthy:
+                              type: object
+                              properties:
+                                interval:
+                                  type: integer
+                                  minimum: 1
+                                  default: 5
+                                  description: "Interval in seconds between health checks for healthy targets"
+                                successes:
+                                  type: integer
+                                  minimum: 1
+                                  default: 2
+                                  description: "Number of successes to consider a target healthy"
+                            unhealthy:
+                              type: object
+                              properties:
+                                interval:
+                                  type: integer
+                                  minimum: 1
+                                  default: 5
+                                  description: "Interval in seconds between health checks for unhealthy targets"
+                                httpFailures:
+                                  type: integer
+                                  minimum: 1
+                                  default: 2
+                                  description: "Number of HTTP failures to consider a target unhealthy"
+                                tcpFailures:
+                                  type: integer
+                                  minimum: 1
+                                  default: 2
+                                  description: "Number of TCP failures to consider a target unhealthy"
+                                timeouts:
+                                  type: integer
+                                  minimum: 1
+                                  default: 3
+                                  description: "Number of timeouts to consider a target unhealthy"
+                plugins:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - name
+                    properties:
+                      name:
+                        type: string
+                        description: "Name of the plugin"
+                      enabled:
+                        type: boolean
+                        default: true
+                        description: "Whether the plugin is enabled"
+                      config:
+                        type: object
+                        additionalProperties: true
+                        description: "Plugin-specific configuration"
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum:
+                    - Pending
+                    - Active
+                    - Failed
+                  description: "Current phase of the route"
+                message:
+                  type: string
+                  description: "Human-readable message indicating details about the current status"
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - status
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - "True"
+                          - "False"
+                          - "Unknown"
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+      additionalPrinterColumns:
+        - name: Hosts
+          type: string
+          jsonPath: .spec.hosts[0]
+        - name: Paths
+          type: string
+          jsonPath: .spec.paths[0]
+        - name: Status
+          type: string
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      subresources:
+        status: {}

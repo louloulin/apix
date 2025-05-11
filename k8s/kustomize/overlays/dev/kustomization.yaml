@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+namePrefix: dev-
+
+commonLabels:
+  environment: development
+
+patches:
+  - path: patches/deployment-patch.yaml
+  - path: patches/configmap-patch.yaml
+
+configMapGenerator:
+  - name: apix-config
+    behavior: merge
+    literals:
+      - APIX_LOG_LEVEL=debug

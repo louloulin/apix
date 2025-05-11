@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apix-config
+data:
+  config.yaml: |
+    mode: data
+    log_level: info
+    dbless: true
+    
+    admin:
+      listen: 0.0.0.0:8001
+    
+    proxy:
+      listen: 0.0.0.0:8000
+    
+    eventbus:
+      cluster_name: apix-cluster
+      cluster_type: hazelcast
+    
+    edge:
+      control_plane_url: "http://prod-apix-admin:8001"
+      sync_interval: 60
+      offline_mode: true
+      local_cache:
+        enabled: true
+        ttl: 3600
+    
+    plugins:
+      enabled:
+        - name: rate-limiting
+          config:
+            limit: 50
+            period: second
+            local_mode: true
+        - name: circuit-breaker
+          config:
+            threshold: 50
+            window_size: 100
+            min_request_count: 20
+            timeout: 5000
+            local_mode: true
+        - name: cache
+          config:
+            ttl: 300
+            strategy: "lru"
+            size: 1000

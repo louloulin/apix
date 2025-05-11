@@ -1,0 +1,23 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: apix-gateway
+spec:
+  selector:
+    istio: ingressgateway # 使用默认的 Istio Ingress Gateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*" # 可以根据需要限制为特定域名
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    hosts:
+    - "*" # 可以根据需要限制为特定域名
+    tls:
+      mode: SIMPLE
+      credentialName: apix-tls-cert # 需要在 Kubernetes 中创建对应的 Secret

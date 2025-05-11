@@ -35,6 +35,7 @@ import com.louloulin.apix.dns.SmartDNSVerticle
 import com.louloulin.apix.network.anycast.AnycastVerticle
 import com.louloulin.apix.network.p2p.P2PAccelerationVerticle
 import com.louloulin.apix.resource.ResourceVerticle
+import com.louloulin.apix.edge.control.EdgeControlVerticle
 import com.louloulin.apix.core.verticle.MonitorVerticle
 import com.louloulin.apix.core.verticle.MultiLevelCacheVerticle
 import com.louloulin.apix.core.verticle.NodeModeVerticle
@@ -361,6 +362,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy ResourceVerticle
             deployVerticle(vertx, ResourceVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy EdgeControlVerticle
+            deployVerticle(vertx, EdgeControlVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy PluginVerticle

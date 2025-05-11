@@ -1,0 +1,17 @@
+apiVersion: v2
+name: apix
+description: APIX AI Gateway - A high-performance API gateway for AI services based on Vert.x
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - api
+  - gateway
+  - ai
+  - vertx
+  - graalvm
+home: https://github.com/louloulinlv/apix
+maintainers:
+  - name: louloulin
+    email: louloulin@example.com
+icon: https://raw.githubusercontent.com/louloulinlv/apix/main/docs/images/logo.png

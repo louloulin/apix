@@ -1,0 +1,11 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: apix-peer-auth
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: apix
+  mtls:
+    mode: STRICT

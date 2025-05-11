@@ -1,0 +1,45 @@
+---
+# Admin Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "apix.fullname" . }}-admin
+  labels:
+    {{- include "apix.labels" . | nindent 4 }}
+    app.kubernetes.io/component: admin
+  {{- with .Values.service.admin.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.admin.type }}
+  ports:
+    - port: {{ .Values.service.admin.port }}
+      targetPort: admin
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "apix.selectorLabels" . | nindent 4 }}
+
+---
+# Proxy Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "apix.fullname" . }}-proxy
+  labels:
+    {{- include "apix.labels" . | nindent 4 }}
+    app.kubernetes.io/component: proxy
+  {{- with .Values.service.proxy.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.proxy.type }}
+  ports:
+    - port: {{ .Values.service.proxy.port }}
+      targetPort: proxy
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "apix.selectorLabels" . | nindent 4 }}

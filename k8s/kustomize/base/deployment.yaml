@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apix
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apix
+  template:
+    metadata:
+      labels:
+        app: apix
+      annotations:
+        checksum/config: ${CONFIG_CHECKSUM}
+    spec:
+      containers:
+        - name: apix
+          image: louloulin/apix:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: APIX_MODE
+              value: hybrid
+            - name: APIX_LOG_LEVEL
+              value: info
+            - name: APIX_DBLESS
+              value: "true"
+            - name: APIX_EVENTBUS_CLUSTER_NAME
+              value: apix-cluster
+            - name: APIX_EVENTBUS_CLUSTER_TYPE
+              value: hazelcast
+          ports:
+            - name: admin
+              containerPort: 8001
+              protocol: TCP
+            - name: proxy
+              containerPort: 8000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: admin
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: admin
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+            requests:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/apix/config.yaml
+              subPath: config.yaml
+      volumes:
+        - name: config-volume
+          configMap:
+            name: apix-config

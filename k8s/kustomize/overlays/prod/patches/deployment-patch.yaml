@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apix
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+        - name: apix
+          env:
+            - name: APIX_LOG_LEVEL
+              value: info
+          resources:
+            limits:
+              cpu: 4000m
+              memory: 4Gi
+            requests:
+              cpu: 1000m
+              memory: 1Gi

@@ -17,8 +17,6 @@ import java.time.format.DateTimeFormatter
  * 边缘控制中心，负责边缘节点的集中管理、监控与运维。
  * 实现plan7.md中的2.2.3节"边缘控制中心"功能。
  */
-// TODO: Fix compilation issues
-/*
 class EdgeControlCenter(private val vertx: Vertx) {
     private val logger = LoggerFactory.getLogger(EdgeControlCenter::class.java)
 

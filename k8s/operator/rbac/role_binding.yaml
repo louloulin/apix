@@ -1,0 +1,12 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: apix-operator
+  namespace: apix-system
+subjects:
+  - kind: ServiceAccount
+    name: apix-operator
+roleRef:
+  kind: Role
+  name: apix-operator
+  apiGroup: rbac.authorization.k8s.io

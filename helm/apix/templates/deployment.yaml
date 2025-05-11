@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "apix.fullname" . }}
+  labels:
+    {{- include "apix.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.deployment.mode }}
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+      {{- include "apix.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: {{ .Values.deployment.mode }}
+  template:
+    metadata:
+      labels:
+        {{- include "apix.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: {{ .Values.deployment.mode }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      {{- with .Values.deployment.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.deployment.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.deployment.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+          env:
+            - name: APIX_MODE
+              value: {{ .Values.deployment.mode }}
+            - name: APIX_LOG_LEVEL
+              value: {{ .Values.apix.logLevel }}
+            - name: APIX_DBLESS
+              value: "{{ .Values.apix.dbless }}"
+            - name: APIX_EVENTBUS_CLUSTER_NAME
+              value: {{ .Values.apix.eventBus.clusterName }}
+            - name: APIX_EVENTBUS_CLUSTER_TYPE
+              value: {{ .Values.apix.eventBus.clusterType }}
+          ports:
+            - name: admin
+              containerPort: 8001
+              protocol: TCP
+            - name: proxy
+              containerPort: 8000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: admin
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: admin
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.deployment.resources | nindent 12 }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/apix/config.yaml
+              subPath: config.yaml
+            {{- if .Values.persistence.enabled }}
+            - name: data
+              mountPath: /data
+            {{- end }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ include "apix.fullname" . }}
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "apix.fullname" . }}
+        {{- end }}

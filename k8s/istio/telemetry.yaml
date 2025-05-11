@@ -1,0 +1,16 @@
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: apix-telemetry
+  namespace: default
+spec:
+  tracing:
+  - providers:
+    - name: zipkin
+    randomSamplingPercentage: 100.0
+  metrics:
+  - providers:
+    - name: prometheus
+  accessLogging:
+  - providers:
+    - name: envoy

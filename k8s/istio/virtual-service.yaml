@@ -1,0 +1,28 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: apix-virtual-service
+spec:
+  hosts:
+  - "*" # 可以根据需要限制为特定域名
+  gateways:
+  - apix-gateway
+  http:
+  # 代理服务路由
+  - match:
+    - uri:
+        prefix: /api
+    route:
+    - destination:
+        host: apix-proxy
+        port:
+          number: 8000
+  # 管理服务路由
+  - match:
+    - uri:
+        prefix: /admin
+    route:
+    - destination:
+        host: apix-admin
+        port:
+          number: 8001
