@@ -358,6 +358,21 @@ object EventBusAddresses {
     const val P2P_NODE_REMOVE = "apix.p2p.node.remove"
     const val P2P_CONFIG_UPDATE = "apix.p2p.config.update"
 
+    // 静态资源相关
+    const val RESOURCE_STATUS_GET = "apix.resource.status.get"
+    const val RESOURCE_INFO_GET = "apix.resource.info.get"
+    const val RESOURCE_ALL_GET = "apix.resource.all.get"
+    const val RESOURCE_ADD = "apix.resource.add"
+    const val RESOURCE_UPDATE = "apix.resource.update"
+    const val RESOURCE_DELETE = "apix.resource.delete"
+    const val RESOURCE_SYNC_REGION = "apix.resource.sync.region"
+    const val RESOURCE_SYNC_ALL = "apix.resource.sync.all"
+    const val RESOURCE_PREWARM = "apix.resource.prewarm"
+    const val RESOURCE_OPTIMIZE = "apix.resource.optimize"
+    const val RESOURCE_COMPRESS = "apix.resource.compress"
+    const val RESOURCE_LAZY_LOAD = "apix.resource.lazy.load"
+    const val RESOURCE_CONFIG_UPDATE = "apix.resource.config.update"
+
     // 集群相关
     const val CLUSTER_GET_LOCAL_NODE_ID = "apix.cluster.get.local.node.id"
     const val CLUSTER_GET_SHARD_ASSIGNMENT = "apix.cluster.get.shard.assignment"
