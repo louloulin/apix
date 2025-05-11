@@ -25,13 +25,16 @@ import com.louloulin.apix.core.verticle.ConfigVerticle
 import com.louloulin.apix.core.verticle.BenchmarkVerticle
 import com.louloulin.apix.core.verticle.DBlessVerticle
 import com.louloulin.apix.core.verticle.DeploymentVerticle
+import com.louloulin.apix.core.verticle.ElasticScalingVerticle
 import com.louloulin.apix.core.verticle.EventBusEnhancerVerticle
 import com.louloulin.apix.core.verticle.HealthVerticle
+import com.louloulin.apix.core.verticle.HighAvailabilityVerticle
 import com.louloulin.apix.core.verticle.ModelRouterVerticle
 import com.louloulin.apix.core.verticle.MonitorVerticle
 import com.louloulin.apix.core.verticle.NodeModeVerticle
 import com.louloulin.apix.core.verticle.PluginVerticle
 import com.louloulin.apix.core.verticle.PromptEnhancerVerticle
+import com.louloulin.apix.core.verticle.ResilienceVerticle
 import com.louloulin.apix.core.verticle.ConcurrencyControlVerticle
 import com.louloulin.apix.core.verticle.MemoryManagerVerticle
 import com.louloulin.apix.core.verticle.RateLimitVerticle
@@ -217,6 +220,9 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         futures.add(vertx.deployVerticle(NodeModeVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(DBlessVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(EventBusEnhancerVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(HighAvailabilityVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(ElasticScalingVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(ResilienceVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ConcurrencyControlVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ApixVerticle::class.java.name, options))
 
@@ -252,6 +258,18 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy EventBusEnhancerVerticle
             deployVerticle(vertx, EventBusEnhancerVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy HighAvailabilityVerticle
+            deployVerticle(vertx, HighAvailabilityVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy ElasticScalingVerticle
+            deployVerticle(vertx, ElasticScalingVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy ResilienceVerticle
+            deployVerticle(vertx, ResilienceVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy ClusterVerticle if Vert.x is clustered
