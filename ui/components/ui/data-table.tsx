@@ -23,10 +23,10 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  ChevronsLeft, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
   ChevronsRight,
   Search
 } from "lucide-react"
@@ -38,6 +38,7 @@ interface DataTableProps<TData, TValue> {
   searchPlaceholder?: string
   pageSize?: number
   className?: string
+  testId?: string
 }
 
 export function DataTable<TData, TValue>({
@@ -47,6 +48,7 @@ export function DataTable<TData, TValue>({
   searchPlaceholder = "Search...",
   pageSize = 10,
   className,
+  testId,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -88,7 +90,7 @@ export function DataTable<TData, TValue>({
           </div>
         </div>
       )}
-      <div className="rounded-md border">
+      <div className="rounded-md border" data-testid={testId}>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -114,6 +116,7 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  data-testid="model-row"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

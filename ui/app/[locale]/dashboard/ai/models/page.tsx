@@ -292,6 +292,7 @@ export default function AIModelsPage() {
                       data={filteredModels}
                       searchColumn="name"
                       searchPlaceholder={`${common('search')} ${t('title')}...`}
+                      testId="ai-models-table"
                     />
                   )}
                 </TabsContent>
@@ -312,6 +313,7 @@ export default function AIModelsPage() {
                         data={filteredModels}
                         searchColumn="name"
                         searchPlaceholder={`${common('search')} ${t('title')}...`}
+                        testId="ai-models-table"
                       />
                     )}
                   </TabsContent>
