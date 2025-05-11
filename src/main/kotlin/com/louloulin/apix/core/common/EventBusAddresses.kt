@@ -69,10 +69,10 @@ object EventBusAddresses {
     const val AUTH_GENERATE_JWT = "apix.auth.generate.jwt"
 
     // 缓存相关
-    const val CACHE_GET = "apix.cache.get"
-    const val CACHE_PUT = "apix.cache.put"
+    const val CACHE_GET_SIMPLE = "apix.cache.get"
+    const val CACHE_PUT_SIMPLE = "apix.cache.put"
     const val CACHE_INVALIDATE = "apix.cache.invalidate"
-    const val CACHE_CLEAR = "apix.cache.clear"
+    const val CACHE_CLEAR_SIMPLE = "apix.cache.clear"
     const val CACHE_STATS = "apix.cache.stats"
 
     // 管理 API 相关
@@ -178,6 +178,16 @@ object EventBusAddresses {
     const val RESILIENCE_FAULT_INJECTION_CHECK = "apix.resilience.fault.injection.check"
     const val RESILIENCE_FAULT_INJECTION_INJECT = "apix.resilience.fault.injection.inject"
     const val RESILIENCE_FAULT_INJECTION_STATS_GET = "apix.resilience.fault.injection.stats.get"
+
+    // 缓存相关
+    const val CACHE_GET = "apix.cache.get"
+    const val CACHE_PUT = "apix.cache.put"
+    const val CACHE_REMOVE = "apix.cache.remove"
+    const val CACHE_CLEAR = "apix.cache.clear"
+    const val CACHE_STATS_GET = "apix.cache.stats.get"
+    const val CACHE_CONSISTENCY_STATUS_GET = "apix.cache.consistency.status.get"
+    const val CACHE_WARMUP_START = "apix.cache.warmup.start"
+    const val CACHE_WARMUP_STATUS_GET = "apix.cache.warmup.status.get"
 
     // 并发控制相关
     const val CONCURRENCY_TRY_ACQUIRE = "apix.concurrency.try.acquire"

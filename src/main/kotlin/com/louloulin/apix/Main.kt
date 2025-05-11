@@ -31,6 +31,7 @@ import com.louloulin.apix.core.verticle.HealthVerticle
 import com.louloulin.apix.core.verticle.HighAvailabilityVerticle
 import com.louloulin.apix.core.verticle.ModelRouterVerticle
 import com.louloulin.apix.core.verticle.MonitorVerticle
+import com.louloulin.apix.core.verticle.MultiLevelCacheVerticle
 import com.louloulin.apix.core.verticle.NodeModeVerticle
 import com.louloulin.apix.core.verticle.PluginVerticle
 import com.louloulin.apix.core.verticle.PromptEnhancerVerticle
@@ -223,6 +224,7 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         futures.add(vertx.deployVerticle(HighAvailabilityVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ElasticScalingVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ResilienceVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(MultiLevelCacheVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ConcurrencyControlVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ApixVerticle::class.java.name, options))
 
@@ -270,6 +272,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy ResilienceVerticle
             deployVerticle(vertx, ResilienceVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy MultiLevelCacheVerticle
+            deployVerticle(vertx, MultiLevelCacheVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy ClusterVerticle if Vert.x is clustered
