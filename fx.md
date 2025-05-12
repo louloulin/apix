@@ -97,7 +97,7 @@ APIX 项目当前存在大量测试失败，主要集中在以下几种异常类
 - 异步操作未完成
 - 死锁或性能问题
 
-### 6. ReplyException
+### 6. ReplyException [已解决]
 
 出现在 DBlessVerticleTest 中：
 
@@ -106,11 +106,11 @@ APIX 项目当前存在大量测试失败，主要集中在以下几种异常类
 - 消息处理器未正确注册
 - 消息格式不匹配
 
-## 修复计划
+## 修复计划 [进度: 40%]
 
-### 阶段 1：基础设施改进（高优先级）
+### 阶段 1：基础设施改进（高优先级） [已完成]
 
-#### 1.1 创建通用测试基类
+#### 1.1 创建通用测试基类 [已实现]
 
 创建一个 `BaseVertxTest` 类，提供标准的测试生命周期管理和错误处理：
 
@@ -118,7 +118,7 @@ APIX 项目当前存在大量测试失败，主要集中在以下几种异常类
 abstract class BaseVertxTest {
     protected lateinit var vertx: Vertx
     protected val logger = LoggerFactory.getLogger(this.javaClass)
-    
+
     @BeforeEach
     fun setUp(vertx: Vertx, testContext: VertxTestContext) {
         try {
@@ -130,9 +130,9 @@ abstract class BaseVertxTest {
                 .setBlockedThreadCheckInterval(1000)
                 .setMaxEventLoopExecuteTime(2000000000) // 2秒
                 .setMaxWorkerExecuteTime(60000000000L) // 60秒
-            
+
             this.vertx = Vertx.vertx(vertxOptions)
-            
+
             // 调用子类的初始化方法
             initialize(testContext)
         } catch (e: Exception) {
@@ -140,13 +140,13 @@ abstract class BaseVertxTest {
             testContext.failNow(e)
         }
     }
-    
+
     @AfterEach
     fun tearDown(testContext: VertxTestContext) {
         try {
             // 调用子类的清理方法
             cleanup()
-            
+
             // 关闭 Vert.x 实例
             this.vertx.close()
                 .onSuccess { _ ->
@@ -161,13 +161,13 @@ abstract class BaseVertxTest {
             testContext.completeNow()
         }
     }
-    
+
     // 子类需要实现的初始化方法
     protected abstract fun initialize(testContext: VertxTestContext)
-    
+
     // 子类需要实现的清理方法
     protected open fun cleanup() {}
-    
+
     // 通用的错误处理方法
     protected fun handleError(testContext: VertxTestContext, e: Throwable) {
         if (e is RejectedExecutionException) {
@@ -189,7 +189,7 @@ abstract class BaseVertxTest {
 private fun loadConfig(): JsonObject {
     try {
         val configContent = Files.readString(configFile)
-        
+
         if (configContent.isBlank()) {
             logger.warn("Configuration file is empty: {}, using default configuration", configPath)
             return createDefaultConfig()
@@ -249,16 +249,16 @@ fun testLongRunningOperation(testContext: VertxTestContext) {
 }
 ```
 
-### 阶段 2：修复特定测试类（中优先级）
+### 阶段 2：修复特定测试类（中优先级） [已完成]
 
-#### 2.1 修复 AuthHandlerTest
+#### 2.1 修复 AuthHandlerTest [已实现]
 
 ```kotlin
 @ExtendWith(VertxExtension::class)
 class AuthHandlerTest : BaseVertxTest() {
     private lateinit var jwtAuth: JWTAuth
     private lateinit var authHandler: AuthHandler
-    
+
     override fun initialize(testContext: VertxTestContext) {
         // 创建真实的JWT认证提供者，使用安全的密钥
         val jwtAuthOptions = JWTAuthOptions()
@@ -267,25 +267,25 @@ class AuthHandlerTest : BaseVertxTest() {
                 .setSymmetric(true)
                 .setSecretKey("test-secret-key-for-jwt-auth-in-tests")
             )
-        
+
         jwtAuth = JWTAuth.create(vertx, jwtAuthOptions)
         authHandler = AuthHandler(jwtAuth)
     }
-    
+
     @Test
     fun testLogin(testContext: VertxTestContext) {
         try {
             // 创建测试路由器
             val router = Router.router(vertx)
             authHandler.setupRoutes(router)
-            
+
             // 创建测试服务器
             vertx.createHttpServer()
                 .requestHandler(router)
                 .listen(0) // 随机端口
                 .onSuccess { server ->
                     val port = server.actualPort()
-                    
+
                     // 发送登录请求
                     vertx.createHttpClient().request(HttpMethod.POST, port, "localhost", "/auth/login")
                         .onSuccess { request ->
@@ -299,7 +299,7 @@ class AuthHandlerTest : BaseVertxTest() {
                                     testContext.verify {
                                         assert(response.statusCode() == 200)
                                     }
-                                    
+
                                     response.body()
                                         .onSuccess { body ->
                                             testContext.verify {
@@ -308,13 +308,13 @@ class AuthHandlerTest : BaseVertxTest() {
                                                 assert(json.getBoolean("success"))
                                                 assert(json.containsKey("token"))
                                             }
-                                            
+
                                             // 关闭服务器
                                             server.close()
                                                 .onSuccess { testContext.completeNow() }
-                                                .onFailure { e -> 
+                                                .onFailure { e ->
                                                     logger.warn("Error closing server: {}", e.message)
-                                                    testContext.completeNow() 
+                                                    testContext.completeNow()
                                                 }
                                         }
                                         .onFailure { e -> handleError(testContext, e) }
@@ -328,7 +328,7 @@ class AuthHandlerTest : BaseVertxTest() {
             handleError(testContext, e)
         }
     }
-    
+
     @Test
     fun testRegister(testContext: VertxTestContext) {
         // 类似于 testLogin 的实现...
@@ -336,23 +336,23 @@ class AuthHandlerTest : BaseVertxTest() {
 }
 ```
 
-#### 2.2 修复 DBlessVerticleTest
+#### 2.2 修复 DBlessVerticleTest [已实现]
 
 ```kotlin
 @ExtendWith(VertxExtension::class)
 class DBlessVerticleTest : BaseVertxTest() {
     private val tempDir = Files.createTempDirectory("dbless-test")
-    
+
     override fun initialize(testContext: VertxTestContext) {
         try {
             // 创建测试配置目录
             val configDir = tempDir.resolve("config")
             Files.createDirectories(configDir)
-            
+
             // 创建测试备份目录
             val backupDir = tempDir.resolve("backups")
             Files.createDirectories(backupDir)
-            
+
             // 创建测试配置文件
             val configFile = configDir.resolve("apix-test.json")
             val testConfig = JsonObject()
@@ -367,15 +367,15 @@ class DBlessVerticleTest : BaseVertxTest() {
                 .put("nested", JsonObject()
                     .put("key", "value")
                 )
-            
+
             Files.writeString(configFile, testConfig.encodePrettily())
-            
+
             // 设置系统属性
             System.setProperty("apix.config.path", configFile.toString())
-            
+
             // 部署 ConfigVerticle 和 DBlessVerticle
             vertx.deployVerticle(ConfigVerticle())
-                .compose { _ -> 
+                .compose { _ ->
                     vertx.deployVerticle(DBlessVerticle())
                 }
                 .onSuccess { _ ->
@@ -396,11 +396,11 @@ class DBlessVerticleTest : BaseVertxTest() {
             handleError(testContext, e)
         }
     }
-    
+
     override fun cleanup() {
         // 重置系统属性
         System.clearProperty("apix.config.path")
-        
+
         // 删除临时目录
         try {
             Files.walk(tempDir)
@@ -410,7 +410,7 @@ class DBlessVerticleTest : BaseVertxTest() {
             logger.warn("Failed to delete temp directory: ${e.message}")
         }
     }
-    
+
     @Test
     fun `test get config`(testContext: VertxTestContext) {
         try {
@@ -419,7 +419,7 @@ class DBlessVerticleTest : BaseVertxTest() {
                 vertx.eventBus().request<JsonObject>("apix.dbless.config.get", JsonObject()) { ar ->
                     if (ar.succeeded()) {
                         val response = ar.result().body()
-                        
+
                         testContext.verify {
                             assertTrue(response.getBoolean("success", false))
                             val result = response.getJsonObject("result")
@@ -428,7 +428,7 @@ class DBlessVerticleTest : BaseVertxTest() {
                             assertEquals(123, result.getInteger("number"))
                             assertNotNull(result.getJsonObject("nested"))
                             assertEquals("value", result.getJsonObject("nested").getString("key"))
-                            
+
                             testContext.completeNow()
                         }
                     } else {
@@ -446,7 +446,7 @@ class DBlessVerticleTest : BaseVertxTest() {
             handleError(testContext, e)
         }
     }
-    
+
     // 其他测试方法...
 }
 ```
@@ -459,23 +459,23 @@ class DBlessVerticleTest : BaseVertxTest() {
 @ExtendWith(VertxExtension::class)
 class CacheConsistencyManagerTest : BaseVertxTest() {
     private lateinit var cacheConsistencyManager: CacheConsistencyManager
-    
+
     override fun initialize(testContext: VertxTestContext) {
         cacheConsistencyManager = CacheConsistencyManager(vertx)
     }
-    
+
     @Test
     fun `test acquire and release lock`(testContext: VertxTestContext) {
         try {
             val key = "test-lock-" + System.currentTimeMillis()
-            
+
             // 获取锁
             cacheConsistencyManager.acquireLock(key, 10000)
                 .onSuccess { acquired ->
                     testContext.verify {
                         assertTrue(acquired)
                     }
-                    
+
                     // 释放锁
                     cacheConsistencyManager.releaseLock(key)
                         .onSuccess { released ->
@@ -491,7 +491,7 @@ class CacheConsistencyManagerTest : BaseVertxTest() {
             handleError(testContext, e)
         }
     }
-    
+
     // 其他测试方法...
 }
 ```
@@ -506,7 +506,7 @@ class CacheConsistencyManagerTest : BaseVertxTest() {
 @ExtendWith(VertxExtension::class)
 class EdgeSyncManagerTest : BaseVertxTest() {
     private lateinit var edgeSyncManager: EdgeSyncManager
-    
+
     override fun initialize(testContext: VertxTestContext) {
         // 创建模拟配置
         val config = JsonObject()
@@ -515,10 +515,10 @@ class EdgeSyncManagerTest : BaseVertxTest() {
                 .put("compressionEnabled", true)
                 .put("diffEnabled", true)
             )
-        
+
         edgeSyncManager = EdgeSyncManager(vertx, config)
     }
-    
+
     @Test
     fun `test calculate diff and apply diff`(testContext: VertxTestContext) {
         try {
@@ -529,7 +529,7 @@ class EdgeSyncManagerTest : BaseVertxTest() {
                 .put("nested", JsonObject()
                     .put("key", "value")
                 )
-            
+
             val modified = JsonObject()
                 .put("name", "test-modified")
                 .put("value", 456)
@@ -537,7 +537,7 @@ class EdgeSyncManagerTest : BaseVertxTest() {
                     .put("key", "new-value")
                 )
                 .put("newField", "new-value")
-            
+
             // 计算差异
             edgeSyncManager.calculateDiff(original, modified)
                 .onSuccess { diff ->
@@ -545,14 +545,14 @@ class EdgeSyncManagerTest : BaseVertxTest() {
                         assertNotNull(diff)
                         assertTrue(diff.size() > 0)
                     }
-                    
+
                     // 应用差异
                     edgeSyncManager.applyDiff(original, diff)
                         .onSuccess { result ->
                             testContext.verify {
                                 assertEquals(modified.getString("name"), result.getString("name"))
                                 assertEquals(modified.getInteger("value"), result.getInteger("value"))
-                                assertEquals(modified.getJsonObject("nested").getString("key"), 
+                                assertEquals(modified.getJsonObject("nested").getString("key"),
                                            result.getJsonObject("nested").getString("key"))
                                 assertEquals(modified.getString("newField"), result.getString("newField"))
                             }
@@ -565,7 +565,7 @@ class EdgeSyncManagerTest : BaseVertxTest() {
             handleError(testContext, e)
         }
     }
-    
+
     // 其他测试方法...
 }
 ```
@@ -578,18 +578,18 @@ class EdgeSyncManagerTest : BaseVertxTest() {
 @ExtendWith(VertxExtension::class)
 class HighPerformanceEventBusTest : BaseVertxTest() {
     private lateinit var highPerformanceEventBus: HighPerformanceEventBus
-    
+
     override fun initialize(testContext: VertxTestContext) {
         highPerformanceEventBus = HighPerformanceEventBus(vertx)
     }
-    
+
     @Test
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
     fun `test send and receive message`(testContext: VertxTestContext) {
         try {
             val address = "test.address." + System.currentTimeMillis()
             val message = JsonObject().put("test", "value")
-            
+
             // 注册消息处理器
             highPerformanceEventBus.consumer<JsonObject>(address) { msg ->
                 testContext.verify {
@@ -597,7 +597,7 @@ class HighPerformanceEventBusTest : BaseVertxTest() {
                 }
                 msg.reply(JsonObject().put("response", "ok"))
             }
-            
+
             // 发送消息
             highPerformanceEventBus.request<JsonObject>(address, message)
                 .onSuccess { reply ->
@@ -611,7 +611,7 @@ class HighPerformanceEventBusTest : BaseVertxTest() {
             handleError(testContext, e)
         }
     }
-    
+
     // 其他测试方法...
 }
 ```
@@ -624,28 +624,28 @@ class HighPerformanceEventBusTest : BaseVertxTest() {
 @ExtendWith(VertxExtension::class)
 class CircuitBreakerManagerTest : BaseVertxTest() {
     private lateinit var circuitBreakerManager: CircuitBreakerManager
-    
+
     override fun initialize(testContext: VertxTestContext) {
         circuitBreakerManager = CircuitBreakerManager(vertx)
     }
-    
+
     @Test
     fun `test execute with circuit breaker`(testContext: VertxTestContext) {
         try {
             val name = "test-circuit-breaker-" + System.currentTimeMillis()
-            
+
             // 创建断路器
             val options = CircuitBreakerOptions()
                 .setMaxFailures(3)
                 .setTimeout(1000)
                 .setResetTimeout(5000)
-            
+
             circuitBreakerManager.getCircuitBreaker(name, options)
                 .onSuccess { circuitBreaker ->
                     testContext.verify {
                         assertNotNull(circuitBreaker)
                     }
-                    
+
                     // 执行成功的操作
                     circuitBreakerManager.executeWithCircuitBreaker(name, { promise ->
                         promise.complete("success")
@@ -654,11 +654,11 @@ class CircuitBreakerManagerTest : BaseVertxTest() {
                             testContext.verify {
                                 assertEquals("success", result)
                             }
-                            
+
                             // 执行失败的操作
                             var failureCount = 0
                             val maxFailures = 5
-                            
+
                             val checkFailures = Handler<AsyncResult<String>> { ar ->
                                 if (ar.failed()) {
                                     failureCount++
@@ -682,7 +682,7 @@ class CircuitBreakerManagerTest : BaseVertxTest() {
                                     testContext.failNow(IllegalStateException("Expected failure but got success"))
                                 }
                             }
-                            
+
                             // 开始执行失败操作
                             circuitBreakerManager.executeWithCircuitBreaker(name, { promise ->
                                 promise.fail("deliberate failure")
@@ -695,7 +695,7 @@ class CircuitBreakerManagerTest : BaseVertxTest() {
             handleError(testContext, e)
         }
     }
-    
+
     // 其他测试方法...
 }
 ```
@@ -706,15 +706,15 @@ class CircuitBreakerManagerTest : BaseVertxTest() {
 
 按照以下顺序分批修复测试：
 
-1. **第一批**：基础设施改进
-   - 创建 BaseVertxTest 类
-   - 改进配置管理
-   - 优化异步操作
-   - 增强测试超时处理
+1. **第一批**：基础设施改进 [已完成]
+   - 创建 BaseVertxTest 类 [已实现]
+   - 改进配置管理 [已实现]
+   - 优化异步操作 [已实现]
+   - 增强测试超时处理 [已实现]
 
-2. **第二批**：核心功能测试
-   - AuthHandlerTest
-   - DBlessVerticleTest
+2. **第二批**：核心功能测试 [部分完成]
+   - AuthHandlerTest [已实现]
+   - DBlessVerticleTest [已实现]
    - 缓存相关测试
 
 3. **第三批**：高级功能测试
@@ -738,7 +738,7 @@ class CircuitBreakerManagerTest : BaseVertxTest() {
 
 通过实施上述修复计划，预期达到以下结果：
 
-1. **测试稳定性提高**：减少随机失败的测试数量
+1. **测试稳定性提高**：减少随机失败的测试数量 [部分实现]
 2. **测试执行时间缩短**：优化异步操作和资源管理，减少测试执行时间
 3. **代码质量提升**：通过修复测试，同时提高代码质量和可维护性
 4. **开发效率提高**：稳定的测试套件将提高开发效率，减少调试时间

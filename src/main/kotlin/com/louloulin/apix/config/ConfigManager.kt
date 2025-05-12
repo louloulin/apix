@@ -101,43 +101,59 @@ class ConfigManager(private val vertx: Vertx) {
     private fun setupConfigRetriever() {
         logger.info("Setting up configuration retriever...")
 
-        // Clean up existing retriever if any
-        configRetriever?.close()
-        configRetriever = null
-
-        // Get the config file path
-        val configPath = System.getProperty("apix.config.path", "config/apix.json")
-        val configFile = Paths.get(configPath)
-
-        // Only set up the retriever if the file exists
-        if (Files.exists(configFile)) {
-            // Create config store options
-            val fileStore = ConfigStoreOptions()
-                .setType("file")
-                .setFormat("json")
-                .setConfig(JsonObject().put("path", configPath))
-
-            // Create config retriever
-            val retrieverOptions = ConfigRetrieverOptions()
-                .addStore(fileStore)
-                .setScanPeriod(0) // Disable automatic scanning, we'll manually reload when needed
-
-            configRetriever = ConfigRetriever.create(vertx, retrieverOptions)
-
-            // Set up config change listener
-            configRetriever?.listen { change ->
-                logger.info("Configuration changed")
-
-                // Update configuration
-                config = change.newConfiguration
-
-                // Notify listeners
-                // In a real implementation, we would notify components that depend on configuration
+        try {
+            // Clean up existing retriever if any
+            try {
+                configRetriever?.close()
+                configRetriever = null
+            } catch (e: Exception) {
+                logger.warn("Failed to close existing config retriever: {}", e.message)
             }
 
-            logger.info("Configuration retriever set up successfully for file: {}", configPath)
-        } else {
-            logger.info("Configuration file does not exist: {}, skipping retriever setup", configPath)
+            // Get the config file path
+            val configPath = System.getProperty("apix.config.path", "config/apix.json")
+            val configFile = Paths.get(configPath)
+
+            // Only set up the retriever if the file exists
+            if (Files.exists(configFile)) {
+                try {
+                    // Create config store options
+                    val fileStore = ConfigStoreOptions()
+                        .setType("file")
+                        .setFormat("json")
+                        .setConfig(JsonObject().put("path", configPath))
+
+                    // Create config retriever
+                    val retrieverOptions = ConfigRetrieverOptions()
+                        .addStore(fileStore)
+                        .setScanPeriod(0) // Disable automatic scanning, we'll manually reload when needed
+
+                    configRetriever = ConfigRetriever.create(vertx, retrieverOptions)
+
+                    // Set up config change listener
+                    configRetriever?.listen { change ->
+                        try {
+                            logger.info("Configuration changed")
+
+                            // Update configuration
+                            config = change.newConfiguration
+
+                            // Notify listeners
+                            // In a real implementation, we would notify components that depend on configuration
+                        } catch (e: Exception) {
+                            logger.error("Failed to process configuration change: {}", e.message)
+                        }
+                    }
+
+                    logger.info("Configuration retriever set up successfully for file: {}", configPath)
+                } catch (e: Exception) {
+                    logger.error("Failed to set up configuration retriever: {}", e.message)
+                }
+            } else {
+                logger.info("Configuration file does not exist: {}, skipping retriever setup", configPath)
+            }
+        } catch (e: Exception) {
+            logger.error("Unexpected error during configuration retriever setup: {}", e.message)
         }
     }
 

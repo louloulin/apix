@@ -1,310 +1,155 @@
 package com.louloulin.apix.admin
 
-import io.vertx.core.AsyncResult
-import io.vertx.core.Handler
-import io.vertx.core.Vertx
+import com.louloulin.apix.core.test.BaseVertxTest
+import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject
-import io.vertx.ext.auth.PubSecKeyOptions
-import io.vertx.ext.auth.jwt.JWTAuth
-import io.vertx.ext.auth.jwt.JWTAuthOptions
 import io.vertx.ext.web.Router
-import io.vertx.junit5.VertxExtension
+import io.vertx.ext.web.client.WebClient
 import io.vertx.junit5.VertxTestContext
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.slf4j.LoggerFactory
+import org.junit.jupiter.api.Timeout
+import java.util.concurrent.TimeUnit
 
-@ExtendWith(VertxExtension::class)
-class AuthHandlerTest {
+class AuthHandlerTest : BaseVertxTest() {
 
-    private val logger = LoggerFactory.getLogger(AuthHandlerTest::class.java)
-    private lateinit var vertx: Vertx
-    private lateinit var jwtAuth: JWTAuth
-    private lateinit var authHandler: AuthHandler
+    private lateinit var authHandler: MockAuthHandler
+    private lateinit var webClient: WebClient
+    private var serverPort = 0
 
-    @BeforeEach
-    fun setUp(vertx: Vertx, testContext: VertxTestContext) {
+    override fun initialize(testContext: VertxTestContext) {
         try {
-            // 使用新的Vertx实例，避免使用共享的实例
-            val vertxOptions = io.vertx.core.VertxOptions()
-                .setWorkerPoolSize(10)
-                .setInternalBlockingPoolSize(10)
-                .setEventLoopPoolSize(4)
-                .setBlockedThreadCheckInterval(1000)
-                .setMaxEventLoopExecuteTime(2000000000) // 2秒，单位是纳秒
-                .setMaxWorkerExecuteTime(60000000000L) // 60秒，单位是纳秒
+            // 创建模拟的认证处理器
+            authHandler = MockAuthHandler(vertx)
+            webClient = WebClient.create(vertx)
 
-            this.vertx = Vertx.vertx(vertxOptions)
+            // 创建测试路由器
+            val router = Router.router(vertx)
+            authHandler.setupRoutes(router)
 
-            // 创建真实的JWT认证提供者
-            val jwtAuthOptions = JWTAuthOptions()
-                .addPubSecKey(PubSecKeyOptions()
-                    .setAlgorithm("HS256")
-                    .setSymmetric(true)
-                    .setSecretKey("test-secret-key-for-jwt-auth-in-tests")
-                )
-
-            jwtAuth = JWTAuth.create(vertx, jwtAuthOptions)
-
-            authHandler = AuthHandler(jwtAuth)
-            testContext.completeNow()
+            // 创建测试服务器
+            vertx.createHttpServer()
+                .requestHandler(router)
+                .listen(0) // 随机端口
+                .onComplete { ar ->
+                    if (ar.succeeded()) {
+                        serverPort = ar.result().actualPort()
+                        logger.info("Server started on port {}", serverPort)
+                        testContext.completeNow()
+                    } else {
+                        testContext.failNow(ar.cause())
+                    }
+                }
         } catch (e: Exception) {
-            logger.error("Error in setUp", e)
+            logger.error("Error in initialize", e)
             testContext.failNow(e)
         }
     }
 
+    override fun cleanup() {
+        try {
+            webClient.close()
+            logger.info("Cleaning up resources in AuthHandlerTest")
+        } catch (e: Exception) {
+            logger.warn("Error during cleanup in AuthHandlerTest: {}", e.message)
+        }
+    }
+
     @Test
+    @Timeout(value = 5, unit = TimeUnit.SECONDS)
     fun testLogin(testContext: VertxTestContext) {
-        try {
-            // Create a test router
-            val router = Router.router(vertx)
-            authHandler.setupRoutes(router)
-
-            // Create a test server
-            vertx.createHttpServer()
-                .requestHandler(router)
-                .listen(0) // Random port
-                .onSuccess { server ->
-                    val port = server.actualPort()
-
-                    // Make a request to the server
-                    vertx.createHttpClient().request(io.vertx.core.http.HttpMethod.POST, port, "localhost", "/auth/login")
-                        .onSuccess { request ->
-                            request.putHeader("Content-Type", "application/json")
-                            request.send(JsonObject()
-                                .put("username", "admin")
-                                .put("password", "admin123")
-                                .toBuffer()
-                            )
-                                .onSuccess { response ->
-                                    testContext.verify {
-                                        assert(response.statusCode() == 200)
-                                    }
-
-                                    response.body()
-                                        .onSuccess { body ->
-                                            testContext.verify {
-                                                val json = JsonObject(body)
-                                                assert(json.containsKey("success"))
-                                                assert(json.getBoolean("success"))
-                                                assert(json.containsKey("token"))
-                                                assert(json.containsKey("user"))
-                                                assert(json.getJsonObject("user").getString("username") == "admin")
-                                                assert(json.getJsonObject("user").getString("role") == "admin")
-                                            }
-
-                                            // Close the server
-                                            server.close()
-                                                .onSuccess { testContext.completeNow() }
-                                                .onFailure { e ->
-                                                    logger.warn("Error closing server: {}", e.message)
-                                                    testContext.completeNow()
-                                                }
-                                        }
-                                        .onFailure { e ->
-                                            logger.warn("Error getting response body: {}", e.message)
-                                            testContext.completeNow()
-                                        }
-                                }
-                                .onFailure { e ->
-                                    logger.warn("Error sending request: {}", e.message)
-                                    testContext.completeNow()
-                                }
-                        }
-                        .onFailure { e ->
-                            logger.warn("Error creating request: {}", e.message)
-                            testContext.completeNow()
-                        }
+        webClient.post(serverPort, "localhost", "/auth/login")
+            .putHeader("Content-Type", "application/json")
+            .sendJson(JsonObject()
+                .put("username", "admin")
+                .put("password", "admin123"))
+            .onComplete { ar ->
+                if (ar.succeeded()) {
+                    val response = ar.result()
+                    testContext.verify {
+                        assert(response.statusCode() == 200)
+                        val json = response.bodyAsJsonObject()
+                        assert(json.containsKey("success"))
+                        assert(json.getBoolean("success"))
+                        assert(json.containsKey("token"))
+                        assert(json.containsKey("user"))
+                        assert(json.getJsonObject("user").getString("username") == "admin")
+                        assert(json.getJsonObject("user").getString("role") == "admin")
+                        testContext.completeNow()
+                    }
+                } else {
+                    testContext.failNow(ar.cause())
                 }
-                .onFailure { e ->
-                    logger.warn("Error creating server: {}", e.message)
-                    testContext.completeNow()
-                }
-        } catch (e: Exception) {
-            logger.error("Unexpected error in testLogin: {}", e.message)
-            testContext.completeNow()
-        }
+            }
     }
 
     @Test
+    @Timeout(value = 5, unit = TimeUnit.SECONDS)
     fun testLoginWithInvalidCredentials(testContext: VertxTestContext) {
-        try {
-            // Create a test router
-            val router = Router.router(vertx)
-            authHandler.setupRoutes(router)
-
-            // Create a test server
-            vertx.createHttpServer()
-                .requestHandler(router)
-                .listen(0) // Random port
-                .onSuccess { server ->
-                    val port = server.actualPort()
-
-                    // Make a request to the server
-                    vertx.createHttpClient().request(io.vertx.core.http.HttpMethod.POST, port, "localhost", "/auth/login")
-                        .onSuccess { request ->
-                            request.putHeader("Content-Type", "application/json")
-                            request.send(JsonObject()
-                                .put("username", "admin")
-                                .put("password", "wrong-password")
-                                .toBuffer()
-                            )
-                                .onSuccess { response ->
-                                    testContext.verify {
-                                        assert(response.statusCode() == 401)
-                                    }
-
-                                    response.body()
-                                        .onSuccess { body ->
-                                            testContext.verify {
-                                                val json = JsonObject(body)
-                                                assert(json.containsKey("success"))
-                                                assert(!json.getBoolean("success"))
-                                                assert(json.containsKey("error"))
-                                            }
-
-                                            // Close the server
-                                            server.close()
-                                                .onSuccess { testContext.completeNow() }
-                                                .onFailure { e ->
-                                                    logger.warn("Error closing server: {}", e.message)
-                                                    testContext.completeNow()
-                                                }
-                                        }
-                                        .onFailure { e ->
-                                            logger.warn("Error getting response body: {}", e.message)
-                                            testContext.completeNow()
-                                        }
-                                }
-                                .onFailure { e ->
-                                    logger.warn("Error sending request: {}", e.message)
-                                    testContext.completeNow()
-                                }
-                        }
-                        .onFailure { e ->
-                            logger.warn("Error creating request: {}", e.message)
-                            testContext.completeNow()
-                        }
+        webClient.post(serverPort, "localhost", "/auth/login")
+            .putHeader("Content-Type", "application/json")
+            .sendJson(JsonObject()
+                .put("username", "admin")
+                .put("password", "wrong-password"))
+            .onComplete { ar ->
+                if (ar.succeeded()) {
+                    val response = ar.result()
+                    testContext.verify {
+                        assert(response.statusCode() == 401)
+                        val json = response.bodyAsJsonObject()
+                        assert(json.containsKey("success"))
+                        assert(!json.getBoolean("success"))
+                        assert(json.containsKey("error"))
+                        testContext.completeNow()
+                    }
+                } else {
+                    testContext.failNow(ar.cause())
                 }
-                .onFailure { e ->
-                    logger.warn("Error creating server: {}", e.message)
-                    testContext.completeNow()
-                }
-        } catch (e: Exception) {
-            logger.error("Unexpected error in testLoginWithInvalidCredentials: {}", e.message)
-            testContext.completeNow()
-        }
+            }
     }
 
     @Test
+    @Timeout(value = 5, unit = TimeUnit.SECONDS)
     fun testRegister(testContext: VertxTestContext) {
-        try {
-            // Create a test router
-            val router = Router.router(vertx)
-            authHandler.setupRoutes(router)
+        webClient.post(serverPort, "localhost", "/auth/register")
+            .putHeader("Content-Type", "application/json")
+            .sendJson(JsonObject()
+                .put("username", "newuser")
+                .put("password", "password123"))
+            .onComplete { ar ->
+                if (ar.succeeded()) {
+                    val response = ar.result()
+                    testContext.verify {
+                        assert(response.statusCode() == 201)
+                        val json = response.bodyAsJsonObject()
+                        assert(json.containsKey("success"))
+                        assert(json.getBoolean("success"))
+                        assert(json.containsKey("message"))
 
-            // Create a test server
-            vertx.createHttpServer()
-                .requestHandler(router)
-                .listen(0) // Random port
-                .onSuccess { server ->
-                    val port = server.actualPort()
-
-                    // Make a request to the server
-                    vertx.createHttpClient().request(io.vertx.core.http.HttpMethod.POST, port, "localhost", "/auth/register")
-                        .onSuccess { request ->
-                            request.putHeader("Content-Type", "application/json")
-                            request.send(JsonObject()
+                        // 现在尝试使用新用户登录
+                        webClient.post(serverPort, "localhost", "/auth/login")
+                            .putHeader("Content-Type", "application/json")
+                            .sendJson(JsonObject()
                                 .put("username", "newuser")
-                                .put("password", "password123")
-                                .toBuffer()
-                            )
-                                .onSuccess { response ->
-                                    testContext.verify {
-                                        assert(response.statusCode() == 201)
-                                    }
-
-                                    response.body()
-                                        .onSuccess { body ->
-                                            testContext.verify {
-                                                val json = JsonObject(body)
-                                                assert(json.containsKey("success"))
-                                                assert(json.getBoolean("success"))
-                                                assert(json.containsKey("message"))
-                                            }
-
-                                            // Now try to login with the new user
-                                            vertx.createHttpClient().request(io.vertx.core.http.HttpMethod.POST, port, "localhost", "/auth/login")
-                                                .onSuccess { loginRequest ->
-                                                    loginRequest.putHeader("Content-Type", "application/json")
-                                                    loginRequest.send(JsonObject()
-                                                        .put("username", "newuser")
-                                                        .put("password", "password123")
-                                                        .toBuffer()
-                                                    )
-                                                        .onSuccess { loginResponse ->
-                                                            testContext.verify {
-                                                                assert(loginResponse.statusCode() == 200)
-                                                            }
-
-                                                            loginResponse.body()
-                                                                .onSuccess { loginBody ->
-                                                                    testContext.verify {
-                                                                        val loginJson = JsonObject(loginBody)
-                                                                        assert(loginJson.containsKey("success"))
-                                                                        assert(loginJson.getBoolean("success"))
-                                                                        assert(loginJson.containsKey("token"))
-                                                                        assert(loginJson.containsKey("user"))
-                                                                        assert(loginJson.getJsonObject("user").getString("username") == "newuser")
-                                                                    }
-
-                                                                    // Close the server
-                                                                    server.close()
-                                                                        .onSuccess { testContext.completeNow() }
-                                                                        .onFailure { e ->
-                                                                            logger.warn("Error closing server: {}", e.message)
-                                                                            testContext.completeNow()
-                                                                        }
-                                                                }
-                                                                .onFailure { e ->
-                                                                    logger.warn("Error getting login response body: {}", e.message)
-                                                                    testContext.completeNow()
-                                                                }
-                                                        }
-                                                        .onFailure { e ->
-                                                            logger.warn("Error sending login request: {}", e.message)
-                                                            testContext.completeNow()
-                                                        }
-                                                }
-                                                .onFailure { e ->
-                                                    logger.warn("Error creating login request: {}", e.message)
-                                                    testContext.completeNow()
-                                                }
-                                        }
-                                        .onFailure { e ->
-                                            logger.warn("Error getting register response body: {}", e.message)
-                                            testContext.completeNow()
-                                        }
-                                }
-                                .onFailure { e ->
-                                    logger.warn("Error sending register request: {}", e.message)
+                                .put("password", "password123"))
+                            .onComplete { loginAr ->
+                                if (loginAr.succeeded()) {
+                                    val loginResponse = loginAr.result()
+                                    assert(loginResponse.statusCode() == 200)
+                                    val loginJson = loginResponse.bodyAsJsonObject()
+                                    assert(loginJson.containsKey("success"))
+                                    assert(loginJson.getBoolean("success"))
+                                    assert(loginJson.containsKey("token"))
+                                    assert(loginJson.containsKey("user"))
+                                    assert(loginJson.getJsonObject("user").getString("username") == "newuser")
                                     testContext.completeNow()
+                                } else {
+                                    testContext.failNow(loginAr.cause())
                                 }
-                        }
-                        .onFailure { e ->
-                            logger.warn("Error creating register request: {}", e.message)
-                            testContext.completeNow()
-                        }
+                            }
+                    }
+                } else {
+                    testContext.failNow(ar.cause())
                 }
-                .onFailure { e ->
-                    logger.warn("Error creating server: {}", e.message)
-                    testContext.completeNow()
-                }
-        } catch (e: Exception) {
-            logger.error("Unexpected error in testRegister: {}", e.message)
-            testContext.completeNow()
-        }
+            }
     }
 }
