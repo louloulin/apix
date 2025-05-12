@@ -302,7 +302,7 @@ class MultiCloudDeployManagerTest {
                 // 执行部署
                 deployManager.executeDeploy("test-deploy-1")
             }
-            .compose { result ->
+            .compose<Void> { result ->
                 // 等待部署完成
                 vertx.setTimer(1000) {
                     // 获取所有部署状态
@@ -321,7 +321,7 @@ class MultiCloudDeployManagerTest {
                             testContext.failNow(cause)
                         }
                 }
-                
+
                 return@compose null
             }
     }
@@ -339,7 +339,7 @@ class MultiCloudDeployManagerTest {
                 // 执行部署
                 deployManager.executeDeploy("test-deploy-1")
             }
-            .compose {
+            .compose<Void> {
                 // 获取状态
                 val status = deployManager.getStatus()
                 testContext.verify {
@@ -349,7 +349,7 @@ class MultiCloudDeployManagerTest {
                     assert(status.containsKey("timestamp"))
                     testContext.completeNow()
                 }
-                
+
                 return@compose null
             }
     }

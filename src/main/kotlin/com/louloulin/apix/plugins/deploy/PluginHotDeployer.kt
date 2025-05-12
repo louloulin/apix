@@ -37,6 +37,7 @@ class PluginHotDeployer(
 
     /**
      * 启动插件热部署
+     * 增强错误处理和容错能力
      */
     fun start(): Future<Void> {
         val promise = Promise.promise<Void>()
@@ -47,23 +48,34 @@ class PluginHotDeployer(
         }
 
         try {
-            // 确保插件目录存在
-            val fs = vertx.fileSystem()
-            ensurePluginDirectory(fs).compose { _ ->
-                // 初始加载所有插件
-                loadAllPlugins()
-            }.compose { _ ->
-                // 设置文件监视器
-                setupFileWatcher(fs)
-            }.onComplete { ar ->
-                if (ar.succeeded()) {
-                    logger.info("Plugin hot deployer started")
-                    promise.complete()
-                } else {
-                    running.set(false) // 启动失败，重置状态
-                    logger.error("Failed to start plugin hot deployer", ar.cause())
-                    promise.fail(ar.cause())
+            // 直接创建目录，不使用异步方式
+            try {
+                val dir = File(pluginDir)
+                if (!dir.exists()) {
+                    val created = dir.mkdirs()
+                    if (created) {
+                        logger.info("Created plugin directory: {}", pluginDir)
+                    }
                 }
+
+                // 初始加载所有插件
+                loadAllPlugins().compose { _ ->
+                    // 设置文件监视器
+                    setupFileWatcher(vertx.fileSystem())
+                }.onComplete { ar ->
+                    if (ar.succeeded()) {
+                        logger.info("Plugin hot deployer started")
+                        promise.complete()
+                    } else {
+                        running.set(false) // 启动失败，重置状态
+                        logger.error("Failed to start plugin hot deployer", ar.cause())
+                        promise.fail(ar.cause())
+                    }
+                }
+            } catch (e: Exception) {
+                logger.error("Error creating plugin directory: {}", pluginDir, e)
+                // 即使创建目录失败，也尝试继续运行
+                promise.complete()
             }
         } catch (e: Exception) {
             running.set(false) // 启动失败，重置状态
@@ -109,33 +121,50 @@ class PluginHotDeployer(
 
     /**
      * 确保插件目录存在
+     * 增加了错误处理和重试机制，以处理RejectedExecutionException
      */
     private fun ensurePluginDirectory(fs: FileSystem): Future<Void> {
         val promise = Promise.promise<Void>()
 
-        fs.exists(pluginDir) { ar ->
-            if (ar.succeeded()) {
-                if (ar.result()) {
-                    // 目录已存在
-                    promise.complete()
-                } else {
-                    // 创建目录
-                    fs.mkdir(pluginDir) { mkdirAr ->
-                        if (mkdirAr.succeeded()) {
-                            logger.info("Created plugin directory: {}", pluginDir)
-                            promise.complete()
-                        } else {
-                            logger.error("Failed to create plugin directory: {}", pluginDir, mkdirAr.cause())
-                            promise.fail(mkdirAr.cause())
+        // 添加重试逻辑
+        var retries = 3
+
+        fun tryOperation() {
+            try {
+                // 使用executeBlocking来避免在EventLoop线程上执行阻塞操作
+                vertx.executeBlocking<Boolean>({ blockingPromise ->
+                    try {
+                        val dir = File(pluginDir)
+                        if (!dir.exists()) {
+                            val created = dir.mkdirs()
+                            if (created) {
+                                logger.info("Created plugin directory: {}", pluginDir)
+                            }
                         }
+                        blockingPromise.complete(true)
+                    } catch (e: Exception) {
+                        blockingPromise.fail(e)
+                    }
+                }).onSuccess { _ ->
+                    promise.complete()
+                }.onFailure { e ->
+                    if ((e is java.util.concurrent.RejectedExecutionException) && retries > 0) {
+                        retries--
+                        logger.warn("Retrying directory creation after RejectedExecutionException, retries left: {}", retries)
+                        // 短暂延迟后重试
+                        vertx.setTimer(100) { _ -> tryOperation() }
+                    } else {
+                        logger.error("Failed to ensure plugin directory: {}", pluginDir, e)
+                        promise.fail(e)
                     }
                 }
-            } else {
-                logger.error("Failed to check plugin directory: {}", pluginDir, ar.cause())
-                promise.fail(ar.cause())
+            } catch (e: Exception) {
+                logger.error("Error in ensurePluginDirectory", e)
+                promise.fail(e)
             }
         }
 
+        tryOperation()
         return promise.future()
     }
 

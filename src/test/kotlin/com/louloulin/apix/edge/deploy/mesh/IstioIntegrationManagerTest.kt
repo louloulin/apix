@@ -418,16 +418,16 @@ class IstioIntegrationManagerTest {
         istioManager.createVirtualService(newVs)
             .compose { result ->
                 val vsId = result.getString("id")
-                
+
                 // 创建授权策略
                 val newPolicy = JsonObject()
                     .put("name", "Status Test AuthorizationPolicy")
                     .put("namespace", "default")
                     .put("selector", JsonObject().put("app", "status-app"))
-                
+
                 istioManager.createAuthorizationPolicy(newPolicy)
             }
-            .compose { result ->
+            .compose<Void> { result ->
                 // 等待异步创建完成
                 vertx.setTimer(3000) {
                     // 获取所有资源状态
@@ -448,7 +448,7 @@ class IstioIntegrationManagerTest {
                             testContext.failNow(cause)
                         }
                 }
-                
+
                 return@compose null
             }
     }

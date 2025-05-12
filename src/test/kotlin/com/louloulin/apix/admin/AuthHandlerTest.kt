@@ -2,6 +2,7 @@ package com.louloulin.apix.admin
 
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.auth.PubSecKeyOptions
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.auth.jwt.JWTAuthOptions
 import io.vertx.ext.web.Router
@@ -13,42 +14,42 @@ import org.junit.jupiter.api.extension.ExtendWith
 
 @ExtendWith(VertxExtension::class)
 class AuthHandlerTest {
-    
+
     private lateinit var vertx: Vertx
     private lateinit var jwtAuth: JWTAuth
     private lateinit var authHandler: AuthHandler
-    
+
     @BeforeEach
     fun setUp(vertx: Vertx, testContext: VertxTestContext) {
         this.vertx = vertx
-        
+
         // Create a JWT auth provider with a test key
         val jwtAuthOptions = JWTAuthOptions()
-            .addPubSecKey(JsonObject()
-                .put("algorithm", "HS256")
-                .put("symmetric", true)
-                .put("secret", "test-secret-key-for-jwt-auth-in-tests")
+            .addPubSecKey(PubSecKeyOptions()
+                .setAlgorithm("HS256")
+                .setSymmetric(true)
+                .setSecretKey("test-secret-key-for-jwt-auth-in-tests")
             )
-        
+
         jwtAuth = JWTAuth.create(vertx, jwtAuthOptions)
         authHandler = AuthHandler(jwtAuth)
-        
+
         testContext.completeNow()
     }
-    
+
     @Test
     fun testLogin(testContext: VertxTestContext) {
         // Create a test router
         val router = Router.router(vertx)
         authHandler.setupRoutes(router)
-        
+
         // Create a test server
         vertx.createHttpServer()
             .requestHandler(router)
             .listen(0) // Random port
             .onSuccess { server ->
                 val port = server.actualPort()
-                
+
                 // Make a request to the server
                 vertx.createHttpClient().request(io.vertx.core.http.HttpMethod.POST, port, "localhost", "/auth/login")
                     .onSuccess { request ->
@@ -62,7 +63,7 @@ class AuthHandlerTest {
                                 testContext.verify {
                                     assert(response.statusCode() == 200)
                                 }
-                                
+
                                 response.body()
                                     .onSuccess { body ->
                                         testContext.verify {
@@ -74,7 +75,7 @@ class AuthHandlerTest {
                                             assert(json.getJsonObject("user").getString("username") == "admin")
                                             assert(json.getJsonObject("user").getString("role") == "admin")
                                         }
-                                        
+
                                         // Close the server
                                         server.close()
                                             .onSuccess { testContext.completeNow() }
@@ -88,20 +89,20 @@ class AuthHandlerTest {
             }
             .onFailure { testContext.failNow(it) }
     }
-    
+
     @Test
     fun testLoginWithInvalidCredentials(testContext: VertxTestContext) {
         // Create a test router
         val router = Router.router(vertx)
         authHandler.setupRoutes(router)
-        
+
         // Create a test server
         vertx.createHttpServer()
             .requestHandler(router)
             .listen(0) // Random port
             .onSuccess { server ->
                 val port = server.actualPort()
-                
+
                 // Make a request to the server
                 vertx.createHttpClient().request(io.vertx.core.http.HttpMethod.POST, port, "localhost", "/auth/login")
                     .onSuccess { request ->
@@ -115,7 +116,7 @@ class AuthHandlerTest {
                                 testContext.verify {
                                     assert(response.statusCode() == 401)
                                 }
-                                
+
                                 response.body()
                                     .onSuccess { body ->
                                         testContext.verify {
@@ -124,7 +125,7 @@ class AuthHandlerTest {
                                             assert(!json.getBoolean("success"))
                                             assert(json.containsKey("error"))
                                         }
-                                        
+
                                         // Close the server
                                         server.close()
                                             .onSuccess { testContext.completeNow() }
@@ -138,20 +139,20 @@ class AuthHandlerTest {
             }
             .onFailure { testContext.failNow(it) }
     }
-    
+
     @Test
     fun testRegister(testContext: VertxTestContext) {
         // Create a test router
         val router = Router.router(vertx)
         authHandler.setupRoutes(router)
-        
+
         // Create a test server
         vertx.createHttpServer()
             .requestHandler(router)
             .listen(0) // Random port
             .onSuccess { server ->
                 val port = server.actualPort()
-                
+
                 // Make a request to the server
                 vertx.createHttpClient().request(io.vertx.core.http.HttpMethod.POST, port, "localhost", "/auth/register")
                     .onSuccess { request ->
@@ -165,7 +166,7 @@ class AuthHandlerTest {
                                 testContext.verify {
                                     assert(response.statusCode() == 201)
                                 }
-                                
+
                                 response.body()
                                     .onSuccess { body ->
                                         testContext.verify {
@@ -174,7 +175,7 @@ class AuthHandlerTest {
                                             assert(json.getBoolean("success"))
                                             assert(json.containsKey("message"))
                                         }
-                                        
+
                                         // Now try to login with the new user
                                         vertx.createHttpClient().request(io.vertx.core.http.HttpMethod.POST, port, "localhost", "/auth/login")
                                             .onSuccess { loginRequest ->
@@ -188,7 +189,7 @@ class AuthHandlerTest {
                                                         testContext.verify {
                                                             assert(loginResponse.statusCode() == 200)
                                                         }
-                                                        
+
                                                         loginResponse.body()
                                                             .onSuccess { loginBody ->
                                                                 testContext.verify {
@@ -199,7 +200,7 @@ class AuthHandlerTest {
                                                                     assert(loginJson.containsKey("user"))
                                                                     assert(loginJson.getJsonObject("user").getString("username") == "newuser")
                                                                 }
-                                                                
+
                                                                 // Close the server
                                                                 server.close()
                                                                     .onSuccess { testContext.completeNow() }

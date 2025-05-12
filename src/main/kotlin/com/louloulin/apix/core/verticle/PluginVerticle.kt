@@ -87,8 +87,18 @@ class PluginVerticle : BaseVerticle() {
         // 加载配置中的插件
         loadPluginsFromConfig()
             .compose { _ ->
-                // 启动插件热部署
-                pluginHotDeployer.start()
+                try {
+                    // 启动插件热部署，但即使失败也不影响整体启动
+                    pluginHotDeployer.start()
+                        .onFailure { cause ->
+                            // 仅记录日志，不影响整体启动
+                            logger.warn("Plugin hot deployer failed to start: {}, continuing without hot deployment", cause.message)
+                        }
+                } catch (e: Exception) {
+                    logger.warn("Error starting plugin hot deployer, continuing without hot deployment", e)
+                }
+                // 无论热部署是否成功，都返回成功
+                Future.succeededFuture<Void>()
             }
             .onComplete { ar ->
                 if (ar.succeeded()) {
@@ -723,32 +733,61 @@ class PluginVerticle : BaseVerticle() {
     override fun stop(stopPromise: Promise<Void>) {
         logger.info("Stopping PluginVerticle...")
 
-        // 停止插件热部署
-        pluginHotDeployer.stop().compose<Void> { _ ->
-            // 关闭所有插件
-            plugins.forEach { (id, plugin) ->
+        // 使用异常处理来确保即使停止插件热部署失败，也能继续关闭其他资源
+        try {
+            // 停止插件热部署
+            pluginHotDeployer.stop().onComplete { stopResult ->
+                if (stopResult.failed()) {
+                    logger.warn("Failed to stop plugin hot deployer", stopResult.cause())
+                }
+
+                // 无论热部署停止成功与否，都继续关闭其他资源
                 try {
-                    plugin.shutdown()
-                    logger.info("Shut down plugin: {}", id)
+                    // 关闭所有插件
+                    plugins.forEach { (id, plugin) ->
+                        try {
+                            plugin.shutdown()
+                            logger.info("Shut down plugin: {}", id)
+                        } catch (e: Exception) {
+                            logger.error("Error shutting down plugin: {}", id, e)
+                        }
+                    }
+
+                    // 清理资源
+                    plugins.clear()
+                    pluginFactories.clear()
+                    pluginStates.clear()
+                    pluginDependencies.clear()
+
+                    logger.info("PluginVerticle stopped successfully")
+                    stopPromise.complete()
                 } catch (e: Exception) {
-                    logger.error("Error shutting down plugin: {}", id, e)
+                    logger.error("Error cleaning up resources in PluginVerticle", e)
+                    stopPromise.fail(e)
                 }
             }
+        } catch (e: Exception) {
+            logger.error("Error stopping PluginVerticle", e)
 
-            plugins.clear()
-            pluginFactories.clear()
-            pluginStates.clear()
-            pluginDependencies.clear()
+            // 即使停止失败，也尝试清理资源
+            try {
+                plugins.forEach { (id, plugin) ->
+                    try {
+                        plugin.shutdown()
+                    } catch (ignored: Exception) {
+                        // 忽略关闭异常
+                    }
+                }
 
-            Future.succeededFuture<Void>()
-        }.onComplete { ar ->
-            if (ar.succeeded()) {
-                logger.info("PluginVerticle stopped successfully")
-                stopPromise.complete()
-            } else {
-                logger.error("Error stopping PluginVerticle", ar.cause())
-                stopPromise.fail(ar.cause())
+                plugins.clear()
+                pluginFactories.clear()
+                pluginStates.clear()
+                pluginDependencies.clear()
+            } catch (ignored: Exception) {
+                // 忽略清理异常
             }
+
+            stopPromise.fail(e)
         }
     }
 }

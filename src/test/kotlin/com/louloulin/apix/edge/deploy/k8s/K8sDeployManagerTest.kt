@@ -153,9 +153,9 @@ class K8sDeployManagerTest {
     fun testUninstallCRD(testContext: VertxTestContext) {
         // 先安装CRD
         deployManager.installCRD("test-cluster", "test-crd")
-            .compose { result ->
+            .compose<Void> { result ->
                 val installId = result.getString("installId")
-                
+
                 // 等待异步安装完成
                 vertx.setTimer(3000) {
                     // 卸载CRD
@@ -164,7 +164,7 @@ class K8sDeployManagerTest {
                             testContext.verify {
                                 assert(uninstallResult.getBoolean("success"))
                                 assert(uninstallResult.getString("message") == "CRD卸载中")
-                                
+
                                 // 等待异步卸载完成
                                 vertx.setTimer(3000) {
                                     deployManager.getCRDInstallStatus(installId)
@@ -182,7 +182,7 @@ class K8sDeployManagerTest {
                             testContext.failNow(cause)
                         }
                 }
-                
+
                 return@compose null
             }
     }
@@ -191,7 +191,7 @@ class K8sDeployManagerTest {
     fun testGetAllCRDInstallStatus(testContext: VertxTestContext) {
         // 先安装CRD
         deployManager.installCRD("test-cluster", "test-crd")
-            .compose { result ->
+            .compose<Void> { result ->
                 // 等待异步安装完成
                 vertx.setTimer(3000) {
                     // 获取所有CRD安装状态
@@ -211,7 +211,7 @@ class K8sDeployManagerTest {
                             testContext.failNow(cause)
                         }
                 }
-                
+
                 return@compose null
             }
     }
