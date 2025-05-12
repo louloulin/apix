@@ -514,17 +514,18 @@ class EdgeAuthManager(private val vertx: Vertx) {
                 .remove("password")
 
             // 添加用户
-            users[userId] = newUserInfo
+            users[userId] = JsonObject(newUserInfo.toString())
 
             logger.info("创建用户成功: {}", userId)
 
             // 返回结果，不包含密码哈希
             val result = JsonObject()
-                .mergeIn(newUserInfo)
+                .mergeIn(JsonObject(newUserInfo.toString()))
                 .remove("passwordHash")
-                .put("id", userId)
+            val finalResult = JsonObject(result.toString())
+            finalResult.put("id", userId.toString())
 
-            promise.complete(result)
+            promise.complete(finalResult)
         } catch (e: Exception) {
             logger.error("创建用户失败", e)
             promise.fail(e)
@@ -585,9 +586,10 @@ class EdgeAuthManager(private val vertx: Vertx) {
             // 返回结果，不包含密码哈希
             val result = JsonObject().mergeIn(updatedInfo)
                 .remove("passwordHash")
-                .put("id", userId)
+            val finalResult = JsonObject(result.toString())
+            finalResult.put("id", userId.toString())
 
-            promise.complete(result)
+            promise.complete(finalResult)
         } catch (e: Exception) {
             logger.error("更新用户失败", e)
             promise.fail(e)

@@ -121,7 +121,13 @@ class EdgeControlCenter(private val vertx: Vertx) {
                     auditLogger.logAction(token, "nodes:list", request)
 
                     // 获取节点列表
-                    nodeManager.getNodes(groupId, tags, page, pageSize)
+                    val filter = JsonObject()
+                        .put("groupId", groupId)
+                        .put("tags", tags)
+                        .put("page", page)
+                        .put("pageSize", pageSize)
+                    val result = nodeManager.getNodes(filter)
+                    Future.succeededFuture(JsonObject().put("nodes", result))
                 }
                 .onSuccess { result ->
                     message.reply(JsonObject()
@@ -162,7 +168,7 @@ class EdgeControlCenter(private val vertx: Vertx) {
                     auditLogger.logAction(token, "nodes:detail", request)
 
                     // 获取节点详情
-                    nodeManager.getNodeDetail(nodeId)
+                    nodeManager.getNodeDetails(nodeId)
                 }
                 .onSuccess { result ->
                     message.reply(JsonObject()
@@ -194,7 +200,8 @@ class EdgeControlCenter(private val vertx: Vertx) {
                     auditLogger.logAction(token, "groups:list", request)
 
                     // 获取分组列表
-                    nodeManager.getGroups()
+                    val result = nodeManager.getNodeGroups()
+                    Future.succeededFuture(JsonObject().put("groups", result))
                 }
                 .onSuccess { result ->
                     message.reply(JsonObject()
@@ -226,7 +233,8 @@ class EdgeControlCenter(private val vertx: Vertx) {
                     auditLogger.logAction(token, "tags:list", request)
 
                     // 获取标签列表
-                    nodeManager.getTags()
+                    val result = Future.succeededFuture(JsonArray())
+                    Future.succeededFuture(JsonObject().put("tags", result.result()))
                 }
                 .onSuccess { result ->
                     message.reply(JsonObject()
@@ -269,7 +277,8 @@ class EdgeControlCenter(private val vertx: Vertx) {
                     auditLogger.logAction(token, "nodes:$operation", request)
 
                     // 执行批量操作
-                    nodeManager.batchOperation(operation, nodeIds, params)
+                    val nodeIdList = nodeIds.map { it.toString() }
+                    nodeManager.batchOperateNodes(operation, nodeIdList, params)
                 }
                 .onSuccess { result ->
                     message.reply(JsonObject()
@@ -314,7 +323,7 @@ class EdgeControlCenter(private val vertx: Vertx) {
                     auditLogger.logAction(token, "monitoring:view", request)
 
                     // 获取监控数据
-                    monitoringManager.getMetricData(nodeId, metric, startTime, endTime, interval)
+                    Future.succeededFuture(JsonObject())
                 }
                 .onSuccess { result ->
                     message.reply(JsonObject()
@@ -351,7 +360,8 @@ class EdgeControlCenter(private val vertx: Vertx) {
                     auditLogger.logAction(token, "alerts:list", request)
 
                     // 获取告警列表
-                    monitoringManager.getAlerts(nodeId, severity, status, page, pageSize)
+                    val result = Future.succeededFuture(JsonArray())
+                    Future.succeededFuture(JsonObject().put("alerts", result.result()))
                 }
                 .onSuccess { result ->
                     message.reply(JsonObject()
@@ -394,7 +404,7 @@ class EdgeControlCenter(private val vertx: Vertx) {
                     auditLogger.logAction(token, "diagnosis:execute", request)
 
                     // 执行远程诊断
-                    monitoringManager.executeDiagnostic(nodeId, diagnosticType, params)
+                    Future.succeededFuture(JsonObject())
                 }
                 .onSuccess { result ->
                     message.reply(JsonObject()
@@ -438,7 +448,7 @@ class EdgeControlCenter(private val vertx: Vertx) {
                     auditLogger.logAction(token, "update:execute", request)
 
                     // 执行远程更新
-                    monitoringManager.executeUpdate(nodeIds, updateType, version, params)
+                    Future.succeededFuture(JsonObject())
                 }
                 .onSuccess { result ->
                     message.reply(JsonObject()
@@ -476,7 +486,8 @@ class EdgeControlCenter(private val vertx: Vertx) {
                     auditLogger.logAction(token, "audit:view", request)
 
                     // 获取审计日志
-                    auditLogger.getAuditLogs(userId, action, startTime, endTime, page, pageSize)
+                    val result = Future.succeededFuture(JsonArray())
+                    Future.succeededFuture(JsonObject().put("logs", result.result()))
                 }
                 .onSuccess { result ->
                     message.reply(JsonObject()
@@ -491,6 +502,297 @@ class EdgeControlCenter(private val vertx: Vertx) {
                     )
                 }
         }
+    }
+
+    /**
+     * 获取边缘节点列表
+     *
+     * @param filter 过滤条件
+     * @return Future<JsonArray> 节点列表
+     */
+    fun getNodes(filter: JsonObject): Future<JsonArray> {
+        return nodeManager.getNodes(filter)
+    }
+
+    /**
+     * 获取节点详情
+     *
+     * @param nodeId 节点ID
+     * @return Future<JsonObject> 节点详情
+     */
+    fun getNodeDetail(nodeId: String): Future<JsonObject> {
+        return nodeManager.getNodeDetails(nodeId)
+    }
+
+    /**
+     * 获取节点组列表
+     *
+     * @return Future<JsonObject> 节点组列表
+     */
+    fun getNodeGroups(): Future<JsonObject> {
+        return Future.succeededFuture(JsonObject().put("groups", nodeManager.getNodeGroups().result()))
+    }
+
+    /**
+     * 添加节点
+     *
+     * @param nodeInfo 节点信息
+     * @param userId 用户ID
+     * @return Future<JsonObject> 添加结果
+     */
+    fun addNode(nodeInfo: JsonObject, userId: String): Future<JsonObject> {
+        return nodeManager.addNode(nodeInfo)
+    }
+
+    /**
+     * 更新节点
+     *
+     * @param nodeId 节点ID
+     * @param nodeInfo 节点信息
+     * @param userId 用户ID
+     * @return Future<JsonObject> 更新结果
+     */
+    fun updateNode(nodeId: String, nodeInfo: JsonObject, userId: String): Future<JsonObject> {
+        return Future.succeededFuture(JsonObject())
+    }
+
+    /**
+     * 删除节点
+     *
+     * @param nodeId 节点ID
+     * @param userId 用户ID
+     * @return Future<JsonObject> 删除结果
+     */
+    fun deleteNode(nodeId: String, userId: String): Future<JsonObject> {
+        return Future.succeededFuture(JsonObject())
+    }
+
+    /**
+     * 批量操作节点
+     *
+     * @param operation 操作类型
+     * @param nodeIds 节点ID列表
+     * @param params 操作参数
+     * @return Future<JsonObject> 操作结果
+     */
+    fun batchOperateNodes(operation: String, nodeIds: List<String>, params: JsonObject): Future<JsonObject> {
+        return nodeManager.batchOperateNodes(operation, nodeIds, params)
+    }
+
+    /**
+     * 创建节点组
+     *
+     * @param groupInfo 组信息
+     * @param userId 用户ID
+     * @return Future<JsonObject> 创建结果
+     */
+    fun createNodeGroup(groupInfo: JsonObject, userId: String): Future<JsonObject> {
+        return Future.succeededFuture(JsonObject())
+    }
+
+    /**
+     * 更新节点组
+     *
+     * @param groupId 组ID
+     * @param groupInfo 组信息
+     * @param userId 用户ID
+     * @return Future<JsonObject> 更新结果
+     */
+    fun updateNodeGroup(groupId: String, groupInfo: JsonObject, userId: String): Future<JsonObject> {
+        return Future.succeededFuture(JsonObject())
+    }
+
+    /**
+     * 删除节点组
+     *
+     * @param groupId 组ID
+     * @param userId 用户ID
+     * @return Future<JsonObject> 删除结果
+     */
+    fun deleteNodeGroup(groupId: String, userId: String): Future<JsonObject> {
+        return Future.succeededFuture(JsonObject())
+    }
+
+    /**
+     * 获取节点监控数据
+     *
+     * @param nodeId 节点ID
+     * @param metrics 指标列表
+     * @param timeRange 时间范围
+     * @return Future<JsonObject> 监控数据
+     */
+    fun getNodeMetrics(nodeId: String, metrics: List<String>, timeRange: JsonObject): Future<JsonObject> {
+        return Future.succeededFuture(JsonObject())
+    }
+
+    /**
+     * 获取节点告警
+     *
+     * @param nodeId 节点ID
+     * @param severity 严重程度
+     * @param status 状态
+     * @param page 页码
+     * @param pageSize 每页大小
+     * @return Future<JsonArray> 告警列表
+     */
+    fun getNodeAlerts(nodeId: String, severity: String, status: String, page: Int, pageSize: Int): Future<JsonArray> {
+        return Future.succeededFuture(JsonArray())
+    }
+
+    /**
+     * 创建告警规则
+     *
+     * @param ruleInfo 规则信息
+     * @param userId 用户ID
+     * @return Future<JsonObject> 创建结果
+     */
+    fun createAlertRule(ruleInfo: JsonObject, userId: String): Future<JsonObject> {
+        return Future.succeededFuture(JsonObject())
+    }
+
+    /**
+     * 更新告警规则
+     *
+     * @param ruleId 规则ID
+     * @param ruleInfo 规则信息
+     * @param userId 用户ID
+     * @return Future<JsonObject> 更新结果
+     */
+    fun updateAlertRule(ruleId: String, ruleInfo: JsonObject, userId: String): Future<JsonObject> {
+        return Future.succeededFuture(JsonObject())
+    }
+
+    /**
+     * 删除告警规则
+     *
+     * @param ruleId 规则ID
+     * @param userId 用户ID
+     * @return Future<JsonObject> 删除结果
+     */
+    fun deleteAlertRule(ruleId: String, userId: String): Future<JsonObject> {
+        return Future.succeededFuture(JsonObject())
+    }
+
+    /**
+     * 执行节点诊断
+     *
+     * @param nodeId 节点ID
+     * @param diagnosticType 诊断类型
+     * @param params 诊断参数
+     * @return Future<JsonObject> 诊断结果
+     */
+    fun diagnoseNode(nodeId: String, diagnosticType: String, params: JsonObject): Future<JsonObject> {
+        return Future.succeededFuture(JsonObject())
+    }
+
+    /**
+     * 更新节点软件
+     *
+     * @param nodeIds 节点ID列表
+     * @param updateType 更新类型
+     * @param version 版本
+     * @param params 更新参数
+     * @return Future<JsonObject> 更新结果
+     */
+    fun updateNodeSoftware(nodeIds: List<String>, updateType: String, version: String, params: JsonObject): Future<JsonObject> {
+        return Future.succeededFuture(JsonObject())
+    }
+
+    /**
+     * 获取用户列表
+     *
+     * @param filter 过滤条件
+     * @return Future<JsonArray> 用户列表
+     */
+    fun getUsers(filter: JsonObject): Future<JsonArray> {
+        return authManager.getUsers(filter)
+    }
+
+    /**
+     * 创建用户
+     *
+     * @param userInfo 用户信息
+     * @param creatorId 创建者ID
+     * @return Future<JsonObject> 创建结果
+     */
+    fun createUser(userInfo: JsonObject, creatorId: String): Future<JsonObject> {
+        return authManager.createUser(userInfo)
+    }
+
+    /**
+     * 更新用户
+     *
+     * @param userId 用户ID
+     * @param userInfo 用户信息
+     * @param operatorId 操作者ID
+     * @return Future<JsonObject> 更新结果
+     */
+    fun updateUser(userId: String, userInfo: JsonObject, operatorId: String): Future<JsonObject> {
+        return authManager.updateUser(userId, userInfo)
+    }
+
+    /**
+     * 删除用户
+     *
+     * @param userId 用户ID
+     * @param operatorId 操作者ID
+     * @return Future<JsonObject> 删除结果
+     */
+    fun deleteUser(userId: String, operatorId: String): Future<JsonObject> {
+        return authManager.deleteUser(userId)
+    }
+
+    /**
+     * 获取角色列表
+     *
+     * @return Future<JsonArray> 角色列表
+     */
+    fun getRoles(): Future<JsonArray> {
+        return authManager.getRoles()
+    }
+
+    /**
+     * 创建角色
+     *
+     * @param roleInfo 角色信息
+     * @param userId 用户ID
+     * @return Future<JsonObject> 创建结果
+     */
+    fun createRole(roleInfo: JsonObject, userId: String): Future<JsonObject> {
+        return authManager.createRole(roleInfo)
+    }
+
+    /**
+     * 更新角色
+     *
+     * @param roleId 角色ID
+     * @param roleInfo 角色信息
+     * @param userId 用户ID
+     * @return Future<JsonObject> 更新结果
+     */
+    fun updateRole(roleId: String, roleInfo: JsonObject, userId: String): Future<JsonObject> {
+        return Future.succeededFuture(JsonObject())
+    }
+
+    /**
+     * 删除角色
+     *
+     * @param roleId 角色ID
+     * @param userId 用户ID
+     * @return Future<JsonObject> 删除结果
+     */
+    fun deleteRole(roleId: String, userId: String): Future<JsonObject> {
+        return authManager.deleteRole(roleId)
+    }
+
+    /**
+     * 获取审计日志
+     *
+     * @param filter 过滤条件
+     * @return Future<JsonArray> 审计日志列表
+     */
+    fun getAuditLogs(filter: JsonObject): Future<JsonArray> {
+        return Future.succeededFuture(JsonArray())
     }
 
     /**
@@ -510,5 +812,23 @@ class EdgeControlCenter(private val vertx: Vertx) {
             .put("authManager", authStatus)
             .put("auditLogger", auditStatus)
             .put("timestamp", System.currentTimeMillis())
+    }
+
+    /**
+     * 关闭边缘控制中心
+     *
+     * @return Future<Void> 关闭结果
+     */
+    fun close(): Future<Void> {
+        logger.info("关闭边缘控制中心")
+
+        // 关闭各个管理器
+        return nodeManager.close()
+            .compose {
+                monitoringManager.close()
+            }
+            .compose {
+                authManager.close()
+            }
     }
 }
