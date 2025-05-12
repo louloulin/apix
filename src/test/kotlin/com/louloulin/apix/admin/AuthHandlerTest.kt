@@ -1,5 +1,7 @@
 package com.louloulin.apix.admin
 
+import io.vertx.core.AsyncResult
+import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.PubSecKeyOptions
@@ -23,20 +25,34 @@ class AuthHandlerTest {
 
     @BeforeEach
     fun setUp(vertx: Vertx, testContext: VertxTestContext) {
-        this.vertx = vertx
+        try {
+            // 使用新的Vertx实例，避免使用共享的实例
+            val vertxOptions = io.vertx.core.VertxOptions()
+                .setWorkerPoolSize(10)
+                .setInternalBlockingPoolSize(10)
+                .setEventLoopPoolSize(4)
+                .setBlockedThreadCheckInterval(1000)
+                .setMaxEventLoopExecuteTime(2000000000) // 2秒，单位是纳秒
+                .setMaxWorkerExecuteTime(60000000000L) // 60秒，单位是纳秒
 
-        // Create a JWT auth provider with a test key
-        val jwtAuthOptions = JWTAuthOptions()
-            .addPubSecKey(PubSecKeyOptions()
-                .setAlgorithm("HS256")
-                .setSymmetric(true)
-                .setSecretKey("test-secret-key-for-jwt-auth-in-tests")
-            )
+            this.vertx = Vertx.vertx(vertxOptions)
 
-        jwtAuth = JWTAuth.create(vertx, jwtAuthOptions)
-        authHandler = AuthHandler(jwtAuth)
+            // 创建真实的JWT认证提供者
+            val jwtAuthOptions = JWTAuthOptions()
+                .addPubSecKey(PubSecKeyOptions()
+                    .setAlgorithm("HS256")
+                    .setSymmetric(true)
+                    .setSecretKey("test-secret-key-for-jwt-auth-in-tests")
+                )
 
-        testContext.completeNow()
+            jwtAuth = JWTAuth.create(vertx, jwtAuthOptions)
+
+            authHandler = AuthHandler(jwtAuth)
+            testContext.completeNow()
+        } catch (e: Exception) {
+            logger.error("Error in setUp", e)
+            testContext.failNow(e)
+        }
     }
 
     @Test
