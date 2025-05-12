@@ -240,7 +240,7 @@ class EdgeAutonomyManager(private val vertx: Vertx) {
     /**
      * 进入离线模式。
      */
-    private fun enterOfflineMode() {
+    fun enterOfflineMode() {
         if (offlineMode.compareAndSet(false, true)) {
             logger.info("进入离线模式")
 
@@ -258,7 +258,7 @@ class EdgeAutonomyManager(private val vertx: Vertx) {
     /**
      * 退出离线模式。
      */
-    private fun exitOfflineMode() {
+    fun exitOfflineMode() {
         if (offlineMode.compareAndSet(true, false)) {
             logger.info("退出离线模式")
 
@@ -492,7 +492,7 @@ class EdgeAutonomyManager(private val vertx: Vertx) {
      *
      * @param cacheData 缓存数据
      */
-    private fun updateLocalCache(cacheData: JsonObject) {
+    fun updateLocalCache(cacheData: JsonObject) {
         logger.info("更新本地缓存: {}", cacheData.encode())
 
         // 更新本地缓存
@@ -505,7 +505,7 @@ class EdgeAutonomyManager(private val vertx: Vertx) {
      * @param context 决策上下文
      * @return 决策结果
      */
-    private fun makeLocalDecision(context: JsonObject): JsonObject {
+    fun makeLocalDecision(context: JsonObject): JsonObject {
         logger.info("进行本地决策: {}", context.encode())
 
         // 在实际实现中，这里应该实现复杂的本地决策逻辑
@@ -528,7 +528,7 @@ class EdgeAutonomyManager(private val vertx: Vertx) {
      * @param window 时间窗口（毫秒）
      * @return 是否允许请求
      */
-    private fun checkRateLimit(key: String, limit: Int, window: Long): Boolean {
+    fun checkRateLimit(key: String, limit: Int, window: Long): Boolean {
         logger.debug("检查限流: key={}, limit={}, window={}ms", key, limit, window)
 
         // 在实际实现中，这里应该实现本地限流逻辑
@@ -544,7 +544,7 @@ class EdgeAutonomyManager(private val vertx: Vertx) {
      * @param service 服务名称
      * @return 是否允许请求
      */
-    private fun checkCircuitBreaker(service: String): Boolean {
+    fun checkCircuitBreaker(service: String): Boolean {
         logger.debug("检查熔断器: service={}", service)
 
         // 在实际实现中，这里应该实现本地熔断逻辑
@@ -610,6 +610,45 @@ class EdgeAutonomyManager(private val vertx: Vertx) {
      */
     fun isOfflineMode(): Boolean {
         return offlineMode.get()
+    }
+
+    /**
+     * 关闭边缘自治管理器，停止所有定时任务和资源。
+     *
+     * @return Future<Void> 关闭结果
+     */
+    fun shutdown(): Future<Void> {
+        logger.info("关闭边缘自治管理器")
+
+        val promise = Promise.promise<Void>()
+
+        try {
+            // 禁用自治功能
+            autonomyEnabled.set(false)
+
+            // 如果在离线模式，退出离线模式
+            if (offlineMode.get()) {
+                exitOfflineMode()
+            }
+
+            // 关闭边缘同步管理器
+            edgeSyncManager.shutdown()
+                .onComplete { _ ->
+                    // 清空数据
+                    localCache.set(JsonObject())
+                    localConfig.set(JsonObject())
+                    localRoutes.set(JsonObject())
+                    localServices.set(JsonObject())
+                    localPlugins.set(JsonObject())
+
+                    promise.complete()
+                }
+        } catch (e: Exception) {
+            logger.error("关闭边缘自治管理器失败", e)
+            promise.fail(e)
+        }
+
+        return promise.future()
     }
 
     companion object {

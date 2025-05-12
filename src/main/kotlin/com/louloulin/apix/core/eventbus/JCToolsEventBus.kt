@@ -95,6 +95,26 @@ class JCToolsEventBus(private val vertx: Vertx) {
         logger.info("Statistics reset")
     }
 
+    /**
+     * 停止JCToolsEventBus
+     *
+     * @return Future<Void> 停止结果
+     */
+    fun stop(): io.vertx.core.Future<Void> {
+        if (started.compareAndSet(true, false)) {
+            logger.info("Stopping JCToolsEventBus wrapper")
+
+            // 清空数据
+            addressCache.clear()
+
+            logger.info("JCToolsEventBus wrapper stopped successfully")
+        } else {
+            logger.info("JCToolsEventBus wrapper already stopped")
+        }
+
+        return io.vertx.core.Future.succeededFuture()
+    }
+
     companion object {
         // 单例实例
         @Volatile

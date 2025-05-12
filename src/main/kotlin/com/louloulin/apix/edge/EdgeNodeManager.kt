@@ -188,7 +188,7 @@ class EdgeNodeManager(private val vertx: Vertx) {
     /**
      * 更新资源使用情况。
      */
-    private fun updateResourceUsage() {
+    fun updateResourceUsage() {
         val runtime = Runtime.getRuntime()
         val usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024)
         val maxMemory = runtime.maxMemory() / (1024 * 1024)
@@ -245,7 +245,7 @@ class EdgeNodeManager(private val vertx: Vertx) {
      *
      * @param newLimits 新的资源限制
      */
-    private fun updateResourceLimits(newLimits: JsonObject) {
+    fun updateResourceLimits(newLimits: JsonObject) {
         logger.info("更新资源限制: {}", newLimits.encode())
 
         // 更新资源限制配置
@@ -307,6 +307,32 @@ class EdgeNodeManager(private val vertx: Vertx) {
      */
     fun getResourceUsage(): JsonObject {
         return resourceUsage.get()
+    }
+
+    /**
+     * 关闭边缘节点管理器，停止所有定时任务和资源。
+     *
+     * @return Future<Void> 关闭结果
+     */
+    fun shutdown(): Future<Void> {
+        logger.info("关闭边缘节点管理器")
+
+        val promise = Promise.promise<Void>()
+
+        try {
+            // 禁用边缘节点
+            edgeEnabled.set(false)
+
+            // 清空数据
+            resourceUsage.set(JsonObject())
+
+            promise.complete()
+        } catch (e: Exception) {
+            logger.error("关闭边缘节点管理器失败", e)
+            promise.fail(e)
+        }
+
+        return promise.future()
     }
 
     companion object {

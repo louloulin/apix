@@ -38,6 +38,11 @@ class BandwidthMonitor(private val vertx: Vertx) {
     fun start() {
         logger.info("启动带宽监控")
 
+        // 初始化带宽历史记录
+        val now = System.currentTimeMillis()
+        val totalBytes = totalBytesSent.get() + totalBytesReceived.get()
+        bandwidthHistory.add(BandwidthSample(now, totalBytes))
+
         // 每秒更新一次带宽使用情况
         timerId = vertx.setPeriodic(1000) { _ ->
             updateBandwidthUsage()

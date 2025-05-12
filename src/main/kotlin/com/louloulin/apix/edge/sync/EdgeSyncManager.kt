@@ -645,6 +645,39 @@ class EdgeSyncManager(private val vertx: Vertx) {
     }
 
     /**
+     * 关闭边缘同步管理器，停止所有定时任务和资源。
+     *
+     * @return Future<Void> 关闭结果
+     */
+    fun shutdown(): Future<Void> {
+        logger.info("关闭边缘同步管理器")
+
+        val promise = Promise.promise<Void>()
+
+        try {
+            // 禁用同步
+            syncEnabled.set(false)
+
+            // 停止带宽监控
+            bandwidthMonitor.stop()
+
+            // 停止网络条件检测
+            networkDetector.stop()
+
+            // 清空数据
+            dataVersions.clear()
+            syncStatus.clear()
+
+            promise.complete()
+        } catch (e: Exception) {
+            logger.error("关闭边缘同步管理器失败", e)
+            promise.fail(e)
+        }
+
+        return promise.future()
+    }
+
+    /**
      * 同步状态类。
      */
     data class SyncStatus(

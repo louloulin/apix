@@ -36,7 +36,7 @@ class RouteHandler(private val routeManager: RouteManager) {
             val routesArray = JsonArray()
 
             routes.forEach { route: com.louloulin.apix.models.Route ->
-                routesArray.add(route)
+                routesArray.add(route.toJson())
             }
 
             context.response()
@@ -79,6 +79,11 @@ class RouteHandler(private val routeManager: RouteManager) {
                 return
             }
 
+            // 将 target 字段复制到 targetUrl 字段，以兼容 Route.fromJson 方法
+            if (body.containsKey("target") && !body.containsKey("targetUrl")) {
+                body.put("targetUrl", body.getString("target"))
+            }
+
             val route = routeManager.createRoute(body)
 
             context.response()
@@ -86,7 +91,7 @@ class RouteHandler(private val routeManager: RouteManager) {
                 .putHeader("Content-Type", "application/json")
                 .end(JsonObject()
                     .put("success", true)
-                    .put("route", route)
+                    .put("route", route.toJson())
                     .encode()
                 )
         } catch (e: Exception) {
@@ -126,7 +131,7 @@ class RouteHandler(private val routeManager: RouteManager) {
             context.response()
                 .putHeader("Content-Type", "application/json")
                 .end(JsonObject()
-                    .put("route", route)
+                    .put("route", route.toJson())
                     .encode()
                 )
         } catch (e: Exception) {

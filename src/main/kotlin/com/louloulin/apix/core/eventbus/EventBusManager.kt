@@ -228,6 +228,44 @@ class EventBusManager(private val vertx: Vertx) {
         logger.info("Statistics reset")
     }
 
+    /**
+     * 关闭EventBus管理器，停止所有实例并释放资源
+     *
+     * @return Future<Void> 关闭结果
+     */
+    fun shutdown(): Future<Void> {
+        logger.info("关闭EventBus管理器")
+
+        val promise = Promise.promise<Void>()
+
+        try {
+            // 切换回原生EventBus
+            switchType(EventBusType.VERTX)
+                .compose<Void> { _ ->
+                    // 停止各种EventBus实现
+                    simpleEventBus.stop()
+                    jcToolsEventBus.stop()
+                    distributedEventBus.stop()
+                    highPerformanceEventBus.stop()
+
+                    Future.succeededFuture<Void>()
+                }
+                .onSuccess { _ ->
+                    logger.info("所有EventBus实现已停止")
+                    promise.complete()
+                }
+                .onFailure { cause ->
+                    logger.error("关闭EventBus管理器失败", cause)
+                    promise.fail(cause as Throwable)
+                }
+        } catch (e: Exception) {
+            logger.error("关闭EventBus管理器失败", e)
+            promise.fail(e)
+        }
+
+        return promise.future()
+    }
+
     companion object {
         // 单例实例
         @Volatile

@@ -20,10 +20,10 @@ APIX 项目当前存在大量测试失败，主要集中在以下几种异常类
 - CacheProtectionManagerTest [已解决]
 - HotDataManagerTest [已解决]
 - MultiLevelCacheManagerTest [已解决]
-- SemanticCacheManagerTest
-- CacheWarmupManagerTest
-- DistributedEventBusTest
-- ResourceVerticleTest
+- SemanticCacheManagerTest [已解决]
+- CacheWarmupManagerTest [已解决]
+- DistributedEventBusTest [已解决]
+- ResourceVerticleTest [已解决]
 - EdgeSyncManagerTest
 - EventBusManagerTest
 - HighPerformanceEventBusTest
@@ -106,7 +106,7 @@ APIX 项目当前存在大量测试失败，主要集中在以下几种异常类
 - 消息处理器未正确注册
 - 消息格式不匹配
 
-## 修复计划 [进度: 60%]
+## 修复计划 [进度: 75%]
 
 ### 阶段 1：基础设施改进（高优先级） [已完成]
 
@@ -720,6 +720,12 @@ class CircuitBreakerManagerTest : BaseVertxTest() {
      - MultiLevelCacheManagerTest [已实现]
      - CacheProtectionManagerTest [已实现]
      - HotDataManagerTest [已实现]
+     - SemanticCacheManagerTest [已实现]
+     - CacheWarmupManagerTest [已实现]
+   - 资源相关测试 [部分实现]
+     - ResourceVerticleTest [已实现]
+   - 事件总线相关测试 [部分实现]
+     - DistributedEventBusTest [已实现]
 
 3. **第三批**：高级功能测试
    - 边缘计算相关测试

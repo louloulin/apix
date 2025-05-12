@@ -387,7 +387,7 @@ class EdgeControlPlaneManager(private val vertx: Vertx) {
      * @param nodeId 节点ID
      * @param nodeInfo 节点信息
      */
-    private fun registerEdgeNode(nodeId: String, nodeInfo: JsonObject) {
+    fun registerEdgeNode(nodeId: String, nodeInfo: JsonObject) {
         // 添加或更新节点信息
         val updatedInfo = nodeInfo.copy()
             .put("lastHeartbeat", System.currentTimeMillis())
@@ -425,7 +425,7 @@ class EdgeControlPlaneManager(private val vertx: Vertx) {
      *
      * @param nodeId 节点ID
      */
-    private fun updateEdgeNodeHeartbeat(nodeId: String) {
+    fun updateEdgeNodeHeartbeat(nodeId: String) {
         // 获取节点信息
         val nodeInfo = edgeNodes[nodeId]
 
@@ -444,7 +444,7 @@ class EdgeControlPlaneManager(private val vertx: Vertx) {
      * @param config 新配置
      * @return 新的配置版本
      */
-    private fun updateConfig(config: JsonObject): String {
+    fun updateConfig(config: JsonObject): String {
         // 创建新的配置版本
         val newVersion = System.currentTimeMillis().toString()
 
@@ -483,7 +483,7 @@ class EdgeControlPlaneManager(private val vertx: Vertx) {
      * @param version 要回滚到的配置版本
      * @return 是否成功回滚
      */
-    private fun rollbackConfig(version: String): Boolean {
+    fun rollbackConfig(version: String): Boolean {
         // 检查版本是否存在
         val config = configHistory[version]
         if (config == null) {
@@ -502,6 +502,15 @@ class EdgeControlPlaneManager(private val vertx: Vertx) {
     }
 
     /**
+     * 获取当前配置版本。
+     *
+     * @return 当前配置版本
+     */
+    fun getConfigVersion(): String {
+        return configVersion.get()
+    }
+
+    /**
      * 获取边缘控制平面状态。
      *
      * @return 包含状态信息的 JsonObject
@@ -514,6 +523,32 @@ class EdgeControlPlaneManager(private val vertx: Vertx) {
             .put("configVersion", configVersion.get())
             .put("configHistorySize", configHistory.size)
             .put("timestamp", System.currentTimeMillis())
+    }
+
+    /**
+     * 关闭边缘控制平面管理器，停止所有定时任务和资源。
+     *
+     * @return Future<Void> 关闭结果
+     */
+    fun shutdown(): Future<Void> {
+        logger.info("关闭边缘控制平面管理器")
+
+        val promise = Promise.promise<Void>()
+
+        try {
+            // 禁用控制平面
+            controlPlaneEnabled.set(false)
+
+            // 清空数据
+            edgeNodes.clear()
+
+            promise.complete()
+        } catch (e: Exception) {
+            logger.error("关闭边缘控制平面管理器失败", e)
+            promise.fail(e)
+        }
+
+        return promise.future()
     }
 
     companion object {

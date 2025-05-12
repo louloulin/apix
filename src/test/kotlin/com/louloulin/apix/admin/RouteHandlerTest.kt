@@ -1,5 +1,6 @@
 package com.louloulin.apix.admin
 
+import com.louloulin.apix.core.BaseVertxTest
 import com.louloulin.apix.core.RouteManager
 import com.louloulin.apix.models.Route
 import io.vertx.core.Vertx
@@ -9,23 +10,25 @@ import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.mockito.ArgumentMatchers.any
+import org.slf4j.LoggerFactory
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
-class RouteHandlerTest {
+class RouteHandlerTest : BaseVertxTest() {
 
-    private lateinit var vertx: Vertx
     private lateinit var routeManager: RouteManager
     private lateinit var routeHandler: RouteHandler
 
     @BeforeEach
-    fun setUp(vertx: Vertx, testContext: VertxTestContext) {
-        this.vertx = vertx
+    override fun setUp(vertx: Vertx, testContext: VertxTestContext) {
+        super.setUp(vertx, testContext)
         routeManager = Mockito.mock(RouteManager::class.java)
         routeHandler = RouteHandler(routeManager)
 
@@ -109,12 +112,13 @@ class RouteHandlerTest {
     }
 
     @Test
+    @Timeout(value = 30, unit = TimeUnit.SECONDS)
     fun testCreateRoute(testContext: VertxTestContext) {
         // Mock data
         val routeId = UUID.randomUUID().toString()
         val routeData = JsonObject()
             .put("path", "/api/test")
-            .put("targetUrl", "http://localhost:8080")
+            .put("target", "http://localhost:8080") // 注意这里是 target 而不是 targetUrl
 
         val createdRoute = Route(
             id = routeId,
