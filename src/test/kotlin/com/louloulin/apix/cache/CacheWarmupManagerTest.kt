@@ -59,9 +59,14 @@ class CacheWarmupManagerTest : BaseVertxTest() {
                     warmupManager.initialize(config)
                 }
                 .onSuccess { _ ->
-                    // 等待一段时间，确保服务已启动
-                    waitForService(500) {
-                        testContext.completeNow()
+                    // 等待更长时间，确保服务已完全启动
+                    waitForService(1000) {
+                        // 再次确认 warmupManager 已初始化
+                        if (::warmupManager.isInitialized) {
+                            testContext.completeNow()
+                        } else {
+                            testContext.failNow(UninitializedPropertyAccessException("warmupManager 未初始化"))
+                        }
                     }
                 }
                 .onFailure { e -> handleError(testContext, e) }
@@ -86,6 +91,12 @@ class CacheWarmupManagerTest : BaseVertxTest() {
     @Timeout(value = 30, unit = TimeUnit.SECONDS)
     fun `test warmup cache async`(testContext: VertxTestContext) {
         try {
+            // 确保 warmupManager 已经初始化
+            if (!::warmupManager.isInitialized) {
+                testContext.failNow(UninitializedPropertyAccessException("warmupManager 未初始化"))
+                return
+            }
+
             // 预填充一些测试数据到缓存中
             val cacheManager = MultiLevelCacheManager.getInstance(vertx)
             cacheManager.put("test-key-1", "value-1", 60000, "test")
@@ -140,6 +151,12 @@ class CacheWarmupManagerTest : BaseVertxTest() {
     @Timeout(value = 30, unit = TimeUnit.SECONDS)
     fun `test warmup cache sync`(testContext: VertxTestContext) {
         try {
+            // 确保 warmupManager 已经初始化
+            if (!::warmupManager.isInitialized) {
+                testContext.failNow(UninitializedPropertyAccessException("warmupManager 未初始化"))
+                return
+            }
+
             // 预填充一些测试数据到缓存中
             val cacheManager = MultiLevelCacheManager.getInstance(vertx)
             cacheManager.put("test-key-1", "value-1", 60000, "test")
@@ -174,6 +191,12 @@ class CacheWarmupManagerTest : BaseVertxTest() {
     @Timeout(value = 5, unit = TimeUnit.SECONDS)
     fun `test get warmup status`(testContext: VertxTestContext) {
         try {
+            // 确保 warmupManager 已经初始化
+            if (!::warmupManager.isInitialized) {
+                testContext.failNow(UninitializedPropertyAccessException("warmupManager 未初始化"))
+                return
+            }
+
             // 获取预热状态
             val status = warmupManager.getWarmupStatus()
 

@@ -45,11 +45,15 @@ class CacheProtectionManagerTest : BaseVertxTest() {
             // 创建布隆过滤器管理器
             val bloomFilterManager = BloomFilterManager.getInstance(vertx)
 
+            // 确保初始化完成后再继续测试
             cacheManager.initialize(config)
                 .compose { _ -> bloomFilterManager.initialize(config) }
                 .compose { _ -> cacheProtectionManager.initialize(config) }
                 .onSuccess { _ ->
-                    testContext.completeNow()
+                    // 等待一段时间，确保所有初始化完成
+                    waitForService(500) {
+                        testContext.completeNow()
+                    }
                 }
                 .onFailure { e -> handleError(testContext, e) }
         } catch (e: Exception) {
@@ -61,6 +65,12 @@ class CacheProtectionManagerTest : BaseVertxTest() {
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
     fun `test prevent cache penetration`(testContext: VertxTestContext) {
         try {
+            // 确保 cacheProtectionManager 已经初始化
+            if (!::cacheProtectionManager.isInitialized) {
+                testContext.failNow(UninitializedPropertyAccessException("cacheProtectionManager 未初始化"))
+                return
+            }
+
             // 生成唯一的测试键
             val testKey = "test-key-penetration-" + System.currentTimeMillis()
             val testValue = "test-value-penetration-" + System.currentTimeMillis()
@@ -116,6 +126,12 @@ class CacheProtectionManagerTest : BaseVertxTest() {
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
     fun `test prevent cache breakdown`(testContext: VertxTestContext) {
         try {
+            // 确保 cacheProtectionManager 已经初始化
+            if (!::cacheProtectionManager.isInitialized) {
+                testContext.failNow(UninitializedPropertyAccessException("cacheProtectionManager 未初始化"))
+                return
+            }
+
             // 生成唯一的测试键
             val testKey = "test-key-breakdown-" + System.currentTimeMillis()
             val testValue = "test-value-breakdown-" + System.currentTimeMillis()
@@ -164,6 +180,12 @@ class CacheProtectionManagerTest : BaseVertxTest() {
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
     fun `test prevent cache avalanche`(testContext: VertxTestContext) {
         try {
+            // 确保 cacheProtectionManager 已经初始化
+            if (!::cacheProtectionManager.isInitialized) {
+                testContext.failNow(UninitializedPropertyAccessException("cacheProtectionManager 未初始化"))
+                return
+            }
+
             // 生成唯一的测试键
             val testKey = "test-key-avalanche-" + System.currentTimeMillis()
             val testValue = "test-value-avalanche-" + System.currentTimeMillis()

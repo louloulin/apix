@@ -37,7 +37,7 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
             val servicesArray = JsonArray()
 
             services.forEach { service: com.louloulin.apix.models.Service ->
-                servicesArray.add(service)
+                servicesArray.add(service.toJson())
             }
 
             context.response()
@@ -64,11 +64,40 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
      * Creates a new service.
      */
     private fun createService(context: RoutingContext) {
+        createServiceForTest(context)
+    }
+
+    /**
+     * Creates a new service (for testing).
+     */
+    fun createServiceForTest(context: RoutingContext) {
         try {
-            val body = context.body().asJsonObject()
+            // 安全地获取请求体
+            val body = try {
+                context.body().asJsonObject()
+            } catch (e: Exception) {
+                logger.warn("Failed to parse request body as JSON: ${e.message}")
+                null
+            }
+
+            logger.info("Received create service request with body: $body")
+
+            if (body == null) {
+                logger.warn("Request body is null")
+                context.response()
+                    .setStatusCode(400)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("success", false)
+                        .put("error", "Invalid or missing request body")
+                        .encode()
+                    )
+                return
+            }
 
             // Validate required fields
             if (!body.containsKey("name") || !body.containsKey("url")) {
+                logger.warn("Missing required fields in request body: name=${body.containsKey("name")}, url=${body.containsKey("url")}")
                 context.response()
                     .setStatusCode(400)
                     .putHeader("Content-Type", "application/json")
@@ -87,7 +116,7 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
                 .putHeader("Content-Type", "application/json")
                 .end(JsonObject()
                     .put("success", true)
-                    .put("service", service)
+                    .put("service", service.toJson())
                     .encode()
                 )
         } catch (e: Exception) {
@@ -127,7 +156,7 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
             context.response()
                 .putHeader("Content-Type", "application/json")
                 .end(JsonObject()
-                    .put("service", service)
+                    .put("service", service.toJson())
                     .encode()
                 )
         } catch (e: Exception) {
@@ -168,11 +197,23 @@ class ServiceHandler(private val serviceManager: ServiceManager) {
 
             val updatedService = serviceManager.updateService(id, body)
 
+            if (updatedService == null) {
+                context.response()
+                    .setStatusCode(404)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("success", false)
+                        .put("error", "Failed to update service: $id")
+                        .encode()
+                    )
+                return
+            }
+
             context.response()
                 .putHeader("Content-Type", "application/json")
                 .end(JsonObject()
                     .put("success", true)
-                    .put("service", updatedService)
+                    .put("service", updatedService.toJson())
                     .encode()
                 )
         } catch (e: Exception) {

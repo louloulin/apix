@@ -63,11 +63,40 @@ class RouteHandler(private val routeManager: RouteManager) {
      * Creates a new route.
      */
     private fun createRoute(context: RoutingContext) {
+        createRouteForTest(context)
+    }
+
+    /**
+     * Creates a new route (for testing).
+     */
+    fun createRouteForTest(context: RoutingContext) {
         try {
-            val body = context.body().asJsonObject()
+            // 安全地获取请求体
+            val body = try {
+                context.body().asJsonObject()
+            } catch (e: Exception) {
+                logger.warn("Failed to parse request body as JSON: ${e.message}")
+                null
+            }
+
+            logger.info("Received create route request with body: $body")
+
+            if (body == null) {
+                logger.warn("Request body is null")
+                context.response()
+                    .setStatusCode(400)
+                    .putHeader("Content-Type", "application/json")
+                    .end(JsonObject()
+                        .put("success", false)
+                        .put("error", "Invalid or missing request body")
+                        .encode()
+                    )
+                return
+            }
 
             // Validate required fields
             if (!body.containsKey("path") || !body.containsKey("target")) {
+                logger.warn("Missing required fields in request body: path=${body.containsKey("path")}, target=${body.containsKey("target")}")
                 context.response()
                     .setStatusCode(400)
                     .putHeader("Content-Type", "application/json")
@@ -156,6 +185,11 @@ class RouteHandler(private val routeManager: RouteManager) {
             val id = context.pathParam("id")
             val body = context.body().asJsonObject()
 
+            // 将 target 字段复制到 targetUrl 字段，以兼容 Route.fromJson 方法
+            if (body.containsKey("target") && !body.containsKey("targetUrl")) {
+                body.put("targetUrl", body.getString("target"))
+            }
+
             val route = routeManager.getRoute(id)
 
             if (route == null) {
@@ -176,7 +210,7 @@ class RouteHandler(private val routeManager: RouteManager) {
                 .putHeader("Content-Type", "application/json")
                 .end(JsonObject()
                     .put("success", true)
-                    .put("route", updatedRoute)
+                    .put("route", updatedRoute?.toJson())
                     .encode()
                 )
         } catch (e: Exception) {
