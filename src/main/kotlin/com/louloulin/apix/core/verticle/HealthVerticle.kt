@@ -38,12 +38,19 @@ class HealthVerticle : BaseVerticle() {
     }
 
     override fun onStart(startPromise: Promise<Void>) {
-        configManager = ConfigManager(vertx)
+        try {
+            configManager = ConfigManager(vertx)
 
-        // 从配置中获取健康检查的端口和主机
-        val healthConfig = configManager.getConfig().getJsonObject("health", JsonObject())
-        healthPort = healthConfig.getInteger("port", 8086)
-        healthHost = healthConfig.getString("host", "0.0.0.0")
+            // 从配置中获取健康检查的端口和主机
+            val healthConfig = configManager.getConfig().getJsonObject("health", JsonObject())
+            healthPort = healthConfig.getInteger("port", 8086)
+            healthHost = healthConfig.getString("host", "0.0.0.0")
+        } catch (e: Exception) {
+            logger.error("Failed to initialize ConfigManager or get health config", e)
+            // 使用默认值
+            healthPort = 8086
+            healthHost = "0.0.0.0"
+        }
 
         // 创建健康检查处理器
         healthChecks = HealthChecks.create(vertx)

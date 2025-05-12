@@ -53,12 +53,21 @@ class ConfigManager(private val vertx: Vertx) {
         if (Files.exists(configFile)) {
             try {
                 val fileContent = Files.readString(configFile)
-                val fileConfig = JsonObject(fileContent)
 
-                // Merge file configuration with default configuration
-                config = config.mergeIn(fileConfig, true)
+                if (fileContent.isBlank()) {
+                    logger.warn("Configuration file is empty: {}, using default configuration", configPath)
+                } else {
+                    try {
+                        val fileConfig = JsonObject(fileContent)
 
-                logger.info("Loaded configuration from file: {}", configPath)
+                        // Merge file configuration with default configuration
+                        config = config.mergeIn(fileConfig, true)
+
+                        logger.info("Loaded configuration from file: {}", configPath)
+                    } catch (e: Exception) {
+                        logger.error("Failed to parse configuration from file: {}", configPath, e)
+                    }
+                }
             } catch (e: Exception) {
                 logger.error("Failed to load configuration from file: {}", configPath, e)
             }
