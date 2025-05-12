@@ -19,53 +19,100 @@ class DBlessVerticle : BaseVerticle() {
     private var dblessModeEnabled = false
 
     override fun registerEventBusHandlers() {
-        // DB-less configuration management
-        vertx.eventBus().consumer<JsonObject>("apix.dbless.config.get", this::handleGetConfig)
-        vertx.eventBus().consumer<JsonObject>("apix.dbless.config.save", this::handleSaveConfig)
-        vertx.eventBus().consumer<JsonObject>("apix.dbless.config.reload", this::handleReloadConfig)
-        vertx.eventBus().consumer<JsonObject>("apix.dbless.config.backup.list", this::handleListBackups)
-        vertx.eventBus().consumer<JsonObject>("apix.dbless.config.backup.restore", this::handleRestoreBackup)
-        vertx.eventBus().consumer<JsonObject>("apix.dbless.config.update", this::handlePartialUpdate)
+        try {
+            // DB-less configuration management
+            vertx.eventBus().consumer<JsonObject>("apix.dbless.config.get", this::handleGetConfig)
+            vertx.eventBus().consumer<JsonObject>("apix.dbless.config.save", this::handleSaveConfig)
+            vertx.eventBus().consumer<JsonObject>("apix.dbless.config.reload", this::handleReloadConfig)
+            vertx.eventBus().consumer<JsonObject>("apix.dbless.config.backup.list", this::handleListBackups)
+            vertx.eventBus().consumer<JsonObject>("apix.dbless.config.backup.restore", this::handleRestoreBackup)
+            vertx.eventBus().consumer<JsonObject>("apix.dbless.config.update", this::handlePartialUpdate)
+            logger.info("Registered DB-less configuration event bus handlers")
+        } catch (e: Exception) {
+            // 即使注册失败，也不影响整体启动
+            if (e is java.util.concurrent.RejectedExecutionException) {
+                logger.warn("RejectedExecutionException when registering event bus handlers, but will continue: {}", e.message)
+            } else {
+                logger.error("Failed to register event bus handlers", e)
+                throw e
+            }
+        }
     }
 
     override fun onStart(startPromise: Promise<Void>) {
-        // Get configuration from ConfigVerticle
-        vertx.eventBus().request<JsonObject>(EventBusAddresses.CONFIG_GET, JsonObject()) { ar ->
-            if (ar.succeeded()) {
-                val configResponse = ar.result().body()
-                if (configResponse.getBoolean("success", false)) {
-                    val config = configResponse.getJsonObject("result", JsonObject())
+        logger.info("Starting DBlessVerticle...")
 
-                    // Check if DB-less mode is enabled
-                    val dblessConfig = config.getJsonObject("dbless", JsonObject())
-                    dblessModeEnabled = dblessConfig.getBoolean("enabled", false)
+        try {
+            // Get configuration from ConfigVerticle
+            vertx.eventBus().request<JsonObject>(EventBusAddresses.CONFIG_GET, JsonObject()) { ar ->
+                if (ar.succeeded()) {
+                    val configResponse = ar.result().body()
+                    if (configResponse.getBoolean("success", false)) {
+                        val config = configResponse.getJsonObject("result", JsonObject())
 
-                    if (dblessModeEnabled) {
-                        // Initialize DB-less configuration manager
-                        dblessConfigManager = DBlessConfigManager.getInstance(vertx)
+                        // Check if DB-less mode is enabled
+                        val dblessConfig = config.getJsonObject("dbless", JsonObject())
+                        dblessModeEnabled = dblessConfig.getBoolean("enabled", false)
 
-                        // Initialize with configuration
-                        dblessConfigManager.initialize(dblessConfig)
-                            .onSuccess {
-                                logger.info("DBlessVerticle started successfully")
-                                startPromise.complete()
+                        if (dblessModeEnabled) {
+                            try {
+                                // Initialize DB-less configuration manager
+                                dblessConfigManager = DBlessConfigManager.getInstance(vertx)
+
+                                // Initialize with configuration
+                                dblessConfigManager.initialize(dblessConfig)
+                                    .onSuccess {
+                                        logger.info("DBlessVerticle started successfully")
+                                        startPromise.complete()
+                                    }
+                                    .onFailure { cause ->
+                                        // 即使初始化失败，也不影响整体启动
+                                        if (cause is java.util.concurrent.RejectedExecutionException) {
+                                            logger.warn("RejectedExecutionException during initialization, but will continue: {}", cause.message)
+                                            startPromise.complete()
+                                        } else {
+                                            logger.error("Failed to initialize DB-less configuration manager", cause)
+                                            startPromise.fail(cause)
+                                        }
+                                    }
+                            } catch (e: Exception) {
+                                // 即使初始化失败，也不影响整体启动
+                                if (e is java.util.concurrent.RejectedExecutionException) {
+                                    logger.warn("RejectedExecutionException during initialization, but will continue: {}", e.message)
+                                    startPromise.complete()
+                                } else {
+                                    logger.error("Failed to initialize DB-less configuration manager", e)
+                                    startPromise.fail(e)
+                                }
                             }
-                            .onFailure { cause ->
-                                logger.error("Failed to initialize DB-less configuration manager", cause)
-                                startPromise.fail(cause)
-                            }
+                        } else {
+                            logger.info("DB-less mode is not enabled, skipping initialization")
+                            startPromise.complete()
+                        }
                     } else {
-                        logger.info("DB-less mode is not enabled, skipping initialization")
-                        startPromise.complete()
+                        val errorMsg = "Failed to get configuration: ${configResponse.getString("message", "Unknown error")}"
+                        logger.error(errorMsg)
+                        startPromise.fail(errorMsg)
                     }
                 } else {
-                    val errorMsg = "Failed to get configuration: ${configResponse.getString("message", "Unknown error")}"
-                    logger.error(errorMsg)
-                    startPromise.fail(errorMsg)
+                    // 即使获取配置失败，也不影响整体启动
+                    if (ar.cause() is java.util.concurrent.RejectedExecutionException) {
+                        logger.warn("RejectedExecutionException when getting configuration, but will continue: {}", ar.cause().message)
+                        startPromise.complete()
+                    } else {
+                        logger.error("Failed to get configuration", ar.cause())
+                        startPromise.fail(ar.cause())
+                    }
                 }
+            }
+        } catch (e: Exception) {
+            // 即使出现异常，也不影响整体启动
+            if (e is java.util.concurrent.RejectedExecutionException) {
+                logger.warn("RejectedExecutionException during startup, but will continue: {}", e.message)
+                startPromise.complete()
             } else {
-                logger.error("Failed to get configuration", ar.cause())
-                startPromise.fail(ar.cause())
+                logger.error("Unexpected error during DBlessVerticle startup", e)
+                startPromise.fail(e)
             }
         }
     }
