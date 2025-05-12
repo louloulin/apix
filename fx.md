@@ -13,13 +13,13 @@ APIX 项目当前存在大量测试失败，主要集中在以下几种异常类
 
 ## 问题分类与分析
 
-### 1. RejectedExecutionException (最高优先级)
+### 1. RejectedExecutionException (最高优先级) [部分解决]
 
 出现在以下测试类中：
-- CacheConsistencyManagerTest
-- CacheProtectionManagerTest
-- HotDataManagerTest
-- MultiLevelCacheManagerTest
+- CacheConsistencyManagerTest [已解决]
+- CacheProtectionManagerTest [已解决]
+- HotDataManagerTest [已解决]
+- MultiLevelCacheManagerTest [已解决]
 - SemanticCacheManagerTest
 - CacheWarmupManagerTest
 - DistributedEventBusTest
@@ -106,7 +106,7 @@ APIX 项目当前存在大量测试失败，主要集中在以下几种异常类
 - 消息处理器未正确注册
 - 消息格式不匹配
 
-## 修复计划 [进度: 40%]
+## 修复计划 [进度: 60%]
 
 ### 阶段 1：基础设施改进（高优先级） [已完成]
 
@@ -451,9 +451,9 @@ class DBlessVerticleTest : BaseVertxTest() {
 }
 ```
 
-#### 2.3 修复缓存相关测试
+#### 2.3 修复缓存相关测试 [部分实现]
 
-以 `CacheConsistencyManagerTest` 为例：
+以 `CacheConsistencyManagerTest` 为例 [已实现]：
 
 ```kotlin
 @ExtendWith(VertxExtension::class)
@@ -715,7 +715,11 @@ class CircuitBreakerManagerTest : BaseVertxTest() {
 2. **第二批**：核心功能测试 [部分完成]
    - AuthHandlerTest [已实现]
    - DBlessVerticleTest [已实现]
-   - 缓存相关测试
+   - 缓存相关测试 [部分实现]
+     - CacheConsistencyManagerTest [已实现]
+     - MultiLevelCacheManagerTest [已实现]
+     - CacheProtectionManagerTest [已实现]
+     - HotDataManagerTest [已实现]
 
 3. **第三批**：高级功能测试
    - 边缘计算相关测试
