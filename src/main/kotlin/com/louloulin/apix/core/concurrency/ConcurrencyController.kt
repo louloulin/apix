@@ -39,6 +39,7 @@ class ConcurrencyController(private val vertx: Vertx) {
     private val requestCounts = ConcurrentHashMap<String, AtomicLong>()
     private val errorCounts = ConcurrentHashMap<String, AtomicLong>()
     private val rejectionCounts = ConcurrentHashMap<String, AtomicLong>()
+    private val totalResponseTimes = ConcurrentHashMap<String, AtomicLong>()
 
     // 系统资源监控
     private var cpuUsage = 0.0
@@ -193,7 +194,9 @@ class ConcurrencyController(private val vertx: Vertx) {
      * 获取服务的平均响应时间
      */
     fun getAverageResponseTime(serviceId: String): Double {
-        return 0.0 // 简化版本，返回固定值
+        val totalTime = totalResponseTimes.computeIfAbsent(serviceId) { AtomicLong(0) }.get()
+        val requests = requestCounts.computeIfAbsent(serviceId) { AtomicLong(0) }.get()
+        return if (requests > 0) totalTime.toDouble() / requests else 0.0
     }
 
     /**
@@ -218,9 +221,9 @@ class ConcurrencyController(private val vertx: Vertx) {
      * 记录请求完成
      */
     fun recordRequestCompletion(serviceId: String, responseTime: Long, success: Boolean) {
-        if (!success) {
-            errorCounts.computeIfAbsent(serviceId) { AtomicLong(0) }.incrementAndGet()
-        }
+        // 只记录响应时间，不增加错误计数
+        // 错误计数已经在 release 方法中增加
+        totalResponseTimes.computeIfAbsent(serviceId) { AtomicLong(0) }.addAndGet(responseTime)
     }
 
     /**
@@ -231,6 +234,7 @@ class ConcurrencyController(private val vertx: Vertx) {
         requestCounts.remove(serviceId)
         errorCounts.remove(serviceId)
         rejectionCounts.remove(serviceId)
+        totalResponseTimes.remove(serviceId)
     }
 
     /**
@@ -241,6 +245,7 @@ class ConcurrencyController(private val vertx: Vertx) {
         requestCounts.clear()
         errorCounts.clear()
         rejectionCounts.clear()
+        totalResponseTimes.clear()
         logger.info("所有性能指标已重置")
     }
 

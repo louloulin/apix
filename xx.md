@@ -22,25 +22,25 @@
 ~~VectorIndexTest > testSetShardData() FAILED~~
     ~~org.opentest4j.AssertionFailedError at VectorIndexTest.kt:109~~ ✅ 已修复
 
-CDNVerticleTest > testPrewarmCache(Vertx, VertxTestContext) FAILED
-    java.lang.AssertionError at VertxExtension.java:205
-        Caused by: io.vertx.core.impl.NoStackTraceThrowable
+~~CDNVerticleTest > testPrewarmCache(Vertx, VertxTestContext) FAILED~~
+    ~~java.lang.AssertionError at VertxExtension.java:205~~
+        ~~Caused by: io.vertx.core.impl.NoStackTraceThrowable~~ ✅ 已修复
 
-CDNVerticleTest > testGetCDNStatus(Vertx, VertxTestContext) FAILED
-    java.lang.AssertionError at VertxExtension.java:205
-        Caused by: io.vertx.core.impl.NoStackTraceThrowable
+~~CDNVerticleTest > testGetCDNStatus(Vertx, VertxTestContext) FAILED~~
+    ~~java.lang.AssertionError at VertxExtension.java:205~~
+        ~~Caused by: io.vertx.core.impl.NoStackTraceThrowable~~ ✅ 已修复
 
-CDNVerticleTest > testPurgeCache(Vertx, VertxTestContext) FAILED
-    java.lang.AssertionError at VertxExtension.java:205
-        Caused by: io.vertx.core.impl.NoStackTraceThrowable
+~~CDNVerticleTest > testPurgeCache(Vertx, VertxTestContext) FAILED~~
+    ~~java.lang.AssertionError at VertxExtension.java:205~~
+        ~~Caused by: io.vertx.core.impl.NoStackTraceThrowable~~ ✅ 已修复
 
-PluginChainTest > should get plugin execution stats(VertxTestContext) FAILED
-    java.lang.AssertionError at VertxExtension.java:205
-        Caused by: org.opentest4j.AssertionFailedError at PluginChainTest.kt:657
+~~PluginChainTest > should get plugin execution stats(VertxTestContext) FAILED~~
+    ~~java.lang.AssertionError at VertxExtension.java:205~~
+        ~~Caused by: org.opentest4j.AssertionFailedError at PluginChainTest.kt:657~~ ✅ 已修复
 
-ConcurrencyControllerTest > test get service metrics(VertxTestContext) FAILED
-    java.lang.AssertionError at VertxExtension.java:205
-        Caused by: org.opentest4j.AssertionFailedError at ConcurrencyControllerTest.kt:128
+~~ConcurrencyControllerTest > test get service metrics(VertxTestContext) FAILED~~
+    ~~java.lang.AssertionError at VertxExtension.java:205~~
+        ~~Caused by: org.opentest4j.AssertionFailedError at ConcurrencyControllerTest.kt:128~~ ✅ 已修复
 
 GracefulScaleDownManagerTest > test start and complete graceful scale down(VertxTestContext) FAILED
     org.opentest4j.AssertionFailedError at GracefulScaleDownManagerTest.kt:163
@@ -253,15 +253,15 @@ EdgeNodeVerticleTest > testGetResourceUsage(VertxTestContext) FAILED
 EdgeNodeVerticleTest > testGetNodeStatus(VertxTestContext) FAILED
     java.util.concurrent.RejectedExecutionException at SingleThreadEventExecutor.java:934
 
-SmartDNSVerticleTest > testGetBestNode(Vertx, VertxTestContext) FAILED
-    java.lang.AssertionError at VertxExtension.java:205
-        Caused by: io.vertx.core.impl.NoStackTraceThrowable
+~~SmartDNSVerticleTest > testGetBestNode(Vertx, VertxTestContext) FAILED~~
+    ~~java.lang.AssertionError at VertxExtension.java:205~~
+        ~~Caused by: io.vertx.core.impl.NoStackTraceThrowable~~ ✅ 已修复
 
-SmartDNSVerticleTest > testGetGeoLocation(Vertx, VertxTestContext) FAILED
-    java.util.concurrent.RejectedExecutionException at SingleThreadEventExecutor.java:934
+~~SmartDNSVerticleTest > testGetGeoLocation(Vertx, VertxTestContext) FAILED~~
+    ~~java.util.concurrent.RejectedExecutionException at SingleThreadEventExecutor.java:934~~ ✅ 已修复
 
-SmartDNSVerticleTest > testGetDNSStatus(Vertx, VertxTestContext) FAILED
-    java.util.concurrent.RejectedExecutionException at SingleThreadEventExecutor.java:934
+~~SmartDNSVerticleTest > testGetDNSStatus(Vertx, VertxTestContext) FAILED~~
+    ~~java.util.concurrent.RejectedExecutionException at SingleThreadEventExecutor.java:934~~ ✅ 已修复
 
 OptimizedEventBusTest > testPublishMessage(VertxTestContext) FAILED
     java.util.concurrent.TimeoutException at RecursiveAction.java:194

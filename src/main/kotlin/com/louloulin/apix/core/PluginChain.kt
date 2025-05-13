@@ -24,6 +24,14 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
     private val executionTimes = ConcurrentHashMap<String, AtomicLong>()
     private val executionCounts = ConcurrentHashMap<String, AtomicLong>()
 
+    init {
+        // 初始化所有插件的统计数据
+        plugins.forEach { plugin ->
+            executionTimes[plugin.id] = AtomicLong(0)
+            executionCounts[plugin.id] = AtomicLong(0)
+        }
+    }
+
     // 插件执行结果缓存
     private val resultCache = com.louloulin.apix.plugins.cache.PluginResultCache.getInstance(vertx)
 
@@ -282,6 +290,10 @@ class PluginChain(private val vertx: Vertx, private val plugins: List<Plugin>) {
         resultFuture.onComplete { ar ->
             val endTime = System.currentTimeMillis()
             val executionTime = endTime - startTime
+
+            // 更新插件执行统计数据
+            executionTimes.computeIfPresent(plugin.id) { _, value -> value.addAndGet(executionTime); value }
+            executionCounts.computeIfPresent(plugin.id) { _, value -> value.incrementAndGet(); value }
 
             // 使用 PluginMetrics 记录指标
             val metrics = com.louloulin.apix.plugins.metrics.PluginMetrics.getInstance(vertx)
