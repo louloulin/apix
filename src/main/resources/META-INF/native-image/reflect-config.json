@@ -255,7 +255,7 @@
     "allPublicFields": true
   },
   {
-    "name": "com.louloulin.apix.core.verticle.EdgeNodeVerticle",
+   "name": "com.louloulin.apix.edge.EdgeNodeVerticle",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true,
     "allDeclaredMethods": true,
@@ -264,7 +264,7 @@
     "allPublicFields": true
   },
   {
-    "name": "com.louloulin.apix.core.verticle.EdgeControlPlaneVerticle",
+    "name": "com.louloulin.apix.edge.EdgeControlPlaneVerticle",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true,
     "allDeclaredMethods": true,
@@ -318,7 +318,7 @@
     "allPublicFields": true
   },
   {
-    "name": "com.louloulin.apix.core.verticle.EdgeControlVerticle",
+    "name": "com.louloulin.apix.edge.control.EdgeControlVerticle",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true,
     "allDeclaredMethods": true,
