@@ -1,0 +1,33 @@
+{
+  "gateway": {
+    "port": 8080,
+    "host": "0.0.0.0"
+  },
+  "server": {
+    "port": 8081,
+    "host": "0.0.0.0"
+  },
+  "admin": {
+    "port": 8082,
+    "host": "0.0.0.0"
+  },
+  "health": {
+    "port": 8083,
+    "host": "0.0.0.0"
+  },
+  "benchmark": {
+    "port": 8084,
+    "host": "0.0.0.0"
+  },
+  "cluster": {
+    "enabled": false,
+    "mode": "standalone",
+    "nodeId": "standalone",
+    "host": "localhost",
+    "port": 5700,
+    "members": [],
+    "type": "hazelcast"
+  },
+  "plugins": [],
+  "routes": []
+}
