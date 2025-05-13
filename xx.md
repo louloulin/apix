@@ -214,24 +214,24 @@ MultiCloudDeployManagerTest > testGetAllDeployStatus(VertxTestContext) FAILED
 MultiCloudDeployManagerTest > testExecuteDeploy(VertxTestContext) FAILED
     java.util.concurrent.RejectedExecutionException at MultiCloudDeployManagerTest.kt:255
 
-EdgeControlVerticleTest > testGetAuditLogs(Vertx, VertxTestContext) FAILED
-    java.lang.AssertionError at VertxExtension.java:205
-        Caused by: java.lang.AssertionError at EdgeControlVerticleTest.kt:249
+~~EdgeControlVerticleTest > testGetAuditLogs(Vertx, VertxTestContext) FAILED~~
+    ~~java.lang.AssertionError at VertxExtension.java:205~~
+        ~~Caused by: java.lang.AssertionError at EdgeControlVerticleTest.kt:249~~ ✅ 已修复
 
-EdgeControlVerticleTest > testGetNodeDetails(Vertx, VertxTestContext) FAILED
-    java.util.concurrent.RejectedExecutionException at SingleThreadEventExecutor.java:934
+~~EdgeControlVerticleTest > testGetNodeDetails(Vertx, VertxTestContext) FAILED~~
+    ~~java.util.concurrent.RejectedExecutionException at SingleThreadEventExecutor.java:934~~ ✅ 已修复
 
-EdgeControlVerticleTest > testGetRoles(Vertx, VertxTestContext) FAILED
-    java.util.concurrent.RejectedExecutionException at SingleThreadEventExecutor.java:934
+~~EdgeControlVerticleTest > testGetRoles(Vertx, VertxTestContext) FAILED~~
+    ~~java.util.concurrent.RejectedExecutionException at SingleThreadEventExecutor.java:934~~ ✅ 已修复
 
-EdgeControlVerticleTest > testGetNodes(Vertx, VertxTestContext) FAILED
-    java.util.concurrent.RejectedExecutionException at SingleThreadEventExecutor.java:934
+~~EdgeControlVerticleTest > testGetNodes(Vertx, VertxTestContext) FAILED~~
+    ~~java.util.concurrent.RejectedExecutionException at SingleThreadEventExecutor.java:934~~ ✅ 已修复
 
-EdgeControlVerticleTest > testGetNodeGroups(Vertx, VertxTestContext) FAILED
-    java.util.concurrent.RejectedExecutionException at SingleThreadEventExecutor.java:934
+~~EdgeControlVerticleTest > testGetNodeGroups(Vertx, VertxTestContext) FAILED~~
+    ~~java.util.concurrent.RejectedExecutionException at SingleThreadEventExecutor.java:934~~ ✅ 已修复
 
-EdgeControlVerticleTest > testGetEdgeControlStatus(Vertx, VertxTestContext) FAILED
-    java.util.concurrent.RejectedExecutionException at SingleThreadEventExecutor.java:934
+~~EdgeControlVerticleTest > testGetEdgeControlStatus(Vertx, VertxTestContext) FAILED~~
+    ~~java.util.concurrent.RejectedExecutionException at SingleThreadEventExecutor.java:934~~ ✅ 已修复
 
 PipelineManagerTest > testUpdatePipeline(VertxTestContext) FAILED
     java.lang.AssertionError at VertxExtension.java:205

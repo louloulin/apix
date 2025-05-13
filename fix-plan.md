@@ -157,27 +157,98 @@
 
 3. **NoStackTraceThrowable**
    - 已修复 CDNVerticleTest 中的三个测试
+   - 已修复 SmartDNSVerticleTest 中的三个测试
 
 ### 下一步修复计划
 
-1. **修复 SmartDNSVerticleTest 中的 NoStackTraceThrowable 问题**
-   - 使用与 CDNVerticleTest 类似的方法，模拟 EventBus 消息处理器
-   - 添加 awaitCompletion 调用，确保测试有足够的时间完成
+#### 1. 修复 RejectedExecutionException 问题
 
-2. **修复 RejectedExecutionException 问题**
-   - 创建一个通用的 BaseVertxTest 类，实现正确的测试生命周期管理
-   - 重点修复 EdgeControlVerticleTest, MultiLevelCacheVerticleTest 等类中的问题
+这个问题在多个测试类中出现，主要是因为 Vertx 实例在测试完成前被关闭，导致后续的异步操作无法执行。主要包括以下测试类：
 
-3. **修复 TimeoutException 问题**
-   - 重点修复 OptimizedEventBusTest, HighAvailabilityVerticleTest 等类中的问题
-   - 增加测试超时时间并优化异步操作的执行效率
+- EdgeControlVerticleTest (6个测试失败)
+- MultiLevelCacheVerticleTest (4个测试失败)
+- SmartCacheVerticleTest (4个测试失败)
+- ResilienceVerticleTest (2个测试失败)
+- P2PAccelerationVerticleTest (2个测试失败)
+- AnycastVerticleTest (2个测试失败)
+- EdgeNodeVerticleTest (3个测试失败)
+- LeaderElectionServiceTest (2个测试失败)
 
-4. **修复 ClassCastException 问题**
-   - 重点修复 FaultInjectionManagerTest, FallbackManagerTest, CircuitBreakerManagerTest 等类中的问题
-   - 添加类型检查和错误处理
+修复方案：
+1. 创建一个通用的 BaseVertxTest 类，实现正确的测试生命周期管理
+2. 在 tearDown 方法中使用 CountDownLatch 或其他同步机制，确保所有异步操作在 Vertx 关闭前完成
+3. 使用与 CDNVerticleTest 和 SmartDNSVerticleTest 类似的方法，模拟 EventBus 消息处理器而不是部署实际的 Verticle
 
-5. **修复其他断言失败的测试**
-   - 重点修复 RequestValidatorPluginTest, SignatureVerificationPluginTest, CsrfProtectionPluginTest, ResiliencePluginTest 等类中的问题
+#### 2. 修复 TimeoutException 问题
+
+这个问题主要出现在以下测试类中：
+
+- OptimizedEventBusTest (5个测试失败)
+- EventBusManagerTest (1个测试失败)
+- PluginChainTest (1个测试失败)
+- HighAvailabilityVerticleTest (1个测试失败)
+- ElasticScalingVerticleTest (2个测试失败)
+- MultiCloudDeployManagerTest (3个测试失败)
+
+修复方案：
+1. 在测试类中使用 @Timeout 注解增加超时时间，从默认的 30 秒增加到 60 秒或更长
+2. 使用 testContext.awaitCompletion() 方法指定更长的超时时间
+3. 优化异步操作的执行效率，减少不必要的异步操作
+4. 确保所有 Future 和 Promise 都有适当的完成或失败处理
+
+#### 3. 修复 ClassCastException 问题
+
+这个问题主要出现在以下测试类中：
+
+- FaultInjectionManagerTest (3个测试失败)
+- FallbackManagerTest (2个测试失败)
+- CircuitBreakerManagerTest (2个测试失败)
+- IncrementalSyncStrategyTest (3个测试失败)
+
+修复方案：
+1. 检查这些类中的 JSON 对象的类型转换
+2. 添加类型检查和错误处理
+3. 使用正确的类型转换方法，如 getJsonObject(), getJsonArray() 等
+
+#### 4. 修复其他断言失败的测试
+
+这些问题主要出现在以下测试类中：
+
+- RequestValidatorPluginTest (1个测试失败)
+- SignatureVerificationPluginTest (2个测试失败)
+- CsrfProtectionPluginTest (2个测试失败)
+- ResiliencePluginTest (2个测试失败)
+- NetworkOptimizerTest (1个测试失败)
+- SystemMonitorTest (1个测试失败)
+- MemoryManagerTest (1个测试失败)
+- MemoryManagerVerticleTest (1个测试失败)
+- PipelineManagerTest (3个测试失败)
+- BandwidthAwareSyncStrategyTest (1个测试失败)
+- DataDiffCalculatorTest (1个测试失败)
+
+修复方案：
+1. 检查测试类中的断言条件
+2. 检查相应的实现类，确保实现符合测试预期
+3. 如有必要，调整测试用例中的预期结果或修复实现中的问题
+
+#### 5. 修复 ReplyException 问题
+
+这个问题主要出现在 DBlessVerticleTest 中（4个测试失败）。
+
+修复方案：
+1. 检查 DBlessVerticle 的实现，特别是对 EventBus 消息的处理
+2. 使用与 CDNVerticleTest 和 SmartDNSVerticleTest 类似的方法，模拟 EventBus 消息处理器
+
+#### 6. 修复 NullPointerException 问题
+
+这个问题主要出现在以下测试类中：
+
+- K8sDeployManagerTest (2个测试失败)
+- IstioIntegrationManagerTest (1个测试失败)
+
+修复方案：
+1. 检查这些类中的空指针引用
+2. 添加空值检查和错误处理
 
 对于每个修复：
 1. 修改相关代码
@@ -188,17 +259,34 @@
 ## 优先级
 
 1. **高优先级**
-   - SmartDNSVerticleTest (修复 NoStackTraceThrowable 问题)
+   - 创建通用的 BaseVertxTest 类，解决 RejectedExecutionException 问题
    - OptimizedEventBusTest (修复 TimeoutException 和 AssertionFailedError 问题)
    - EdgeControlVerticleTest (修复 RejectedExecutionException 问题)
+   - MultiLevelCacheVerticleTest (修复 RejectedExecutionException 问题)
 
 2. **中优先级**
    - FaultInjectionManagerTest (修复 ClassCastException 问题)
    - FallbackManagerTest (修复 ClassCastException 问题)
    - CircuitBreakerManagerTest (修复 ClassCastException 问题)
+   - DBlessVerticleTest (修复 ReplyException 问题)
+   - HighAvailabilityVerticleTest (修复 TimeoutException 问题)
 
 3. **低优先级**
-   - 其他测试类
+   - 其他测试类中的断言失败问题
+   - K8sDeployManagerTest 和 IstioIntegrationManagerTest 中的 NullPointerException 问题
+
+## 实施步骤
+
+1. 首先创建通用的 BaseVertxTest 类，解决大部分 RejectedExecutionException 问题
+2. 然后修复 OptimizedEventBusTest 中的 TimeoutException 问题
+3. 接着修复 FaultInjectionManagerTest 等类中的 ClassCastException 问题
+4. 最后修复其他断言失败的测试
+
+对于每个测试类，我们将采用以下步骤：
+1. 分析测试失败的原因
+2. 修改相关代码
+3. 运行单个测试验证修复
+4. 更新 xx.md 标记已修复的测试
 
 ## 进度跟踪
 
@@ -207,6 +295,7 @@
 - [x] 阶段 3: 修复 NoStackTraceThrowable
 - [x] 阶段 4: 修复 PluginChain 和 ConcurrencyController 中的问题
 - [x] 阶段 5: 修复 SmartDNSVerticleTest 中的问题
-- [ ] 阶段 6: 修复 RejectedExecutionException
-- [ ] 阶段 7: 修复 TimeoutException
-- [ ] 阶段 8: 修复 ClassCastException
+- [x] 阶段 6: 修复 EdgeControlVerticleTest 中的 RejectedExecutionException 问题
+- [ ] 阶段 7: 修复其他测试类中的 RejectedExecutionException 问题
+- [ ] 阶段 8: 修复 TimeoutException
+- [ ] 阶段 9: 修复 ClassCastException
