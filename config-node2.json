@@ -1,0 +1,29 @@
+{
+  "gateway": {
+    "port": 9090,
+    "host": "0.0.0.0"
+  },
+  "server": {
+    "port": 9092,
+    "host": "0.0.0.0"
+  },
+  "admin": {
+    "port": 9099,
+    "host": "0.0.0.0"
+  },
+  "health": {
+    "port": 9098,
+    "host": "0.0.0.0"
+  },
+  "cluster": {
+    "enabled": true,
+    "mode": "node",
+    "nodeId": "node2",
+    "host": "localhost",
+    "port": 5702,
+    "members": ["localhost:5701", "localhost:5702"],
+    "type": "hazelcast"
+  },
+  "plugins": [],
+  "routes": []
+}

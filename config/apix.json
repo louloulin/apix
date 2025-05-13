@@ -204,6 +204,14 @@
     "createdAt" : 1747104947744,
     "expiresAt" : 0
   }, {
+    "id" : "e0b37aa1-ca29-4c23-b3e6-be4ea994829c",
+    "key" : "8a526ff4a1be484b8439d73fa9a15c0cf3abc26646bc4a51a077b44b5832effa",
+    "name" : "Test API Key",
+    "scopes" : [ "read", "write" ],
+    "enabled" : true,
+    "createdAt" : 1747115640894,
+    "expiresAt" : 0
+  }, {
     "id" : "9874bfe6-35e6-48d4-bfc7-ac314355fe2d",
     "key" : "8f1dba8d681341fd9bc771d4ea77902b844efbfeedfe4a359bd39bcf5197b12e",
     "name" : "Test API Key",
@@ -426,6 +434,14 @@
     "scopes" : [ "read", "write" ],
     "enabled" : true,
     "createdAt" : 1747099916422,
+    "expiresAt" : 0
+  }, {
+    "id" : "9089a2d5-b2e1-44a3-a920-1eea839bd860",
+    "key" : "cdacc18697a74388a72da0230b30b8a7edf75e60638a4111b939d2abae09269f",
+    "name" : "Test API Key",
+    "scopes" : [ "read", "write" ],
+    "enabled" : true,
+    "createdAt" : 1747115640906,
     "expiresAt" : 0
   }, {
     "id" : "7f034f4c-6f8d-41c9-b7c9-38f89ef9fbf1",
@@ -794,6 +810,14 @@
     "scopes" : [ "read", "write" ],
     "enabled" : true,
     "createdAt" : 1747027175014,
+    "expiresAt" : 0
+  }, {
+    "id" : "f67ff9f8-b691-476d-85c9-9a74cdbf8460",
+    "key" : "7973d921fc01452681b413fbf36849490743753d220d4869968284a135176471",
+    "name" : "Test API Key",
+    "scopes" : [ "read", "write" ],
+    "enabled" : true,
+    "createdAt" : 1747115640914,
     "expiresAt" : 0
   }, {
     "id" : "50c073ae-2a15-4313-ba16-34f65edb13e6",

@@ -1,0 +1,25 @@
+{
+  "server": {
+    "port": 8070,
+    "host": "0.0.0.0"
+  },
+  "admin": {
+    "port": 8071,
+    "host": "0.0.0.0"
+  },
+  "health": {
+    "port": 8076,
+    "host": "0.0.0.0"
+  },
+  "cluster": {
+    "enabled": false,
+    "mode": "control-plane",
+    "nodeId": "control-plane",
+    "host": "localhost",
+    "port": 5700,
+    "members": ["localhost:5700", "localhost:5701", "localhost:5702"],
+    "type": "hazelcast"
+  },
+  "plugins": [],
+  "routes": []
+}

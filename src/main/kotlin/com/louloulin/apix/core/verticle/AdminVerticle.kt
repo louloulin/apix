@@ -86,7 +86,7 @@ class AdminVerticle : BaseVerticle() {
         setupRoutes()
 
         // 启动 HTTP 服务器
-        val port = config().getInteger("admin.port", 8080)
+        val port = config().getInteger("admin.port", 8071)
         val host = config().getString("admin.host", "0.0.0.0")
 
         // 设置端口和主机

@@ -1,0 +1,25 @@
+{
+  "server": {
+    "port": 8060,
+    "host": "0.0.0.0"
+  },
+  "admin": {
+    "port": 8061,
+    "host": "0.0.0.0"
+  },
+  "health": {
+    "port": 8066,
+    "host": "0.0.0.0"
+  },
+  "cluster": {
+    "enabled": true,
+    "mode": "data-plane",
+    "nodeId": "data-plane",
+    "host": "localhost",
+    "port": 5703,
+    "controlPlane": "localhost:5700",
+    "members": ["localhost:5703"]
+  },
+  "plugins": [],
+  "routes": []
+}

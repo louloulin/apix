@@ -88,7 +88,12 @@ class ClusterService(private val vertx: Vertx, private val clusterConfig: Cluste
             if (routesAr.succeeded()) {
                 val routesResponse = routesAr.result().body()
                 if (routesResponse.getBoolean("success", false)) {
-                    val routes = routesResponse.getJsonArray("result", JsonArray())
+                    val resultValue = routesResponse.getValue("result")
+                    val routes = when (resultValue) {
+                        is JsonArray -> resultValue
+                        is JsonObject -> JsonArray().add(resultValue)
+                        else -> JsonArray()
+                    }
 
                     // Clear existing routes and add new ones
                     if (routesMap != null) {
@@ -117,7 +122,12 @@ class ClusterService(private val vertx: Vertx, private val clusterConfig: Cluste
             if (servicesAr.succeeded()) {
                 val servicesResponse = servicesAr.result().body()
                 if (servicesResponse.getBoolean("success", false)) {
-                    val services = servicesResponse.getJsonArray("result", JsonArray())
+                    val resultValue = servicesResponse.getValue("result")
+                    val services = when (resultValue) {
+                        is JsonArray -> resultValue
+                        is JsonObject -> JsonArray().add(resultValue)
+                        else -> JsonArray()
+                    }
 
                     // Clear existing services and add new ones
                     if (servicesMap != null) {
@@ -146,7 +156,12 @@ class ClusterService(private val vertx: Vertx, private val clusterConfig: Cluste
             if (pluginsAr.succeeded()) {
                 val pluginsResponse = pluginsAr.result().body()
                 if (pluginsResponse.getBoolean("success", false)) {
-                    val plugins = pluginsResponse.getJsonArray("result", JsonArray())
+                    val resultValue = pluginsResponse.getValue("result")
+                    val plugins = when (resultValue) {
+                        is JsonArray -> resultValue
+                        is JsonObject -> JsonArray().add(resultValue)
+                        else -> JsonArray()
+                    }
 
                     // Clear existing plugins and add new ones
                     if (pluginsMap != null) {
