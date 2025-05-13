@@ -1,10 +1,12 @@
 package com.louloulin.apix.core.verticle
 
+import com.louloulin.apix.config.ConfigManager
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Promise
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
+import io.vertx.ext.web.RoutingContext
 import org.slf4j.LoggerFactory
 
 /**
@@ -54,8 +56,12 @@ class BenchmarkVerticle : AbstractVerticle() {
         }
 
         // 从配置中获取端口和主机
-        val port = config().getInteger("benchmark.port", 10080) // 使用高端口避免冲突
-        val host = config().getString("benchmark.host", "0.0.0.0")
+        val configManager = ConfigManager(vertx)
+        val benchmarkConfig = configManager.getConfig().getJsonObject("benchmark", JsonObject())
+        val port = benchmarkConfig.getInteger("port", 10080) // 使用高端口避免冲突
+        val host = benchmarkConfig.getString("host", "0.0.0.0")
+
+        logger.info("BenchmarkVerticle 将使用端口: {}, 配置: {}", port, benchmarkConfig.encodePrettily())
 
         // 创建HTTP服务器
         val serverOptions = HttpServerOptions()

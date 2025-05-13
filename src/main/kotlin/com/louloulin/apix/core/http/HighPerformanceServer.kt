@@ -1,10 +1,12 @@
 package com.louloulin.apix.core.http
 
+import com.louloulin.apix.config.ConfigManager
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.http.Http2Settings
 import io.vertx.core.http.HttpServerOptions
+import io.vertx.core.json.JsonObject
 import org.slf4j.LoggerFactory
 
 /**
@@ -19,8 +21,12 @@ class HighPerformanceServer : AbstractVerticle() {
 
     override fun start(startPromise: Promise<Void>) {
         // 从配置中获取端口和主机
-        val port = config().getInteger("server.port", DEFAULT_PORT)
-        val host = config().getString("server.host", "0.0.0.0")
+        val configManager = ConfigManager(vertx)
+        val serverConfig = configManager.getConfig().getJsonObject("server", JsonObject())
+        val port = serverConfig.getInteger("port", DEFAULT_PORT)
+        val host = serverConfig.getString("host", "0.0.0.0")
+
+        logger.info("HighPerformanceServer 将使用端口: {}, 配置: {}", port, serverConfig.encodePrettily())
 
         // 创建超高性能HTTP服务器配置
         val serverOptions = HttpServerOptions()

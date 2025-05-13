@@ -106,8 +106,11 @@ class AdminVerticle : BaseVerticle() {
         setupRoutes()
 
         // 启动 HTTP 服务器
-        val port = config().getInteger("admin.port", 8071)
-        val host = config().getString("admin.host", "0.0.0.0")
+        val adminConfig = configManager.getConfig().getJsonObject("admin", JsonObject())
+        val port = adminConfig.getInteger("port", 8071)
+        val host = adminConfig.getString("host", "0.0.0.0")
+
+        logger.info("AdminVerticle 将使用端口: {}, 配置: {}", port, adminConfig.encodePrettily())
 
         // 设置端口和主机
         httpServer.requestHandler(router).listen(port, host) { ar ->

@@ -1,22 +1,22 @@
 {
   "gateway": {
-    "port": 9180,
+    "port": 9280,
     "host": "0.0.0.0"
   },
   "server": {
-    "port": 9181,
+    "port": 9281,
     "host": "0.0.0.0"
   },
   "admin": {
-    "port": 9182,
+    "port": 9282,
     "host": "0.0.0.0"
   },
   "health": {
-    "port": 9183,
+    "port": 9283,
     "host": "0.0.0.0"
   },
   "benchmark": {
-    "port": 9184,
+    "port": 9284,
     "host": "0.0.0.0"
   },
   "cluster": {
