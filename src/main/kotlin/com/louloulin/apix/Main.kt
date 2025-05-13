@@ -38,9 +38,7 @@ import com.louloulin.apix.network.p2p.P2PAccelerationVerticle
 import com.louloulin.apix.resource.ResourceVerticle
 import com.louloulin.apix.edge.control.EdgeControlVerticle
 import com.louloulin.apix.core.verticle.MonitorVerticle
-import com.louloulin.apix.core.verticle.MultiLevelCacheVerticle
 import com.louloulin.apix.core.verticle.NodeModeVerticle
-import com.louloulin.apix.core.verticle.SmartCacheVerticle
 import com.louloulin.apix.core.verticle.PluginVerticle
 import com.louloulin.apix.core.verticle.PromptEnhancerVerticle
 import com.louloulin.apix.core.verticle.ResilienceVerticle
@@ -241,8 +239,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         futures.add(vertx.deployVerticle(HighAvailabilityVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ElasticScalingVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ResilienceVerticle::class.java.name, options))
-        futures.add(vertx.deployVerticle(MultiLevelCacheVerticle::class.java.name, options))
-        futures.add(vertx.deployVerticle(SmartCacheVerticle::class.java.name, options))
+        // MultiLevelCacheVerticle temporarily removed
+        // futures.add(vertx.deployVerticle(MultiLevelCacheVerticle::class.java.name, options))
+        // SmartCacheVerticle temporarily removed
+        // futures.add(vertx.deployVerticle(SmartCacheVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ConcurrencyControlVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(EdgeNodeVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(EdgeControlPlaneVerticle::class.java.name, options))
@@ -306,12 +306,14 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
             deployVerticle(vertx, ResilienceVerticle::class.java.name, standardOptions)
         }
         .compose {
-            // Then deploy MultiLevelCacheVerticle
-            deployVerticle(vertx, MultiLevelCacheVerticle::class.java.name, standardOptions)
+            // MultiLevelCacheVerticle temporarily removed
+            // deployVerticle(vertx, MultiLevelCacheVerticle::class.java.name, standardOptions)
+            Future.succeededFuture<String>()
         }
         .compose {
-            // Then deploy SmartCacheVerticle
-            deployVerticle(vertx, SmartCacheVerticle::class.java.name, standardOptions)
+            // SmartCacheVerticle temporarily removed
+            // deployVerticle(vertx, SmartCacheVerticle::class.java.name, standardOptions)
+            Future.succeededFuture<String>()
         }
         .compose {
             // Then deploy ClusterVerticle if Vert.x is clustered
@@ -403,6 +405,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy BenchmarkVerticle for performance testing
             deployVerticle(vertx, BenchmarkVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy CacheVerticle for caching
+            deployVerticle(vertx, CacheVerticle::class.java.name, standardOptions)
         }
         // 注意：以下Verticle已注释掉，因为它们尚未集成到主代码库中
         // .compose {

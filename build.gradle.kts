@@ -29,6 +29,7 @@ dependencies {
     implementation("io.vertx:vertx-circuit-breaker")
     implementation("io.vertx:vertx-dropwizard-metrics")
     implementation("io.vertx:vertx-zipkin")
+    implementation("io.vertx:vertx-redis-client")
 
     // Cluster support
     implementation("io.vertx:vertx-zookeeper")

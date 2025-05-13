@@ -29,5 +29,43 @@
     "type": "hazelcast"
   },
   "plugins": [],
-  "routes": []
+  "routes": [],
+  "cache": {
+    "type": "semantic",
+    "semantic": {
+      "embedding": {
+        "type": "simple"
+      },
+      "underlyingCache": {
+        "type": "multilevel",
+        "caches": [
+          {
+            "type": "memory"
+          }
+        ]
+      },
+      "similarityThreshold": 0.8
+    },
+    "strategy": {
+      "type": "composite",
+      "ttlSelectionMode": "MIN",
+      "strategies": [
+        {
+          "type": "ttl",
+          "defaultTtl": 3600,
+          "keyPatternTtls": {
+            "query:.*": 7200
+          }
+        },
+        {
+          "type": "model",
+          "defaultTtl": 3600,
+          "modelTtls": {
+            "gpt-3.5-turbo": 7200,
+            "gpt-4": 14400
+          }
+        }
+      ]
+    }
+  }
 }

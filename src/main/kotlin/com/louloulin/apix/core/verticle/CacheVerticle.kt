@@ -1,376 +1,226 @@
 package com.louloulin.apix.core.verticle
 
-import com.louloulin.apix.cluster.ClusterConfig
-import com.louloulin.apix.core.common.EventBusAddresses
-import io.vertx.core.Future
+import com.louloulin.apix.cache.CacheService
+import com.louloulin.apix.config.ConfigManager
 import io.vertx.core.Promise
+import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
-import io.vertx.core.shareddata.AsyncMap
-import io.vertx.core.shareddata.LocalMap
-import org.slf4j.LoggerFactory
-import java.util.concurrent.ConcurrentHashMap
 
 /**
- * 负责缓存管理的 Verticle
+ * 缓存 Verticle，提供缓存服务
  */
 class CacheVerticle : BaseVerticle() {
-    // 使用基类的 logger
 
-    // 缓存存储 - 本地模式
-    private var localCache: LocalMap<String, String>? = null
+    // 缓存服务
+    private lateinit var cacheService: CacheService
 
-    // 缓存存储 - 集群模式
-    private var clusterCache: AsyncMap<String, String>? = null
+    // 配置管理器
+    private lateinit var configManager: ConfigManager
 
-    // 是否使用集群模式
-    private var clustered = false
-
-    // 缓存统计
-    private val cacheStats = ConcurrentHashMap<String, CacheStats>()
-
-    override fun registerEventBusHandlers() {
-        // AI 响应缓存相关处理器
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.CACHE_GET, this::handleGetCache)
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.CACHE_PUT, this::handlePutCache)
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.CACHE_INVALIDATE, this::handleInvalidateCache)
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.CACHE_CLEAR, this::handleClearCache)
-        vertx.eventBus().consumer<JsonObject>(EventBusAddresses.CACHE_STATS, this::handleGetCacheStats)
+    // 事件总线地址
+    companion object {
+        const val ADDRESS_GET = "apix.cache.get"
+        const val ADDRESS_GET_BY_QUERY = "apix.cache.getByQuery"
+        const val ADDRESS_SET = "apix.cache.set"
+        const val ADDRESS_SET_BY_QUERY = "apix.cache.setByQuery"
+        const val ADDRESS_REMOVE = "apix.cache.remove"
+        const val ADDRESS_CLEAR = "apix.cache.clear"
+        const val ADDRESS_STATS = "apix.cache.stats"
     }
 
     override fun onStart(startPromise: Promise<Void>) {
-        // 检查是否在集群模式
-        clustered = vertx.isClustered()
+        // 初始化配置管理器
+        configManager = ConfigManager(vertx)
 
-        if (clustered) {
-            // 集群模式 - 使用分布式缓存
-            logger.info("Initializing distributed cache in clustered mode")
-            initializeClusteredCache(startPromise)
-        } else {
-            // 非集群模式 - 使用本地缓存
-            logger.info("Initializing local cache in non-clustered mode")
-            localCache = vertx.sharedData().getLocalMap("ai-response-cache")
-            logger.info("CacheVerticle started successfully with local cache")
-            startPromise.complete()
-        }
+        // 从配置中创建缓存服务
+        val cacheConfig = configManager.getConfig().getJsonObject("cache", JsonObject())
+        cacheService = CacheService.createFromConfig(vertx, cacheConfig)
+
+        logger.info("CacheVerticle started successfully")
+        startPromise.complete()
     }
 
     /**
-     * 初始化集群缓存
+     * 注册事件总线处理器
      */
-    private fun initializeClusteredCache(startPromise: Promise<Void>) {
-        vertx.sharedData().getAsyncMap<String, String>("ai-response-cache") { ar ->
-            if (ar.succeeded()) {
-                clusterCache = ar.result()
-                logger.info("CacheVerticle started successfully with distributed cache")
-                startPromise.complete()
-            } else {
-                logger.error("Failed to initialize distributed cache", ar.cause())
-                // 如果分布式缓存初始化失败，回退到本地缓存
-                logger.warn("Falling back to local cache")
-                localCache = vertx.sharedData().getLocalMap("ai-response-cache")
-                clustered = false
-                startPromise.complete()
-            }
-        }
+    override fun registerEventBusHandlers() {
+        // 获取缓存
+        vertx.eventBus().consumer<JsonObject>(ADDRESS_GET, this::handleGet)
+
+        // 根据查询获取缓存
+        vertx.eventBus().consumer<JsonObject>(ADDRESS_GET_BY_QUERY, this::handleGetByQuery)
+
+        // 设置缓存
+        vertx.eventBus().consumer<JsonObject>(ADDRESS_SET, this::handleSet)
+
+        // 根据查询设置缓存
+        vertx.eventBus().consumer<JsonObject>(ADDRESS_SET_BY_QUERY, this::handleSetByQuery)
+
+        // 删除缓存
+        vertx.eventBus().consumer<JsonObject>(ADDRESS_REMOVE, this::handleRemove)
+
+        // 清空缓存
+        vertx.eventBus().consumer<JsonObject>(ADDRESS_CLEAR, this::handleClear)
+
+        // 获取缓存统计信息
+        vertx.eventBus().consumer<JsonObject>(ADDRESS_STATS, this::handleStats)
     }
 
     /**
      * 处理获取缓存请求
      */
-    private fun handleGetCache(message: io.vertx.core.eventbus.Message<JsonObject>) {
+    private fun handleGet(message: Message<JsonObject>) {
         val key = message.body().getString("key")
-        val modelId = message.body().getString("modelId", "default")
 
         if (key == null) {
-            sendError(message, 400, "Cache key is required")
+            message.fail(400, "Missing key parameter")
             return
         }
 
-        val cacheKey = generateCacheKey(key, modelId)
-
-        if (clustered && clusterCache != null) {
-            // 使用分布式缓存
-            clusterCache!!.get(cacheKey) { ar ->
-                if (ar.succeeded()) {
-                    val cachedValue = ar.result()
-                    if (cachedValue != null) {
-                        // 缓存命中
-                        updateCacheStats(modelId, true)
-                        sendSuccess(message, JsonObject()
-                            .put("cached", true)
-                            .put("value", cachedValue)
-                        )
-                    } else {
-                        // 缓存未命中
-                        updateCacheStats(modelId, false)
-                        sendError(message, 404, "Cache miss")
-                    }
-                } else {
-                    logger.error("Failed to get from distributed cache", ar.cause())
-                    updateCacheStats(modelId, false)
-                    sendError(message, 500, "Failed to access cache: ${ar.cause().message}")
-                }
+        cacheService.get(key)
+            .onSuccess { value ->
+                message.reply(JsonObject().put("value", value))
             }
-        } else {
-            // 使用本地缓存
-            val cachedValue = localCache?.get(cacheKey)
-            if (cachedValue != null) {
-                // 缓存命中
-                updateCacheStats(modelId, true)
-                sendSuccess(message, JsonObject()
-                    .put("cached", true)
-                    .put("value", cachedValue)
-                )
-            } else {
-                // 缓存未命中
-                updateCacheStats(modelId, false)
-                sendError(message, 404, "Cache miss")
+            .onFailure { err ->
+                logger.error("Error getting cache entry for key: $key", err)
+                message.fail(500, err.message)
             }
-        }
     }
 
     /**
-     * 处理存储缓存请求
+     * 处理根据查询获取缓存请求
      */
-    private fun handlePutCache(message: io.vertx.core.eventbus.Message<JsonObject>) {
-        val key = message.body().getString("key")
-        val value = message.body().getString("value")
-        val modelId = message.body().getString("modelId", "default")
-        val ttl = message.body().getLong("ttl", 3600000L) // 默认 1 小时
+    private fun handleGetByQuery(message: Message<JsonObject>) {
+        val query = message.body().getString("query")
 
-        if (key == null || value == null) {
-            sendError(message, 400, "Both key and value are required")
+        if (query == null) {
+            message.fail(400, "Missing query parameter")
             return
         }
 
-        val cacheKey = generateCacheKey(key, modelId)
-
-        if (clustered && clusterCache != null) {
-            // 使用分布式缓存
-            clusterCache!!.put(cacheKey, value) { ar ->
-                if (ar.succeeded()) {
-                    // 设置 TTL
-                    if (ttl > 0) {
-                        vertx.setTimer(ttl) { _ ->
-                            clusterCache!!.remove(cacheKey) { _ -> }
-                        }
-                    }
-                    sendSuccess(message, true)
-                } else {
-                    logger.error("Failed to put to distributed cache", ar.cause())
-                    sendError(message, 500, "Failed to store in cache: ${ar.cause().message}")
-                }
+        cacheService.getByQuery(query)
+            .onSuccess { value ->
+                message.reply(JsonObject().put("value", value))
             }
-        } else {
-            // 使用本地缓存
-            localCache?.put(cacheKey, value)
-
-            // 设置 TTL
-            if (ttl > 0) {
-                vertx.setTimer(ttl) { _ ->
-                    localCache?.remove(cacheKey)
-                }
+            .onFailure { err ->
+                logger.error("Error getting cache entry for query: $query", err)
+                message.fail(500, err.message)
             }
-
-            sendSuccess(message, true)
-        }
     }
 
     /**
-     * 处理失效缓存请求
+     * 处理设置缓存请求
      */
-    private fun handleInvalidateCache(message: io.vertx.core.eventbus.Message<JsonObject>) {
+    private fun handleSet(message: Message<JsonObject>) {
         val key = message.body().getString("key")
-        val modelId = message.body().getString("modelId", "default")
+        val value = message.body().getJsonObject("value")
 
         if (key == null) {
-            sendError(message, 400, "Cache key is required")
+            message.fail(400, "Missing key parameter")
             return
         }
 
-        val cacheKey = generateCacheKey(key, modelId)
-
-        if (clustered && clusterCache != null) {
-            // 使用分布式缓存
-            clusterCache!!.remove(cacheKey) { ar ->
-                if (ar.succeeded()) {
-                    sendSuccess(message, ar.result() != null)
-                } else {
-                    logger.error("Failed to invalidate distributed cache", ar.cause())
-                    sendError(message, 500, "Failed to invalidate cache: ${ar.cause().message}")
-                }
-            }
-        } else {
-            // 使用本地缓存
-            val removed = localCache?.remove(cacheKey) != null
-            sendSuccess(message, removed)
+        if (value == null) {
+            message.fail(400, "Missing value parameter")
+            return
         }
+
+        cacheService.set(key, value)
+            .onSuccess {
+                message.reply(JsonObject().put("success", true))
+            }
+            .onFailure { err ->
+                logger.error("Error setting cache entry for key: $key", err)
+                message.fail(500, err.message)
+            }
+    }
+
+    /**
+     * 处理根据查询设置缓存请求
+     */
+    private fun handleSetByQuery(message: Message<JsonObject>) {
+        val query = message.body().getString("query")
+        val response = message.body().getJsonObject("response")
+
+        if (query == null) {
+            message.fail(400, "Missing query parameter")
+            return
+        }
+
+        if (response == null) {
+            message.fail(400, "Missing response parameter")
+            return
+        }
+
+        cacheService.setByQuery(query, response)
+            .onSuccess {
+                message.reply(JsonObject().put("success", true))
+            }
+            .onFailure { err ->
+                logger.error("Error setting cache entry for query: $query", err)
+                message.fail(500, err.message)
+            }
+    }
+
+    /**
+     * 处理删除缓存请求
+     */
+    private fun handleRemove(message: Message<JsonObject>) {
+        val key = message.body().getString("key")
+
+        if (key == null) {
+            message.fail(400, "Missing key parameter")
+            return
+        }
+
+        cacheService.remove(key)
+            .onSuccess {
+                message.reply(JsonObject().put("success", true))
+            }
+            .onFailure { err ->
+                logger.error("Error removing cache entry for key: $key", err)
+                message.fail(500, err.message)
+            }
     }
 
     /**
      * 处理清空缓存请求
      */
-    private fun handleClearCache(message: io.vertx.core.eventbus.Message<JsonObject>) {
-        val modelId = message.body().getString("modelId")
-
-        if (clustered && clusterCache != null) {
-            // 集群模式
-            if (modelId != null) {
-                // 清空特定模型的缓存
-                // 获取所有键值对
-                clusterCache!!.entries { entriesAr ->
-                    if (entriesAr.succeeded()) {
-                        val entries = entriesAr.result()
-                        val keysToRemove = mutableListOf<String>()
-
-                        // 找出匹配的键
-                        entries.forEach { entry ->
-                            if (entry.key.startsWith("$modelId:")) {
-                                keysToRemove.add(entry.key)
-                            }
-                        }
-
-                        // 删除匹配的键
-                        var removedCount = 0
-                        for (key in keysToRemove) {
-                            clusterCache!!.remove(key) { _ -> removedCount++ }
-                        }
-
-                        // 重置统计信息
-                        cacheStats.remove(modelId)
-
-                        sendSuccess(message, keysToRemove.size)
-                    } else {
-                        logger.error("Failed to get entries from distributed cache", entriesAr.cause())
-                        sendError(message, 500, "Failed to clear cache: ${entriesAr.cause().message}")
-                    }
-                }
-            } else {
-                // 清空所有缓存
-                clusterCache!!.clear { clearAr ->
-                    if (clearAr.succeeded()) {
-                        // 重置所有统计信息
-                        cacheStats.clear()
-                        sendSuccess(message, true)
-                    } else {
-                        logger.error("Failed to clear distributed cache", clearAr.cause())
-                        sendError(message, 500, "Failed to clear cache: ${clearAr.cause().message}")
-                    }
-                }
+    private fun handleClear(message: Message<JsonObject>) {
+        cacheService.clear()
+            .onSuccess {
+                message.reply(JsonObject().put("success", true))
             }
-        } else {
-            // 本地模式
-            if (modelId != null) {
-                // 清空特定模型的缓存
-                val keysToRemove = mutableListOf<String>()
-
-                localCache?.keys?.forEach { key ->
-                    if (key.startsWith("$modelId:")) {
-                        keysToRemove.add(key)
-                    }
-                }
-
-                keysToRemove.forEach { key ->
-                    localCache?.remove(key)
-                }
-
-                // 重置统计信息
-                cacheStats.remove(modelId)
-
-                sendSuccess(message, keysToRemove.size)
-            } else {
-                // 清空所有缓存
-                val size = localCache?.size ?: 0
-                localCache?.clear()
-
-                // 重置所有统计信息
-                cacheStats.clear()
-
-                sendSuccess(message, size)
+            .onFailure { err ->
+                logger.error("Error clearing cache", err)
+                message.fail(500, err.message)
             }
-        }
     }
 
     /**
      * 处理获取缓存统计信息请求
      */
-    private fun handleGetCacheStats(message: io.vertx.core.eventbus.Message<JsonObject>) {
-        val modelId = message.body().getString("modelId")
-
-        if (modelId != null) {
-            // 获取特定模型的缓存统计信息
-            val stats = cacheStats[modelId] ?: CacheStats()
-
-            sendSuccess(message, JsonObject()
-                .put("modelId", modelId)
-                .put("hits", stats.hits)
-                .put("misses", stats.misses)
-                .put("hitRate", stats.hitRate)
-            )
-        } else {
-            // 获取所有缓存统计信息
-            val statsArray = io.vertx.core.json.JsonArray()
-
-            cacheStats.forEach { (modelId, stats) ->
-                statsArray.add(JsonObject()
-                    .put("modelId", modelId)
-                    .put("hits", stats.hits)
-                    .put("misses", stats.misses)
-                    .put("hitRate", stats.hitRate)
-                )
+    private fun handleStats(message: Message<JsonObject>) {
+        cacheService.getStats()
+            .onSuccess { stats ->
+                message.reply(stats)
             }
-
-            // 添加总体统计信息
-            val totalHits = cacheStats.values.sumOf { it.hits }
-            val totalMisses = cacheStats.values.sumOf { it.misses }
-            val totalRequests = totalHits + totalMisses
-            val totalHitRate = if (totalRequests > 0) totalHits.toDouble() / totalRequests else 0.0
-
-            val totalStats = JsonObject()
-                .put("modelId", "total")
-                .put("hits", totalHits)
-                .put("misses", totalMisses)
-                .put("hitRate", totalHitRate)
-                .put("size", if (clustered && clusterCache != null) -1 else localCache?.size ?: 0)
-
-            sendSuccess(message, JsonObject()
-                .put("total", totalStats)
-                .put("models", statsArray)
-            )
-        }
+            .onFailure { err ->
+                logger.error("Error getting cache stats", err)
+                message.fail(500, err.message)
+            }
     }
 
-    /**
-     * 生成缓存键
-     */
-    private fun generateCacheKey(key: String, modelId: String): String {
-        return "$modelId:$key"
-    }
-
-    /**
-     * 更新缓存统计信息
-     */
-    private fun updateCacheStats(modelId: String, hit: Boolean) {
-        val stats = cacheStats.computeIfAbsent(modelId) { CacheStats() }
-
-        if (hit) {
-            stats.hits++
-        } else {
-            stats.misses++
-        }
-    }
-
-    /**
-     * 缓存统计信息
-     */
-    private data class CacheStats(
-        var hits: Long = 0,
-        var misses: Long = 0
-    ) {
-        val hitRate: Double
-            get() {
-                val total = hits + misses
-                return if (total > 0) hits.toDouble() / total else 0.0
+    override fun onStop(stopPromise: Promise<Void>) {
+        // 关闭缓存服务
+        cacheService.close()
+            .onSuccess {
+                logger.info("CacheVerticle stopped successfully")
+                stopPromise.complete()
+            }
+            .onFailure { err ->
+                logger.error("Error stopping CacheVerticle", err)
+                stopPromise.fail(err)
             }
     }
 }
