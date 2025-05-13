@@ -54,8 +54,8 @@ class BenchmarkVerticle : AbstractVerticle() {
         }
 
         // 从配置中获取端口和主机
-        val port = config().getInteger("server.port", 10080) // 使用高端口避免冲突
-        val host = config().getString("server.host", "0.0.0.0")
+        val port = config().getInteger("benchmark.port", 10080) // 使用高端口避免冲突
+        val host = config().getString("benchmark.host", "0.0.0.0")
 
         // 创建HTTP服务器
         val serverOptions = HttpServerOptions()

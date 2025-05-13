@@ -4,15 +4,19 @@
     "host": "0.0.0.0"
   },
   "server": {
-    "port": 9092,
+    "port": 9091,
     "host": "0.0.0.0"
   },
   "admin": {
-    "port": 9099,
+    "port": 9092,
     "host": "0.0.0.0"
   },
   "health": {
-    "port": 9098,
+    "port": 9093,
+    "host": "0.0.0.0"
+  },
+  "benchmark": {
+    "port": 9094,
     "host": "0.0.0.0"
   },
   "cluster": {

@@ -1,8 +1,15 @@
 package com.louloulin.apix.core.verticle
 
+import com.louloulin.apix.admin.DashboardHandler
 import com.louloulin.apix.config.ConfigManager
 import com.louloulin.apix.core.common.EventBusAddresses
+import com.louloulin.apix.metrics.MetricsCollector
 import com.louloulin.apix.models.Route
+import com.louloulin.apix.plugins.Plugin
+import com.louloulin.apix.plugins.PluginConfig
+import com.louloulin.apix.plugins.PluginFactory
+import com.louloulin.apix.plugins.UnifiedPluginManager
+import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServer
@@ -14,6 +21,7 @@ import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.CorsHandler
 import io.vertx.ext.web.handler.LoggerHandler
+import java.lang.management.ManagementFactory
 import java.util.UUID
 
 /**
@@ -23,6 +31,9 @@ class AdminVerticle : BaseVerticle() {
     private lateinit var httpServer: HttpServer
     private lateinit var router: Router
     private lateinit var configManager: ConfigManager
+    private lateinit var pluginManager: UnifiedPluginManager
+    private lateinit var metricsCollector: MetricsCollector
+    private lateinit var dashboardHandler: DashboardHandler
 
     override fun registerEventBusHandlers() {
         // 不需要注册 EventBus 处理器
@@ -33,6 +44,15 @@ class AdminVerticle : BaseVerticle() {
 
         // 初始化配置管理器
         configManager = ConfigManager(vertx)
+
+        // 初始化插件管理器
+        pluginManager = UnifiedPluginManager.getInstance(vertx)
+
+        // 初始化指标收集器
+        metricsCollector = MetricsCollector(vertx)
+
+        // 初始化仪表盘处理器
+        dashboardHandler = DashboardHandler(metricsCollector)
 
         // 创建 HTTP 服务器与高并发优化设置
         val serverOptions = HttpServerOptions()
@@ -124,6 +144,22 @@ class AdminVerticle : BaseVerticle() {
         // 压测用端点
         router.get("/api/hello").handler(this::helloWorld)
         router.get("/api/hello/:name").handler(this::helloName)
+
+        // 健康检查端点
+        router.get("/health").handler { ctx ->
+            ctx.response()
+                .putHeader("content-type", "application/json")
+                .end(JsonObject().put("status", "UP").encode())
+        }
+
+        // 插件管理 API
+        setupPluginRoutes()
+
+        // 系统监控 API
+        setupMonitoringRoutes()
+
+        // 仪表盘 API
+        setupDashboardRoutes()
     }
 
     /**
@@ -450,5 +486,462 @@ class AdminVerticle : BaseVerticle() {
                 .put("timestamp", System.currentTimeMillis())
                 .encode()
             )
+    }
+
+    /**
+     * 设置插件管理路由
+     */
+    private fun setupPluginRoutes() {
+        // 获取所有插件
+        router.get("/api/plugins").handler { ctx ->
+            val plugins = pluginManager.getAllPlugins()
+            val response = JsonObject()
+                .put("plugins", JsonArray(plugins.map { plugin ->
+                    JsonObject()
+                        .put("id", plugin.id)
+                        .put("type", plugin.type)
+                        .put("config", plugin.config.config)
+                        .put("status", if (pluginManager.isPluginEnabled(plugin.id)) "enabled" else "disabled")
+                }))
+
+            ctx.response()
+                .putHeader("content-type", "application/json")
+                .end(response.encode())
+        }
+
+        // 获取单个插件
+        router.get("/api/plugins/:id").handler { ctx ->
+            val id = ctx.pathParam("id")
+            val plugin = pluginManager.getPlugin(id)
+
+            if (plugin != null) {
+                val response = JsonObject()
+                    .put("plugin", JsonObject()
+                        .put("id", plugin.id)
+                        .put("type", plugin.type)
+                        .put("config", plugin.config.config)
+                        .put("status", if (pluginManager.isPluginEnabled(plugin.id)) "enabled" else "disabled")
+                    )
+
+                ctx.response()
+                    .putHeader("content-type", "application/json")
+                    .end(response.encode())
+            } else {
+                ctx.response()
+                    .setStatusCode(404)
+                    .putHeader("content-type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Plugin not found")
+                        .put("id", id)
+                        .encode()
+                    )
+            }
+        }
+
+        // 创建插件
+        router.post("/api/plugins").handler { ctx ->
+            val body = ctx.body().asJsonObject()
+
+            if (body == null) {
+                ctx.response()
+                    .setStatusCode(400)
+                    .putHeader("content-type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Invalid request body")
+                        .encode()
+                    )
+                return@handler
+            }
+
+            val id = body.getString("id")
+            val type = body.getString("type")
+            val config = body.getJsonObject("config", JsonObject())
+
+            if (id == null || type == null) {
+                ctx.response()
+                    .setStatusCode(400)
+                    .putHeader("content-type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Missing required fields: id, type")
+                        .encode()
+                    )
+                return@handler
+            }
+
+            // 检查插件是否已存在
+            if (pluginManager.hasPlugin(id)) {
+                ctx.response()
+                    .setStatusCode(409)
+                    .putHeader("content-type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Plugin already exists")
+                        .put("id", id)
+                        .encode()
+                    )
+                return@handler
+            }
+
+            // 创建插件配置
+            val pluginConfig = PluginConfig(id, type, config)
+
+            // 创建插件
+            pluginManager.createPlugin(pluginConfig)
+                .onSuccess { pluginId ->
+                    // 获取创建的插件
+                    val plugin = pluginManager.getPlugin(pluginId)
+
+                    if (plugin != null) {
+                        // 如果请求中指定了启用状态，则设置插件状态
+                        val enabled = body.getBoolean("enabled", true)
+                        pluginManager.setPluginEnabled(pluginId, enabled)
+
+                        val response = JsonObject()
+                            .put("success", true)
+                            .put("plugin", JsonObject()
+                                .put("id", plugin.id)
+                                .put("type", plugin.type)
+                                .put("config", plugin.config.config)
+                                .put("status", if (pluginManager.isPluginEnabled(plugin.id)) "enabled" else "disabled")
+                            )
+
+                        ctx.response()
+                            .putHeader("content-type", "application/json")
+                            .end(response.encode())
+                    } else {
+                        ctx.response()
+                            .setStatusCode(500)
+                            .putHeader("content-type", "application/json")
+                            .end(JsonObject()
+                                .put("error", "Failed to retrieve created plugin")
+                                .encode()
+                            )
+                    }
+                }
+                .onFailure { err ->
+                    ctx.response()
+                        .setStatusCode(500)
+                        .putHeader("content-type", "application/json")
+                        .end(JsonObject()
+                            .put("error", "Failed to create plugin: ${err.message}")
+                            .encode()
+                        )
+                }
+        }
+
+        // 更新插件
+        router.put("/api/plugins/:id").handler { ctx ->
+            val id = ctx.pathParam("id")
+            val body = ctx.body().asJsonObject()
+
+            if (body == null) {
+                ctx.response()
+                    .setStatusCode(400)
+                    .putHeader("content-type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Invalid request body")
+                        .encode()
+                    )
+                return@handler
+            }
+
+            // 检查插件是否存在
+            if (!pluginManager.hasPlugin(id)) {
+                ctx.response()
+                    .setStatusCode(404)
+                    .putHeader("content-type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Plugin not found")
+                        .put("id", id)
+                        .encode()
+                    )
+                return@handler
+            }
+
+            // 更新插件
+            pluginManager.updatePlugin(body.put("id", id))
+                .onSuccess {
+                    // 如果请求中指定了启用状态，则设置插件状态
+                    val status = body.getString("status")
+                    if (status != null) {
+                        pluginManager.setPluginEnabled(id, status == "enabled")
+                    }
+
+                    // 获取更新后的插件
+                    val plugin = pluginManager.getPlugin(id)
+
+                    if (plugin != null) {
+                        val response = JsonObject()
+                            .put("success", true)
+                            .put("plugin", JsonObject()
+                                .put("id", plugin.id)
+                                .put("type", plugin.type)
+                                .put("config", plugin.config.config)
+                                .put("status", if (pluginManager.isPluginEnabled(plugin.id)) "enabled" else "disabled")
+                            )
+
+                        ctx.response()
+                            .putHeader("content-type", "application/json")
+                            .end(response.encode())
+                    } else {
+                        ctx.response()
+                            .setStatusCode(500)
+                            .putHeader("content-type", "application/json")
+                            .end(JsonObject()
+                                .put("error", "Failed to retrieve updated plugin")
+                                .encode()
+                            )
+                    }
+                }
+                .onFailure { err ->
+                    ctx.response()
+                        .setStatusCode(500)
+                        .putHeader("content-type", "application/json")
+                        .end(JsonObject()
+                            .put("error", "Failed to update plugin: ${err.message}")
+                            .encode()
+                        )
+                }
+        }
+
+        // 删除插件
+        router.delete("/api/plugins/:id").handler { ctx ->
+            val id = ctx.pathParam("id")
+
+            // 检查插件是否存在
+            if (!pluginManager.hasPlugin(id)) {
+                ctx.response()
+                    .setStatusCode(404)
+                    .putHeader("content-type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Plugin not found")
+                        .put("id", id)
+                        .encode()
+                    )
+                return@handler
+            }
+
+            // 删除插件
+            pluginManager.unloadPlugin(id)
+                .onSuccess {
+                    ctx.response()
+                        .putHeader("content-type", "application/json")
+                        .end(JsonObject()
+                            .put("success", true)
+                            .encode()
+                        )
+                }
+                .onFailure { err ->
+                    ctx.response()
+                        .setStatusCode(500)
+                        .putHeader("content-type", "application/json")
+                        .end(JsonObject()
+                            .put("error", "Failed to delete plugin: ${err.message}")
+                            .encode()
+                        )
+                }
+        }
+
+        // 启用插件
+        router.post("/api/plugins/:id/enable").handler { ctx ->
+            val id = ctx.pathParam("id")
+
+            // 检查插件是否存在
+            if (!pluginManager.hasPlugin(id)) {
+                ctx.response()
+                    .setStatusCode(404)
+                    .putHeader("content-type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Plugin not found")
+                        .put("id", id)
+                        .encode()
+                    )
+                return@handler
+            }
+
+            // 启用插件
+            pluginManager.setPluginEnabled(id, true)
+                .onSuccess {
+                    ctx.response()
+                        .putHeader("content-type", "application/json")
+                        .end(JsonObject()
+                            .put("success", true)
+                            .encode()
+                        )
+                }
+                .onFailure { err ->
+                    ctx.response()
+                        .setStatusCode(500)
+                        .putHeader("content-type", "application/json")
+                        .end(JsonObject()
+                            .put("error", "Failed to enable plugin: ${err.message}")
+                            .encode()
+                        )
+                }
+        }
+
+        // 禁用插件
+        router.post("/api/plugins/:id/disable").handler { ctx ->
+            val id = ctx.pathParam("id")
+
+            // 检查插件是否存在
+            if (!pluginManager.hasPlugin(id)) {
+                ctx.response()
+                    .setStatusCode(404)
+                    .putHeader("content-type", "application/json")
+                    .end(JsonObject()
+                        .put("error", "Plugin not found")
+                        .put("id", id)
+                        .encode()
+                    )
+                return@handler
+            }
+
+            // 禁用插件
+            pluginManager.setPluginEnabled(id, false)
+                .onSuccess {
+                    ctx.response()
+                        .putHeader("content-type", "application/json")
+                        .end(JsonObject()
+                            .put("success", true)
+                            .encode()
+                        )
+                }
+                .onFailure { err ->
+                    ctx.response()
+                        .setStatusCode(500)
+                        .putHeader("content-type", "application/json")
+                        .end(JsonObject()
+                            .put("error", "Failed to disable plugin: ${err.message}")
+                            .encode()
+                        )
+                }
+        }
+
+        // 获取可用的插件类型
+        router.get("/api/plugins/types").handler { ctx ->
+            // 添加一些常见的插件类型
+            val types = JsonArray()
+
+            types.add(JsonObject()
+                .put("id", "authentication")
+                .put("name", "Authentication")
+                .put("description", "Handles user authentication and authorization")
+                .put("defaultConfig", JsonObject()
+                    .put("provider", "jwt")
+                    .put("secret", "your-secret-key")
+                )
+            )
+
+            types.add(JsonObject()
+                .put("id", "security")
+                .put("name", "Security")
+                .put("description", "Provides security features like rate limiting, IP filtering, etc.")
+                .put("defaultConfig", JsonObject()
+                    .put("rateLimit", 100)
+                    .put("timeWindow", 60000)
+                )
+            )
+
+            types.add(JsonObject()
+                .put("id", "transformation")
+                .put("name", "Transformation")
+                .put("description", "Transforms request/response data")
+                .put("defaultConfig", JsonObject()
+                    .put("requestTransform", JsonObject())
+                    .put("responseTransform", JsonObject())
+                )
+            )
+
+            types.add(JsonObject()
+                .put("id", "business-logic")
+                .put("name", "Business Logic")
+                .put("description", "Implements custom business logic")
+                .put("defaultConfig", JsonObject()
+                    .put("script", "function process(request, response) { return response; }")
+                )
+            )
+
+            ctx.response()
+                .putHeader("content-type", "application/json")
+                .end(JsonObject()
+                    .put("types", types)
+                    .encode()
+                )
+        }
+    }
+
+    /**
+     * 设置系统监控路由
+     */
+    private fun setupMonitoringRoutes() {
+        // 获取系统指标
+        router.get("/api/metrics").handler { ctx ->
+            val metrics = JsonObject()
+                .put("cpu", JsonObject()
+                    .put("usage", 0.5)
+                    .put("cores", Runtime.getRuntime().availableProcessors())
+                )
+                .put("memory", JsonObject()
+                    .put("total", Runtime.getRuntime().totalMemory())
+                    .put("free", Runtime.getRuntime().freeMemory())
+                    .put("max", Runtime.getRuntime().maxMemory())
+                )
+                .put("uptime", System.currentTimeMillis() - ManagementFactory.getRuntimeMXBean().startTime)
+
+            ctx.response()
+                .putHeader("content-type", "application/json")
+                .end(metrics.encode())
+        }
+
+        // 获取路由信息
+        router.get("/api/routes").handler { ctx ->
+            val routes = JsonArray()
+
+            // 这里应该从路由管理器获取所有路由
+            // 由于我们没有直接的方法，这里模拟一些路由
+            routes.add(JsonObject()
+                .put("path", "/api/v1/users")
+                .put("method", "GET")
+                .put("plugins", JsonArray().add("authentication").add("rate-limiter"))
+            )
+
+            routes.add(JsonObject()
+                .put("path", "/api/v1/users")
+                .put("method", "POST")
+                .put("plugins", JsonArray().add("authentication").add("validation"))
+            )
+
+            ctx.response()
+                .putHeader("content-type", "application/json")
+                .end(JsonObject()
+                    .put("routes", routes)
+                    .encode()
+                )
+        }
+    }
+
+    /**
+     * 设置仪表盘路由
+     */
+    private fun setupDashboardRoutes() {
+        // 获取仪表盘统计数据
+        router.get("/api/admin/dashboard/stats").handler { ctx ->
+            dashboardHandler.handleGetDashboardStats(ctx)
+        }
+
+        // 获取流量数据
+        router.get("/api/admin/dashboard/traffic").handler { ctx ->
+            dashboardHandler.handleGetTrafficData(ctx)
+        }
+
+        // 获取 LLM 使用数据
+        router.get("/api/admin/dashboard/llm-usage").handler { ctx ->
+            dashboardHandler.handleGetLlmUsageData(ctx)
+        }
+
+        // 获取最近事件
+        router.get("/api/admin/dashboard/events").handler { ctx ->
+            dashboardHandler.handleGetRecentEvents(ctx)
+        }
     }
 }

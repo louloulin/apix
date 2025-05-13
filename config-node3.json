@@ -1,31 +1,31 @@
 {
   "gateway": {
-    "port": 8070,
+    "port": 10090,
     "host": "0.0.0.0"
   },
   "server": {
-    "port": 8071,
+    "port": 10091,
     "host": "0.0.0.0"
   },
   "admin": {
-    "port": 8072,
+    "port": 10092,
     "host": "0.0.0.0"
   },
   "health": {
-    "port": 8073,
+    "port": 10093,
     "host": "0.0.0.0"
   },
   "benchmark": {
-    "port": 8074,
+    "port": 10094,
     "host": "0.0.0.0"
   },
   "cluster": {
     "enabled": false,
-    "mode": "control-plane",
-    "nodeId": "control-plane",
+    "mode": "node",
+    "nodeId": "node3",
     "host": "localhost",
-    "port": 5700,
-    "members": ["localhost:5700", "localhost:5701", "localhost:5702"],
+    "port": 5703,
+    "members": ["localhost:5701", "localhost:5702", "localhost:5703"],
     "type": "hazelcast"
   },
   "plugins": [],

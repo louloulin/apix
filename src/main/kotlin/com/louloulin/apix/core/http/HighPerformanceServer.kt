@@ -13,16 +13,20 @@ import org.slf4j.LoggerFactory
  */
 class HighPerformanceServer : AbstractVerticle() {
     private val logger = LoggerFactory.getLogger(HighPerformanceServer::class.java)
-    
+
     // 默认端口
     private val DEFAULT_PORT = 8081
-    
+
     override fun start(startPromise: Promise<Void>) {
+        // 从配置中获取端口和主机
+        val port = config().getInteger("server.port", DEFAULT_PORT)
+        val host = config().getString("server.host", "0.0.0.0")
+
         // 创建超高性能HTTP服务器配置
         val serverOptions = HttpServerOptions()
             // 基本设置
-            .setPort(DEFAULT_PORT)
-            .setHost("0.0.0.0")
+            .setPort(port)
+            .setHost(host)
             // TCP优化
             .setTcpNoDelay(true)
             .setTcpFastOpen(true)
@@ -47,7 +51,7 @@ class HighPerformanceServer : AbstractVerticle() {
                 .setMaxFrameSize(24576)         // 24KB
                 .setPushEnabled(false)
             )
-        
+
         // 创建HTTP服务器
         vertx.createHttpServer(serverOptions)
             .requestHandler { req ->
@@ -58,7 +62,7 @@ class HighPerformanceServer : AbstractVerticle() {
             }
             .listen()
             .onSuccess { server ->
-                logger.info("High Performance Server started on port {}", server.actualPort())
+                logger.info("High Performance Server started on {}:{}", host, port)
                 startPromise.complete()
             }
             .onFailure { err ->
@@ -66,7 +70,7 @@ class HighPerformanceServer : AbstractVerticle() {
                 startPromise.fail(err)
             }
     }
-    
+
     override fun stop(stopPromise: Promise<Void>) {
         logger.info("Stopping High Performance Server")
         stopPromise.complete()
