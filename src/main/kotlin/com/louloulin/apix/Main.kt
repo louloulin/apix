@@ -30,6 +30,7 @@ import com.louloulin.apix.core.verticle.EventBusEnhancerVerticle
 import com.louloulin.apix.core.verticle.HealthVerticle
 import com.louloulin.apix.core.verticle.HighAvailabilityVerticle
 import com.louloulin.apix.core.verticle.ModelRouterVerticle
+import com.louloulin.apix.core.verticle.ServiceVerticle
 import com.louloulin.apix.cdn.CDNVerticle
 import com.louloulin.apix.dns.SmartDNSVerticle
 import com.louloulin.apix.network.anycast.AnycastVerticle
@@ -227,9 +228,16 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         futures.add(vertx.deployVerticle(ConfigVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(MonitorVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(HealthVerticle::class.java.name, options))
-        futures.add(vertx.deployVerticle(NodeModeVerticle::class.java.name, options))
+        // 使用实例化的方式部署NodeModeVerticle，避免ClassNotFoundException
+        futures.add(vertx.deployVerticle(com.louloulin.apix.core.verticle.NodeModeVerticle(), options))
         futures.add(vertx.deployVerticle(DBlessVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(EventBusEnhancerVerticle::class.java.name, options))
+        // 在HighAvailabilityVerticle之前部署DeploymentVerticle，以处理路由请求
+        futures.add(vertx.deployVerticle(DeploymentVerticle::class.java.name, options))
+        // 在HighAvailabilityVerticle之前部署ServiceVerticle，以处理服务请求
+        futures.add(vertx.deployVerticle(ServiceVerticle::class.java.name, options))
+        // 在HighAvailabilityVerticle之前部署PluginVerticle，以处理插件请求
+        futures.add(vertx.deployVerticle(PluginVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(HighAvailabilityVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ElasticScalingVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ResilienceVerticle::class.java.name, options))
@@ -262,8 +270,8 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
             deployVerticle(vertx, MonitorVerticle::class.java.name, standardOptions)
         }
         .compose {
-            // Then deploy NodeModeVerticle
-            deployVerticle(vertx, NodeModeVerticle::class.java.name, standardOptions)
+            // Then deploy NodeModeVerticle using instance to avoid ClassNotFoundException
+            deployVerticle(vertx, com.louloulin.apix.core.verticle.NodeModeVerticle(), standardOptions)
         }
         .compose {
             // Then deploy DBlessVerticle
@@ -272,6 +280,18 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy EventBusEnhancerVerticle
             deployVerticle(vertx, EventBusEnhancerVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy DeploymentVerticle (needed before HighAvailabilityVerticle to handle route requests)
+            deployVerticle(vertx, DeploymentVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy ServiceVerticle (needed before HighAvailabilityVerticle to handle service requests)
+            deployVerticle(vertx, ServiceVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy PluginVerticle (needed before HighAvailabilityVerticle to handle plugin requests)
+            deployVerticle(vertx, PluginVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy HighAvailabilityVerticle
@@ -379,10 +399,7 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
             // Then deploy HealthVerticle
             deployVerticle(vertx, HealthVerticle::class.java.name, standardOptions)
         }
-        .compose {
-            // Then deploy DeploymentVerticle
-            deployVerticle(vertx, DeploymentVerticle::class.java.name, standardOptions)
-        }
+        // DeploymentVerticle已经在HighAvailabilityVerticle之前部署
         .compose {
             // Then deploy BenchmarkVerticle for performance testing
             deployVerticle(vertx, BenchmarkVerticle::class.java.name, standardOptions)
@@ -434,6 +451,24 @@ private fun deployVerticle(vertx: Vertx, verticleName: String, options: Deployme
             }
             .onFailure { cause ->
                 logger.error("Failed to deploy {}", verticleName, cause)
+                promise.fail(cause)
+            }
+    }
+}
+
+/**
+ * Deploy a verticle instance
+ */
+private fun <T : io.vertx.core.Verticle> deployVerticle(vertx: Vertx, verticle: T, options: DeploymentOptions): Future<String> {
+    logger.info("Deploying verticle instance: {}", verticle.javaClass.simpleName)
+    return Future.future { promise ->
+        vertx.deployVerticle(verticle, options)
+            .onSuccess { deploymentId ->
+                logger.info("Successfully deployed {}: {}", verticle.javaClass.simpleName, deploymentId)
+                promise.complete(deploymentId)
+            }
+            .onFailure { cause ->
+                logger.error("Failed to deploy {}", verticle.javaClass.simpleName, cause)
                 promise.fail(cause)
             }
     }

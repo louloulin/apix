@@ -203,10 +203,10 @@ class PluginVerticle : BaseVerticle() {
      * 处理获取所有插件请求
      */
     private fun handleGetAllPlugins(message: io.vertx.core.eventbus.Message<JsonObject>) {
-        val result = JsonArray()
+        val pluginsJson = JsonObject()
 
         plugins.forEach { (id, plugin) ->
-            result.add(JsonObject()
+            pluginsJson.put(id, JsonObject()
                 .put("id", id)
                 .put("type", plugin.type)
                 .put("state", pluginStates[id]?.name ?: PluginState.UNKNOWN.name)
@@ -214,6 +214,7 @@ class PluginVerticle : BaseVerticle() {
             )
         }
 
+        val result = JsonObject().put("plugins", pluginsJson)
         sendSuccess(message, result)
     }
 
