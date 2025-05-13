@@ -505,40 +505,60 @@ class EdgeNodeVerticle : BaseVerticle() {
      * 注册边缘节点组件状态。
      */
     private fun registerComponentStatus() {
-        // 向健康检查Verticle注册边缘节点组件状态
-        val status = edgeNodeManager.getStatus()
-        val enabled = status.getBoolean("enabled", false)
+        try {
+            // 向健康检查Verticle注册边缘节点组件状态
+            if (::edgeNodeManager.isInitialized) {
+                val status = edgeNodeManager.getStatus()
+                val enabled = status.getBoolean("enabled", false)
 
-        vertx.eventBus().send(EventBusAddresses.HEALTH_COMPONENT_STATUS, JsonObject()
-            .put("component", "edge-node")
-            .put("status", enabled)
-        )
+                vertx.eventBus().send(EventBusAddresses.HEALTH_COMPONENT_STATUS, JsonObject()
+                    .put("component", "edge-node")
+                    .put("status", enabled)
+                )
+            } else {
+                logger.warn("EdgeNodeManager未初始化，无法注册组件状态")
+            }
 
-        // 向健康检查Verticle注册边缘自治组件状态
-        val autonomyStatus = edgeAutonomyManager.getStatus()
-        val autonomyEnabled = autonomyStatus.getBoolean("enabled", false)
+            // 向健康检查Verticle注册边缘自治组件状态
+            if (::edgeAutonomyManager.isInitialized) {
+                val autonomyStatus = edgeAutonomyManager.getStatus()
+                val autonomyEnabled = autonomyStatus.getBoolean("enabled", false)
 
-        vertx.eventBus().send(EventBusAddresses.HEALTH_COMPONENT_STATUS, JsonObject()
-            .put("component", "edge-autonomy")
-            .put("status", autonomyEnabled)
-        )
+                vertx.eventBus().send(EventBusAddresses.HEALTH_COMPONENT_STATUS, JsonObject()
+                    .put("component", "edge-autonomy")
+                    .put("status", autonomyEnabled)
+                )
+            } else {
+                logger.warn("EdgeAutonomyManager未初始化，无法注册组件状态")
+            }
 
-        // 向健康检查Verticle注册边缘智能组件状态
-        val intelligenceStatus = edgeIntelligenceManager.getStatus()
-        val intelligenceEnabled = intelligenceStatus.getBoolean("enabled", false)
+            // 向健康检查Verticle注册边缘智能组件状态
+            if (::edgeIntelligenceManager.isInitialized) {
+                val intelligenceStatus = edgeIntelligenceManager.getStatus()
+                val intelligenceEnabled = intelligenceStatus.getBoolean("enabled", false)
 
-        vertx.eventBus().send(EventBusAddresses.HEALTH_COMPONENT_STATUS, JsonObject()
-            .put("component", "edge-intelligence")
-            .put("status", intelligenceEnabled)
-        )
+                vertx.eventBus().send(EventBusAddresses.HEALTH_COMPONENT_STATUS, JsonObject()
+                    .put("component", "edge-intelligence")
+                    .put("status", intelligenceEnabled)
+                )
+            } else {
+                logger.warn("EdgeIntelligenceManager未初始化，无法注册组件状态")
+            }
 
-        // 向健康检查Verticle注册边缘同步组件状态
-        val syncStatus = edgeSyncManager.getSyncStatus()
-        val syncEnabled = !syncStatus.isEmpty()
+            // 向健康检查Verticle注册边缘同步组件状态
+            if (::edgeSyncManager.isInitialized) {
+                val syncStatus = edgeSyncManager.getSyncStatus()
+                val syncEnabled = !syncStatus.isEmpty()
 
-        vertx.eventBus().send(EventBusAddresses.HEALTH_COMPONENT_STATUS, JsonObject()
-            .put("component", "edge-sync")
-            .put("status", syncEnabled)
-        )
+                vertx.eventBus().send(EventBusAddresses.HEALTH_COMPONENT_STATUS, JsonObject()
+                    .put("component", "edge-sync")
+                    .put("status", syncEnabled)
+                )
+            } else {
+                logger.warn("EdgeSyncManager未初始化，无法注册组件状态")
+            }
+        } catch (e: Exception) {
+            logger.error("注册边缘节点组件状态失败", e)
+        }
     }
 }

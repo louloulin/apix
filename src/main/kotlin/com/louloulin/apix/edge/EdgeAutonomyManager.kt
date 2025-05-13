@@ -560,47 +560,70 @@ class EdgeAutonomyManager(private val vertx: Vertx) {
      * @return 包含状态信息的 JsonObject
      */
     fun getStatus(): JsonObject {
-        // 获取同步状态
-        val syncStatus = JsonObject()
-        val syncStatusMap = edgeSyncManager.getSyncStatus()
-        for ((dataType, status) in syncStatusMap) {
-            syncStatus.put(dataType, JsonObject()
-                .put("status", status.status)
-                .put("startVersion", status.startVersion)
-                .put("endVersion", status.endVersion)
-                .put("startTime", status.startTime)
-                .put("endTime", status.endTime)
-                .put("duration", status.getDuration())
-                .put("error", status.error)
-            )
-        }
-
-        // 获取带宽使用情况
-        val bandwidthUsage = edgeSyncManager.getBandwidthUsage()
-        val bandwidthInfo = JsonObject()
-            .put("bytesPerSecond", bandwidthUsage.bytesPerSecond)
-            .put("maxBandwidth", bandwidthUsage.maxBandwidth)
-            .put("usageRatio", bandwidthUsage.usageRatio)
-
-        // 获取网络条件
-        val networkCondition = edgeSyncManager.getNetworkCondition()
-        val networkInfo = JsonObject()
-            .put("status", networkCondition.status.toString())
-            .put("latency", networkCondition.latency)
-            .put("packetLoss", networkCondition.packetLoss)
-
-        return JsonObject()
+        val result = JsonObject()
             .put("enabled", autonomyEnabled.get())
             .put("offlineMode", offlineMode.get())
             .put("lastCommunicationTime", lastCommunicationTime.get())
             .put("config", autonomyConfig.get())
             .put("timestamp", System.currentTimeMillis())
-            .put("sync", JsonObject()
+
+        // 只有当自治功能启用且edgeSyncManager已初始化时，才添加同步相关信息
+        if (autonomyEnabled.get() && ::edgeSyncManager.isInitialized) {
+            // 获取同步状态
+            val syncStatus = JsonObject()
+            val syncStatusMap = edgeSyncManager.getSyncStatus()
+            for ((dataType, status) in syncStatusMap) {
+                syncStatus.put(dataType, JsonObject()
+                    .put("status", status.status)
+                    .put("startVersion", status.startVersion)
+                    .put("endVersion", status.endVersion)
+                    .put("startTime", status.startTime)
+                    .put("endTime", status.endTime)
+                    .put("duration", status.getDuration())
+                    .put("error", status.error)
+                )
+            }
+
+            // 获取带宽使用情况
+            val bandwidthUsage = edgeSyncManager.getBandwidthUsage()
+            val bandwidthInfo = JsonObject()
+                .put("bytesPerSecond", bandwidthUsage.bytesPerSecond)
+                .put("maxBandwidth", bandwidthUsage.maxBandwidth)
+                .put("usageRatio", bandwidthUsage.usageRatio)
+
+            // 获取网络条件
+            val networkCondition = edgeSyncManager.getNetworkCondition()
+            val networkInfo = JsonObject()
+                .put("status", networkCondition.status.toString())
+                .put("latency", networkCondition.latency)
+                .put("packetLoss", networkCondition.packetLoss)
+
+            // 添加同步相关信息
+            result.put("sync", JsonObject()
                 .put("status", syncStatus)
                 .put("bandwidth", bandwidthInfo)
                 .put("network", networkInfo)
                 .put("dataVersions", JsonObject(edgeSyncManager.getDataVersions().mapValues { it.value }))
             )
+        } else {
+            // 如果edgeSyncManager未初始化，添加一个空的同步信息
+            result.put("sync", JsonObject()
+                .put("status", JsonObject())
+                .put("bandwidth", JsonObject()
+                    .put("bytesPerSecond", 0)
+                    .put("maxBandwidth", 0)
+                    .put("usageRatio", 0.0)
+                )
+                .put("network", JsonObject()
+                    .put("status", "UNKNOWN")
+                    .put("latency", 0)
+                    .put("packetLoss", 0.0)
+                )
+                .put("dataVersions", JsonObject())
+            )
+        }
+
+        return result
     }
 
     /**
