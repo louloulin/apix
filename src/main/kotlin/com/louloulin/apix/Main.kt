@@ -228,8 +228,8 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         futures.add(vertx.deployVerticle(ConfigVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(MonitorVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(HealthVerticle::class.java.name, options))
-        // 使用实例化的方式部署NodeModeVerticle，避免ClassNotFoundException
-        futures.add(vertx.deployVerticle(com.louloulin.apix.core.verticle.NodeModeVerticle(), options))
+        // 使用标准类名部署NodeModeVerticle，已在GraalVM反射配置中添加
+        futures.add(vertx.deployVerticle(NodeModeVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(DBlessVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(EventBusEnhancerVerticle::class.java.name, options))
         // 在HighAvailabilityVerticle之前部署DeploymentVerticle，以处理路由请求
@@ -270,8 +270,8 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
             deployVerticle(vertx, MonitorVerticle::class.java.name, standardOptions)
         }
         .compose {
-            // Then deploy NodeModeVerticle using instance to avoid ClassNotFoundException
-            deployVerticle(vertx, com.louloulin.apix.core.verticle.NodeModeVerticle(), standardOptions)
+            // Then deploy NodeModeVerticle (configured in GraalVM reflection config)
+            deployVerticle(vertx, NodeModeVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy DBlessVerticle
