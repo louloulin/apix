@@ -8,7 +8,7 @@
 
 Kong AI Gateway 是业界领先的 AI 网关解决方案，主要特性包括：
 
-- **多 LLM 支持**：支持 OpenAI、Anthropic、Cohere、Azure OpenAI、AWS Bedrock ✅、Google Vertex AI 等多种 LLM 提供商
+- **多 LLM 支持**：支持 OpenAI、Anthropic、Cohere、Azure OpenAI、AWS Bedrock ✅、Google Vertex AI ✅ 等多种 LLM 提供商
 - **语义缓存**：基于相似度的语义缓存，提高性能并降低成本
 - **AI 安全功能**：提供 PII 数据清理、提示词注入防护、内容安全检查等安全功能
 - **可观测性**：提供 AI 特定指标、成本分析和使用统计
@@ -100,7 +100,7 @@ APIX 是一个基于 GraalVM 和 Vert.x 构建的高性能 AI 代理网关，采
 #### 3.1.1 LLM 提供商集成增强
 
 - **完善现有集成**：优化 OpenAI、Anthropic 等现有集成
-- **增加新提供商支持**：添加 Cohere ✅、AWS Bedrock、Google Vertex AI 支持
+- **增加新提供商支持**：添加 Cohere ✅、AWS Bedrock ✅、Google Vertex AI ✅ 支持
 - **开源模型支持**：增强对 Llama、Mistral 等开源模型的支持
 
 #### 3.1.2 语义缓存系统优化 ✅
@@ -183,11 +183,11 @@ APIX 是一个基于 GraalVM 和 Vert.x 构建的高性能 AI 代理网关，采
 - 支持 Anthropic Claude、Amazon Titan 等模型 ✅
 - 添加 AWS 认证和区域配置 ✅
 
-#### 4.1.3 Google Vertex AI 集成
+#### 4.1.3 Google Vertex AI 集成 ✅
 
-- 实现 Google Vertex AI API 客户端
-- 支持 Gemini 系列模型
-- 添加 Google Cloud 认证配置
+- 实现 Google Vertex AI API 客户端 ✅
+- 支持 Gemini 系列模型 ✅
+- 添加 Google Cloud 认证配置 ✅
 
 #### 4.1.4 开源模型支持增强
 
