@@ -116,6 +116,18 @@ object EventBusAddresses {
     const val AI_LOAD_BALANCED_GROUP_REMOVE = "apix.ai.load.balanced.group.remove"
     const val AI_LOAD_BALANCED_GROUPS_CLEAR = "apix.ai.load.balanced.groups.clear"
 
+    // 插件市场
+    const val PLUGIN_MARKET_GET_ALL = "apix.plugin.market.get.all"
+    const val PLUGIN_MARKET_GET = "apix.plugin.market.get"
+    const val PLUGIN_MARKET_SEARCH = "apix.plugin.market.search"
+    const val PLUGIN_MARKET_UPLOAD = "apix.plugin.market.upload"
+    const val PLUGIN_MARKET_DOWNLOAD = "apix.plugin.market.download"
+    const val PLUGIN_MARKET_INSTALL = "apix.plugin.market.install"
+    const val PLUGIN_MARKET_UNINSTALL = "apix.plugin.market.uninstall"
+    const val PLUGIN_MARKET_RATE = "apix.plugin.market.rate"
+    const val PLUGIN_MARKET_DELETE = "apix.plugin.market.delete"
+    const val PLUGIN_MARKET_GET_INSTALLED = "apix.plugin.market.get.installed"
+
     // AI 提示词增强
     const val AI_PROMPT_ENHANCE = "apix.ai.prompt.enhance"
     const val AI_PROMPT_TEMPLATES_GET = "apix.ai.prompt.templates.get"
