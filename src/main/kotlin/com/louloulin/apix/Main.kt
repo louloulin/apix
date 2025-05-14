@@ -44,6 +44,7 @@ import com.louloulin.apix.core.verticle.PromptEnhancerVerticle
 import com.louloulin.apix.core.verticle.ResilienceVerticle
 import com.louloulin.apix.core.verticle.ConcurrencyControlVerticle
 import com.louloulin.apix.core.verticle.MemoryManagerVerticle
+import com.louloulin.apix.core.verticle.ThreadModelOptimizerVerticle
 import com.louloulin.apix.core.verticle.RateLimitVerticle
 import com.louloulin.apix.core.verticle.RequestQueueVerticle
 import com.louloulin.apix.edge.EdgeNodeVerticle
@@ -244,6 +245,7 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         // SmartCacheVerticle temporarily removed
         // futures.add(vertx.deployVerticle(SmartCacheVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ConcurrencyControlVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(ThreadModelOptimizerVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(EdgeNodeVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(EdgeControlPlaneVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ApixVerticle::class.java.name, options))
@@ -356,6 +358,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy MemoryManagerVerticle
             deployVerticle(vertx, MemoryManagerVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy ThreadModelOptimizerVerticle
+            deployVerticle(vertx, ThreadModelOptimizerVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy EdgeNodeVerticle

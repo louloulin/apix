@@ -210,6 +210,11 @@ object EventBusAddresses {
     const val CONCURRENCY_SET_LIMIT = "apix.concurrency.set.limit"
     const val CONCURRENCY_RESET_METRICS = "apix.concurrency.reset.metrics"
 
+    // 线程模型相关
+    const val THREAD_MODEL_GET_STATS = "apix.thread.model.get.stats"
+    const val THREAD_MODEL_START_MONITORING = "apix.thread.model.start.monitoring"
+    const val THREAD_MODEL_STOP_MONITORING = "apix.thread.model.stop.monitoring"
+
     // 内存管理相关
     const val MEMORY_USAGE_GET = "apix.memory.usage.get"
     const val MEMORY_GC_TRIGGER = "apix.memory.gc.trigger"
