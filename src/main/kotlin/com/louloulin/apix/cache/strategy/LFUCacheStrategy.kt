@@ -19,6 +19,9 @@ class LFUCacheStrategy(
     // 缓存项访问频率映射
     private val frequencyMap = ConcurrentHashMap<String, AtomicInteger>()
 
+    // 缓存项最后访问时间映射，用于解决频率相同时的冲突
+    private val lastAccessMap = ConcurrentHashMap<String, Long>()
+
     // 当前缓存大小
     private val currentSize = AtomicInteger(0)
 
@@ -107,6 +110,9 @@ class LFUCacheStrategy(
     override fun onCacheHit(key: String) {
         // 增加访问频率
         frequencyMap.computeIfAbsent(key) { AtomicInteger(0) }.incrementAndGet()
+
+        // 更新最后访问时间
+        lastAccessMap[key] = System.currentTimeMillis()
     }
 
     override fun onCacheMiss(key: String) {
@@ -117,6 +123,9 @@ class LFUCacheStrategy(
         // 初始化访问频率
         frequencyMap[key] = AtomicInteger(1)
 
+        // 设置最后访问时间
+        lastAccessMap[key] = System.currentTimeMillis()
+
         // 增加缓存大小
         currentSize.incrementAndGet()
     }
@@ -124,6 +133,9 @@ class LFUCacheStrategy(
     override fun onCacheRemove(key: String) {
         // 从频率映射中移除
         frequencyMap.remove(key)
+
+        // 从最后访问时间映射中移除
+        lastAccessMap.remove(key)
 
         // 减少缓存大小
         currentSize.decrementAndGet()
@@ -141,25 +153,74 @@ class LFUCacheStrategy(
 
     /**
      * 如果需要，驱逐缓存项
+     * 增强版LFU策略，考虑了访问频率和最后访问时间
      */
     private fun evictIfNeeded() {
-        // 找到访问频率最低的缓存项
-        var lowestFrequencyKey: String? = null
-        var lowestFrequency = Int.MAX_VALUE
+        // 需要驱逐的数量，驱逐缓存大小的10%
+        val evictionCount = Math.max(1, maxSize / 10)
+        logger.debug("LFU缓存策略需要驱逐 $evictionCount 个缓存项")
 
+        // 按照频率分组
+        val frequencyGroups = mutableMapOf<Int, MutableList<String>>()
+
+        // 将缓存项按照频率分组
         for ((key, frequency) in frequencyMap) {
             val freq = frequency.get()
-            if (freq < lowestFrequency) {
-                lowestFrequency = freq
-                lowestFrequencyKey = key
+            frequencyGroups.getOrPut(freq) { mutableListOf() }.add(key)
+        }
+
+        // 按照频率从低到高排序
+        val sortedFrequencies = frequencyGroups.keys.sorted()
+
+        // 要驱逐的项
+        val toEvict = mutableListOf<String>()
+
+        // 从频率最低的组开始选择要驱逐的项
+        for (freq in sortedFrequencies) {
+            val keysInGroup = frequencyGroups[freq] ?: continue
+
+            if (toEvict.size + keysInGroup.size <= evictionCount) {
+                // 如果这个组的所有项加起来不超过需要驱逐的数量，全部驱逐
+                toEvict.addAll(keysInGroup)
+            } else {
+                // 否则，按照最后访问时间排序，驱逐最早访问的
+                val sortedByLastAccess = keysInGroup.sortedBy { lastAccessMap[it] ?: 0L }
+                toEvict.addAll(sortedByLastAccess.take(evictionCount - toEvict.size))
+                break
             }
         }
 
-        // 移除访问频率最低的缓存项
-        if (lowestFrequencyKey != null) {
-            frequencyMap.remove(lowestFrequencyKey)
+        // 驱逐选定的项
+        for (key in toEvict) {
+            frequencyMap.remove(key)
+            lastAccessMap.remove(key)
             currentSize.decrementAndGet()
-            logger.debug("LFU缓存策略驱逐缓存项: $lowestFrequencyKey, 频率: $lowestFrequency")
+            logger.debug("LFU缓存策略驱逐缓存项: $key, 频率: ${frequencyMap[key]?.get() ?: 0}")
+        }
+
+        // 如果还需要继续驱逐，使用简单的LFU策略
+        while (currentSize.get() >= maxSize) {
+            // 找到访问频率最低的缓存项
+            var lowestFrequencyKey: String? = null
+            var lowestFrequency = Int.MAX_VALUE
+
+            for ((key, frequency) in frequencyMap) {
+                val freq = frequency.get()
+                if (freq < lowestFrequency) {
+                    lowestFrequency = freq
+                    lowestFrequencyKey = key
+                }
+            }
+
+            // 移除访问频率最低的缓存项
+            if (lowestFrequencyKey != null) {
+                frequencyMap.remove(lowestFrequencyKey)
+                lastAccessMap.remove(lowestFrequencyKey)
+                currentSize.decrementAndGet()
+                logger.debug("LFU缓存策略驱逐缓存项(备用方式): $lowestFrequencyKey, 频率: $lowestFrequency")
+            } else {
+                break
+            }
         }
     }
 

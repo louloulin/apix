@@ -155,14 +155,49 @@ class LRUCacheStrategy(
 
     /**
      * 如果需要，驱逐缓存项
+     * 增强版LRU策略，考虑了访问时间和频率
      */
     private fun evictIfNeeded() {
-        // 移除最长时间未被访问的缓存项
-        val oldestKey = accessQueue.poll()
-        if (oldestKey != null) {
-            accessMap.remove(oldestKey)
+        // 需要驱逐的数量，驱逐缓存大小的10%
+        val evictionCount = Math.max(1, maxSize / 10)
+        logger.debug("LRU缓存策略需要驱逐 $evictionCount 个缓存项")
+
+        // 按照访问时间排序，驱逐最早访问的项
+        val currentTime = System.currentTimeMillis()
+        val sortedEntries = accessMap.entries
+            .sortedBy { it.value } // 按访问时间排序
+            .take(evictionCount * 2) // 取出最早访问的一部分项
+
+        // 从这些项中选择要驱逐的项
+        val toEvict = sortedEntries
+            .sortedWith(compareBy<Map.Entry<String, Long>> {
+                // 首先按访问时间排序
+                it.value
+            }.thenBy {
+                // 其次按照在队列中的位置排序（访问频率）
+                val index = accessQueue.indexOf(it.key)
+                if (index == -1) Int.MAX_VALUE else index
+            })
+            .take(evictionCount)
+
+        // 驱逐选定的项
+        for ((key, _) in toEvict) {
+            accessMap.remove(key)
+            accessQueue.remove(key)
             currentSize.decrementAndGet()
-            logger.debug("LRU缓存策略驱逐缓存项: $oldestKey")
+            logger.debug("LRU缓存策略驱逐缓存项: $key")
+        }
+
+        // 如果还需要继续驱逐，使用简单的LRU策略
+        while (currentSize.get() >= maxSize) {
+            val oldestKey = accessQueue.poll()
+            if (oldestKey != null) {
+                accessMap.remove(oldestKey)
+                currentSize.decrementAndGet()
+                logger.debug("LRU缓存策略驱逐缓存项(备用方式): $oldestKey")
+            } else {
+                break
+            }
         }
     }
 

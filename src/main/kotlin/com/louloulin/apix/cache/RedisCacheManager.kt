@@ -47,6 +47,42 @@ class RedisCacheManager(
     // 初始化标志
     private var initialized = false
 
+    // 缓存预热配置
+    private var preloadPatterns = listOf<Regex>()
+    private var preloadMaxKeys = 1000
+    private var preloadInterval = 3600000L // 默认1小时
+    private var preloadTimerId: Long = -1
+
+    // 缓存一致性配置
+    private var consistencyCheckInterval = 300000L // 默认5分钟
+    private var consistencyTimerId: Long = -1
+
+    /**
+     * 配置缓存预热
+     * @param patterns 预热的键模式列表
+     * @param maxKeys 每次预热的最大键数
+     * @param intervalMs 预热间隔（毫秒）
+     */
+    fun configurePreload(
+        patterns: List<String>,
+        maxKeys: Int = 1000,
+        intervalMs: Long = 3600000L
+    ) {
+        this.preloadPatterns = patterns.map { Regex(it) }
+        this.preloadMaxKeys = maxKeys
+        this.preloadInterval = intervalMs
+        logger.info("配置缓存预热: patterns=$patterns, maxKeys=$maxKeys, interval=${intervalMs}ms")
+    }
+
+    /**
+     * 配置缓存一致性检查
+     * @param intervalMs 一致性检查间隔（毫秒）
+     */
+    fun configureConsistencyCheck(intervalMs: Long = 300000L) {
+        this.consistencyCheckInterval = intervalMs
+        logger.info("配置缓存一致性检查: interval=${intervalMs}ms")
+    }
+
     /**
      * 初始化缓存管理器
      * @return 初始化结果的 Future
@@ -66,6 +102,14 @@ class RedisCacheManager(
 
                 // 设置消息处理器
                 setupMessageHandler()
+
+                // 启动缓存预热定时器（如果配置了预热模式）
+                if (preloadPatterns.isNotEmpty()) {
+                    startPreloadTimer()
+                }
+
+                // 启动缓存一致性检查定时器
+                startConsistencyCheckTimer()
 
                 initialized = true
                 promise.complete()
@@ -114,18 +158,44 @@ class RedisCacheManager(
             val notification = JsonObject(message)
             val action = notification.getString("action")
             val key = notification.getString("key")
+            val pattern = notification.getString("pattern")
 
-            if (action != null && key != null) {
+            if (action != null) {
                 when (action) {
                     "remove" -> {
-                        // 从本地缓存中移除
-                        localCache.remove(key)
-                        logger.debug("收到缓存失效通知，已从本地缓存中移除: $key")
+                        if (key != null) {
+                            // 从本地缓存中移除
+                            localCache.remove(key)
+                            logger.debug("收到缓存失效通知，已从本地缓存中移除: $key")
+                        }
                     }
                     "clear" -> {
                         // 清除本地缓存
                         localCache.clear()
                         logger.debug("收到缓存清除通知，已清除本地缓存")
+                    }
+                    "pattern_remove" -> {
+                        if (pattern != null) {
+                            try {
+                                val regex = Regex(pattern)
+                                // 移除所有匹配模式的键
+                                val keysToRemove = localCache.keys.filter { regex.matches(it) }
+                                keysToRemove.forEach { localCache.remove(it) }
+                                logger.debug("收到模式失效通知，已从本地缓存中移除 ${keysToRemove.size} 个键，模式: $pattern")
+                            } catch (e: Exception) {
+                                logger.error("处理模式失效通知失败，无效的正则表达式: $pattern", e)
+                            }
+                        }
+                    }
+                    "preload" -> {
+                        // 触发缓存预热
+                        if (preloadPatterns.isNotEmpty()) {
+                            preloadCache()
+                        }
+                    }
+                    "consistency_check" -> {
+                        // 触发一致性检查
+                        checkCacheConsistency()
                     }
                 }
             }
@@ -136,11 +206,12 @@ class RedisCacheManager(
 
     /**
      * 发送缓存失效通知
-     * @param action 操作类型（"remove" 或 "clear"）
-     * @param key 缓存键（对于 "clear" 操作可为 null）
+     * @param action 操作类型（"remove", "clear", "pattern_remove", "preload", "consistency_check"）
+     * @param key 缓存键（对于某些操作可为 null）
+     * @param pattern 模式（对于 pattern_remove 操作）
      * @return 操作结果的 Future
      */
-    private fun sendCacheNotification(action: String, key: String? = null): Future<Void> {
+    fun sendCacheNotification(action: String, key: String? = null, pattern: String? = null): Future<Void> {
         val promise = Promise.promise<Void>()
 
         val notification = JsonObject()
@@ -150,16 +221,237 @@ class RedisCacheManager(
             notification.put("key", key)
         }
 
+        if (pattern != null) {
+            notification.put("pattern", pattern)
+        }
+
         redis.publish(pubSubChannel, notification.encode())
             .onSuccess { _ ->
-                logger.debug("发送缓存失效通知成功: $action, $key")
+                logger.debug("发送缓存通知成功: $action, key=$key, pattern=$pattern")
                 promise.complete()
             }
             .onFailure { err ->
-                logger.error("发送缓存失效通知失败: $action, $key", err)
+                logger.error("发送缓存通知失败: $action, key=$key, pattern=$pattern", err)
                 promise.fail(err)
             }
 
+        return promise.future()
+    }
+
+    /**
+     * 启动缓存预热定时器
+     */
+    private fun startPreloadTimer() {
+        // 取消现有定时器
+        if (preloadTimerId != -1L) {
+            vertx.cancelTimer(preloadTimerId)
+        }
+
+        // 初次预热
+        preloadCache()
+
+        // 设置定期预热
+        preloadTimerId = vertx.setPeriodic(preloadInterval) {
+            preloadCache()
+        }
+
+        logger.info("启动缓存预热定时器，间隔: ${preloadInterval}ms")
+    }
+
+    /**
+     * 启动缓存一致性检查定时器
+     */
+    private fun startConsistencyCheckTimer() {
+        // 取消现有定时器
+        if (consistencyTimerId != -1L) {
+            vertx.cancelTimer(consistencyTimerId)
+        }
+
+        // 设置定期一致性检查
+        consistencyTimerId = vertx.setPeriodic(consistencyCheckInterval) {
+            checkCacheConsistency()
+        }
+
+        logger.info("启动缓存一致性检查定时器，间隔: ${consistencyCheckInterval}ms")
+    }
+
+    /**
+     * 预热缓存
+     */
+    private fun preloadCache() {
+        if (preloadPatterns.isEmpty()) {
+            return
+        }
+
+        logger.debug("开始缓存预热操作")
+
+        // 对每个预热模式进行处理
+        for (pattern in preloadPatterns) {
+            preloadCacheForPattern(pattern.pattern)
+        }
+    }
+
+    /**
+     * 为指定模式预热缓存
+     * @param pattern 键模式
+     */
+    private fun preloadCacheForPattern(pattern: String) {
+        // 使用 SCAN 命令查找匹配的键
+        scanKeys("$keyPrefix$pattern", preloadMaxKeys)
+            .onSuccess { keys ->
+                if (keys.isEmpty()) {
+                    logger.debug("没有找到匹配模式的键: $pattern")
+                    return@onSuccess
+                }
+
+                logger.debug("找到 ${keys.size} 个匹配模式的键: $pattern")
+
+                // 批量获取这些键的值
+                val futures = mutableListOf<Future<Pair<String, JsonObject?>>>()
+
+                for (redisKey in keys) {
+                    // 从 Redis 键中提取原始键（去除前缀）
+                    val originalKey = redisKey.substring(keyPrefix.length)
+
+                    // 如果本地缓存中已有该键，则跳过
+                    if (localCache.containsKey(originalKey)) {
+                        continue
+                    }
+
+                    // 获取值并存入本地缓存
+                    val future = redis.get(redisKey)
+                        .map { response ->
+                            if (response != null) {
+                                try {
+                                    val jsonValue = JsonObject(response.toString())
+                                    // 存入本地缓存
+                                    localCache[originalKey] = jsonValue
+                                    Pair(originalKey, jsonValue)
+                                } catch (e: Exception) {
+                                    logger.error("解析 JSON 失败，键: $originalKey", e)
+                                    Pair(originalKey, null)
+                                }
+                            } else {
+                                Pair(originalKey, null)
+                            }
+                        }
+
+                    futures.add(future)
+                }
+
+                // 等待所有获取操作完成
+                Future.all(futures)
+                    .onSuccess { _ ->
+                        val successCount = futures.count { it.succeeded() && it.result().second != null }
+                        logger.info("缓存预热完成，模式: $pattern，成功预热 $successCount/${futures.size} 个键")
+                    }
+                    .onFailure { err ->
+                        logger.error("缓存预热失败，模式: $pattern", err)
+                    }
+            }
+            .onFailure { err ->
+                logger.error("扫描匹配模式的键失败: $pattern", err)
+            }
+    }
+
+    /**
+     * 检查缓存一致性
+     */
+    private fun checkCacheConsistency() {
+        logger.debug("开始缓存一致性检查")
+
+        // 随机选择一部分本地缓存键进行检查
+        val keysToCheck = localCache.keys.shuffled().take(100)
+
+        if (keysToCheck.isEmpty()) {
+            logger.debug("本地缓存为空，无需进行一致性检查")
+            return
+        }
+
+        val futures = mutableListOf<Future<Pair<String, Boolean>>>()
+
+        for (key in keysToCheck) {
+            val redisKey = keyPrefix + key
+
+            // 检查键是否存在于 Redis 中
+            val future = redis.exists(listOf(redisKey))
+                .map { response ->
+                    val exists = response != null && response.toInteger() == 1
+                    Pair(key, exists)
+                }
+
+            futures.add(future)
+        }
+
+        // 等待所有检查完成
+        Future.all(futures)
+            .onSuccess { _ ->
+                val inconsistentKeys = futures.filter { it.succeeded() && !it.result().second }.map { it.result().first }
+
+                if (inconsistentKeys.isNotEmpty()) {
+                    logger.info("发现 ${inconsistentKeys.size} 个不一致的缓存键，正在从本地缓存中移除")
+
+                    // 从本地缓存中移除不一致的键
+                    for (key in inconsistentKeys) {
+                        localCache.remove(key)
+                    }
+                } else {
+                    logger.debug("缓存一致性检查完成，所有检查的键都一致")
+                }
+            }
+            .onFailure { err ->
+                logger.error("缓存一致性检查失败", err)
+            }
+    }
+
+    /**
+     * 使用 SCAN 命令扫描匹配的键
+     * @param pattern 键模式
+     * @param maxKeys 最大返回键数
+     * @return 匹配的键列表
+     */
+    private fun scanKeys(pattern: String, maxKeys: Int): Future<List<String>> {
+        val promise = Promise.promise<List<String>>()
+        val keys = mutableListOf<String>()
+        var cursor = "0"
+
+        fun scan() {
+            redis.scan(listOf(cursor, "MATCH", pattern, "COUNT", "100"))
+                .onSuccess { response ->
+                    if (response != null && response.size() >= 2) {
+                        cursor = response.get(0).toString()
+
+                        // 添加扫描到的键
+                        val scanKeys = response.get(1)
+                        if (scanKeys != null && scanKeys.size() > 0) {
+                            for (i in 0 until scanKeys.size()) {
+                                keys.add(scanKeys.get(i).toString())
+
+                                // 如果达到最大键数，则停止扫描
+                                if (keys.size >= maxKeys) {
+                                    promise.complete(keys)
+                                    return@onSuccess
+                                }
+                            }
+                        }
+
+                        // 如果有更多的键，继续扫描
+                        if (cursor != "0") {
+                            scan()
+                        } else {
+                            promise.complete(keys)
+                        }
+                    } else {
+                        promise.complete(keys)
+                    }
+                }
+                .onFailure { err ->
+                    logger.error("使用 SCAN 命令扫描键失败", err)
+                    promise.fail(err)
+                }
+        }
+
+        scan()
         return promise.future()
     }
 
@@ -273,6 +565,64 @@ class RedisCacheManager(
             }
             .onFailure { err ->
                 logger.error("Error removing cache entry from Redis for key: $key", err)
+                promise.fail(err)
+            }
+
+        return promise.future()
+    }
+
+    /**
+     * 根据模式移除缓存项
+     * @param pattern 要移除的缓存键模式
+     * @return 操作结果的 Future
+     */
+    fun removeByPattern(pattern: String): Future<Void> {
+        val promise = Promise.promise<Void>()
+        val redisKeyPattern = keyPrefix + pattern
+
+        // 从本地缓存中移除匹配的键
+        try {
+            val regex = Regex(pattern)
+            val keysToRemove = localCache.keys.filter { regex.matches(it) }
+            keysToRemove.forEach { localCache.remove(it) }
+            logger.debug("从本地缓存中移除了 ${keysToRemove.size} 个匹配模式的键: $pattern")
+        } catch (e: Exception) {
+            logger.error("处理模式失败，无效的正则表达式: $pattern", e)
+        }
+
+        // 使用 SCAN 命令查找匹配的键
+        scanKeys(redisKeyPattern, Int.MAX_VALUE)
+            .onSuccess { keys ->
+                if (keys.isEmpty()) {
+                    logger.debug("没有找到匹配模式的键: $pattern")
+                    promise.complete()
+                    return@onSuccess
+                }
+
+                logger.debug("找到 ${keys.size} 个匹配模式的键: $pattern")
+
+                // 从 Redis 中批量移除这些键
+                redis.del(keys)
+                    .onSuccess {
+                        removes.addAndGet(keys.size.toLong())
+
+                        // 发送模式失效通知
+                        sendCacheNotification("pattern_remove", null, pattern)
+                            .onSuccess {
+                                promise.complete()
+                            }
+                            .onFailure { err ->
+                                logger.warn("Failed to send pattern cache notification: $pattern", err)
+                                promise.complete() // 仍然完成操作，只是无法通知其他节点
+                            }
+                    }
+                    .onFailure { err ->
+                        logger.error("Error removing cache entries from Redis for pattern: $pattern", err)
+                        promise.fail(err)
+                    }
+            }
+            .onFailure { err ->
+                logger.error("Error scanning keys for pattern: $pattern", err)
                 promise.fail(err)
             }
 
@@ -422,6 +772,17 @@ class RedisCacheManager(
         val promise = Promise.promise<Void>()
 
         try {
+            // 取消定时器
+            if (preloadTimerId != -1L) {
+                vertx.cancelTimer(preloadTimerId)
+                preloadTimerId = -1L
+            }
+
+            if (consistencyTimerId != -1L) {
+                vertx.cancelTimer(consistencyTimerId)
+                consistencyTimerId = -1L
+            }
+
             // 取消订阅
             subscriber.unsubscribe(listOf(pubSubChannel))
                 .onSuccess { _ ->
