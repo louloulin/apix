@@ -1,0 +1,827 @@
+20:58:12.494 [main] INFO com.louloulin.apix.Main -- Starting APIX - AI Agent Gateway
+20:58:12.576 [main] INFO com.louloulin.apix.Main -- Loaded configuration from: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:12.579 [main] INFO com.louloulin.apix.cluster.ClusterConfig -- Initialized cluster configuration: type=HAZELCAST, enabled=true
+20:58:12.584 [main] DEBUG io.vertx.core.logging.LoggerFactory -- Using io.vertx.core.logging.SLF4JLogDelegateFactory
+20:58:12.586 [main] INFO com.louloulin.apix.Main -- Loaded Vert.x configuration from: src/main/resources/vertx-high-concurrency.json
+20:58:12.586 [main] INFO com.louloulin.apix.Main -- Configuring clustering with type: HAZELCAST
+20:58:12.587 [main] INFO com.louloulin.apix.cluster.ClusterManagerFactory -- Creating Hazelcast cluster manager with config path: config/hazelcast.xml
+20:58:12.598 [main] INFO com.louloulin.apix.Main -- Creating clustered Vert.x instance
+20:58:12.605 [main] DEBUG io.netty.util.internal.logging.InternalLoggerFactory -- Using SLF4J as the default logging framework
+20:58:12.611 [main] DEBUG io.netty.util.internal.PlatformDependent0 -- -Dio.netty.noUnsafe: false
+20:58:12.612 [main] DEBUG io.netty.util.internal.PlatformDependent0 -- Java version: 17
+20:58:12.612 [main] DEBUG io.netty.util.internal.PlatformDependent0 -- sun.misc.Unsafe.theUnsafe: available
+20:58:12.612 [main] DEBUG io.netty.util.internal.PlatformDependent0 -- sun.misc.Unsafe.copyMemory: available
+20:58:12.612 [main] DEBUG io.netty.util.internal.PlatformDependent0 -- sun.misc.Unsafe.storeFence: available
+20:58:12.612 [main] DEBUG io.netty.util.internal.PlatformDependent0 -- java.nio.Buffer.address: available
+20:58:12.612 [main] DEBUG io.netty.util.internal.PlatformDependent0 -- direct buffer constructor: unavailable: Reflective setAccessible(true) disabled
+20:58:12.612 [main] DEBUG io.netty.util.internal.PlatformDependent0 -- java.nio.Bits.unaligned: available, true
+20:58:12.613 [main] DEBUG io.netty.util.internal.PlatformDependent0 -- jdk.internal.misc.Unsafe.allocateUninitializedArray(int): unavailable: class io.netty.util.internal.PlatformDependent0$7 cannot access class jdk.internal.misc.Unsafe (in module java.base) because module java.base does not export jdk.internal.misc to unnamed module @6b67034
+20:58:12.613 [main] DEBUG io.netty.util.internal.PlatformDependent0 -- java.nio.DirectByteBuffer.<init>(long, {int,long}): unavailable
+20:58:12.613 [main] DEBUG io.netty.util.internal.PlatformDependent -- sun.misc.Unsafe: available
+20:58:12.613 [main] DEBUG io.netty.util.internal.PlatformDependent -- -Dio.netty.tmpdir: /var/folders/nj/vtk9xv2j4wq41_94ry3zr8hh0000gn/T (java.io.tmpdir)
+20:58:12.613 [main] DEBUG io.netty.util.internal.PlatformDependent -- -Dio.netty.bitMode: 64 (sun.arch.data.model)
+20:58:12.614 [main] DEBUG io.netty.util.internal.PlatformDependent -- Platform: MacOS
+20:58:12.614 [main] DEBUG io.netty.util.internal.PlatformDependent -- -Dio.netty.maxDirectMemory: -1 bytes
+20:58:12.614 [main] DEBUG io.netty.util.internal.PlatformDependent -- -Dio.netty.uninitializedArrayAllocationThreshold: -1
+20:58:12.614 [main] DEBUG io.netty.util.internal.CleanerJava9 -- java.nio.ByteBuffer.cleaner(): available
+20:58:12.614 [main] DEBUG io.netty.util.internal.PlatformDependent -- -Dio.netty.noPreferDirect: false
+20:58:12.636 [main] DEBUG io.netty.util.ResourceLeakDetector -- -Dio.netty.leakDetection.level: simple
+20:58:12.636 [main] DEBUG io.netty.util.ResourceLeakDetector -- -Dio.netty.leakDetection.targetRecords: 4
+20:58:12.643 [main] DEBUG io.netty.channel.MultithreadEventLoopGroup -- -Dio.netty.eventLoopThreads: 28
+20:58:12.646 [main] DEBUG io.netty.util.concurrent.GlobalEventExecutor -- -Dio.netty.globalEventExecutor.quietPeriodSeconds: 1
+20:58:12.648 [main] DEBUG io.netty.util.internal.InternalThreadLocalMap -- -Dio.netty.threadLocalMap.stringBuilder.initialSize: 1024
+20:58:12.648 [main] DEBUG io.netty.util.internal.InternalThreadLocalMap -- -Dio.netty.threadLocalMap.stringBuilder.maxSize: 4096
+20:58:12.650 [main] DEBUG io.netty.channel.nio.NioEventLoop -- -Dio.netty.noKeySetOptimization: false
+20:58:12.650 [main] DEBUG io.netty.channel.nio.NioEventLoop -- -Dio.netty.selectorAutoRebuildThreshold: 512
+20:58:12.653 [main] DEBUG io.netty.util.internal.PlatformDependent -- org.jctools-core.MpscChunkedArrayQueue: available
+20:58:12.664 [main] DEBUG io.netty.resolver.dns.DefaultDnsServerAddressStreamProvider -- Default DNS servers: [/[fe80:0:0:0:8a81:b9ff:fead:68be%en0]:53, /192.168.3.1:53] (sun.net.dns.ResolverConfiguration)
+20:58:12.669 [main] DEBUG io.netty.util.NetUtil -- -Djava.net.preferIPv4Stack: false
+20:58:12.669 [main] DEBUG io.netty.util.NetUtil -- -Djava.net.preferIPv6Addresses: false
+20:58:12.670 [main] DEBUG io.netty.util.NetUtilInitializations -- Loopback interface: lo0 (lo0, 0:0:0:0:0:0:0:1%lo0)
+20:58:12.670 [main] DEBUG io.netty.util.NetUtil -- Failed to get SOMAXCONN from sysctl and file /proc/sys/net/core/somaxconn. Default: 128
+20:58:12.670 [main] DEBUG io.netty.resolver.dns.DnsNameResolver -- Default ResolvedAddressTypes: IPV4_PREFERRED
+20:58:12.670 [main] DEBUG io.netty.resolver.dns.DnsNameResolver -- Localhost address: localhost/127.0.0.1
+20:58:12.670 [main] DEBUG io.netty.resolver.dns.DnsNameResolver -- Windows hostname: null
+20:58:12.670 [main] DEBUG io.netty.resolver.dns.DnsNameResolver -- Default search domains: []
+20:58:12.671 [main] DEBUG io.netty.resolver.dns.DnsNameResolver -- Default UnixResolverOptions{ndots=1, timeout=5, attempts=16}
+20:58:12.672 [main] DEBUG io.netty.resolver.DefaultHostsFileEntriesResolver -- -Dio.netty.hostsFileRefreshInterval: 0
+20:58:12.673 [main] WARN io.netty.resolver.dns.DnsServerAddressStreamProviders -- Can not find io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider in the classpath, fallback to system defaults. This may result in incorrect DNS resolutions on MacOS. Check whether you have a dependency on 'io.netty:netty-resolver-dns-native-macos'
+20:58:12.680 [main] DEBUG io.netty.buffer.PooledByteBufAllocator -- -Dio.netty.allocator.numHeapArenas: 28
+20:58:12.680 [main] DEBUG io.netty.buffer.PooledByteBufAllocator -- -Dio.netty.allocator.numDirectArenas: 28
+20:58:12.680 [main] DEBUG io.netty.buffer.PooledByteBufAllocator -- -Dio.netty.allocator.pageSize: 8192
+20:58:12.680 [main] DEBUG io.netty.buffer.PooledByteBufAllocator -- -Dio.netty.allocator.maxOrder: 9
+20:58:12.680 [main] DEBUG io.netty.buffer.PooledByteBufAllocator -- -Dio.netty.allocator.chunkSize: 4194304
+20:58:12.680 [main] DEBUG io.netty.buffer.PooledByteBufAllocator -- -Dio.netty.allocator.smallCacheSize: 256
+20:58:12.680 [main] DEBUG io.netty.buffer.PooledByteBufAllocator -- -Dio.netty.allocator.normalCacheSize: 64
+20:58:12.680 [main] DEBUG io.netty.buffer.PooledByteBufAllocator -- -Dio.netty.allocator.maxCachedBufferCapacity: 32768
+20:58:12.680 [main] DEBUG io.netty.buffer.PooledByteBufAllocator -- -Dio.netty.allocator.cacheTrimInterval: 8192
+20:58:12.680 [main] DEBUG io.netty.buffer.PooledByteBufAllocator -- -Dio.netty.allocator.cacheTrimIntervalMillis: 0
+20:58:12.680 [main] DEBUG io.netty.buffer.PooledByteBufAllocator -- -Dio.netty.allocator.useCacheForAllThreads: false
+20:58:12.680 [main] DEBUG io.netty.buffer.PooledByteBufAllocator -- -Dio.netty.allocator.maxCachedByteBuffersPerChunk: 1023
+20:58:12.684 [main] DEBUG io.netty.buffer.AbstractByteBuf -- -Dio.netty.buffer.checkAccessible: true
+20:58:12.684 [main] DEBUG io.netty.buffer.AbstractByteBuf -- -Dio.netty.buffer.checkBounds: true
+20:58:12.684 [main] DEBUG io.netty.util.ResourceLeakDetectorFactory -- Loaded default ResourceLeakDetector: io.netty.util.ResourceLeakDetector@74f6c5d8
+5月 13, 2025 8:58:12 下午 com.hazelcast.instance.impl.HazelcastInstanceFactory
+警告: Hazelcast is starting in a Java modular environment (Java 9 and newer) but without proper access to required Java packages. Use additional Java arguments to provide Hazelcast access to Java internal API. The internal API access is used to get the best performance results. Arguments to be used:
+ --add-modules java.se --add-exports java.base/jdk.internal.ref=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.management/sun.management=ALL-UNNAMED --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+5月 13, 2025 8:58:12 下午 com.hazelcast.system
+信息: [192.168.3.40]:5701 [dev] [4.2.8] Hazelcast 4.2.8 (20230529 - 90df6cd) starting at [192.168.3.40]:5701
+5月 13, 2025 8:58:12 下午 com.hazelcast.spi.discovery.integration.DiscoveryService
+信息: [192.168.3.40]:5701 [dev] [4.2.8] No discovery strategy is applicable for auto-detection
+5月 13, 2025 8:58:12 下午 com.hazelcast.instance.impl.Node
+信息: [192.168.3.40]:5701 [dev] [4.2.8] Using Multicast discovery
+5月 13, 2025 8:58:12 下午 com.hazelcast.cp.CPSubsystem
+警告: [192.168.3.40]:5701 [dev] [4.2.8] CP Subsystem is not enabled. CP data structures will operate in UNSAFE mode! Please note that UNSAFE mode will not provide strong consistency guarantees.
+5月 13, 2025 8:58:12 下午 com.hazelcast.internal.diagnostics.Diagnostics
+信息: [192.168.3.40]:5701 [dev] [4.2.8] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.
+5月 13, 2025 8:58:12 下午 com.hazelcast.core.LifecycleService
+信息: [192.168.3.40]:5701 [dev] [4.2.8] [192.168.3.40]:5701 is STARTING
+5月 13, 2025 8:58:15 下午 com.hazelcast.internal.cluster.ClusterService
+信息: [192.168.3.40]:5701 [dev] [4.2.8] 
+
+Members {size:1, ver:1} [
+	Member [192.168.3.40]:5701 - 23681792-42a6-4b42-bef4-eb8350186ac9 this
+]
+
+5月 13, 2025 8:58:15 下午 com.hazelcast.core.LifecycleService
+信息: [192.168.3.40]:5701 [dev] [4.2.8] [192.168.3.40]:5701 is STARTED
+20:58:15.140 [vert.x-eventloop-thread-1] DEBUG io.netty.channel.DefaultChannelId -- -Dio.netty.processId: 39510 (auto-detected)
+20:58:15.141 [vert.x-eventloop-thread-1] DEBUG io.netty.channel.DefaultChannelId -- -Dio.netty.machineId: da:39:7c:ff:fe:d3:03:75 (auto-detected)
+20:58:15.146 [vert.x-eventloop-thread-1] DEBUG io.netty.buffer.ByteBufUtil -- -Dio.netty.allocator.type: pooled
+20:58:15.146 [vert.x-eventloop-thread-1] DEBUG io.netty.buffer.ByteBufUtil -- -Dio.netty.threadLocalDirectBufferSize: 0
+20:58:15.146 [vert.x-eventloop-thread-1] DEBUG io.netty.buffer.ByteBufUtil -- -Dio.netty.maxThreadLocalCharBufferSize: 16384
+20:58:15.146 [vert.x-eventloop-thread-1] DEBUG io.netty.bootstrap.ChannelInitializerExtensions -- -Dio.netty.bootstrap.extensions: null
+5月 13, 2025 8:58:15 下午 com.hazelcast.internal.partition.impl.PartitionStateManager
+信息: [192.168.3.40]:5701 [dev] [4.2.8] Initializing cluster partition table arrangement...
+20:58:15.173 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully created clustered Vert.x instance
+20:58:15.173 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.core.eventbus.EventBusCodecRegistry -- 注册EventBus本地消息编解码器...
+20:58:15.173 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.eventbus.EventBusCodecRegistry -- 已注册本地消息编解码器: JsonObject
+20:58:15.173 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.eventbus.EventBusCodecRegistry -- 已注册本地消息编解码器: JsonArray
+20:58:15.173 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.eventbus.EventBusCodecRegistry -- 已注册本地消息编解码器: String
+20:58:15.173 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.eventbus.EventBusCodecRegistry -- 已注册本地消息编解码器: boolean
+20:58:15.173 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.eventbus.EventBusCodecRegistry -- 已注册本地消息编解码器: int
+20:58:15.174 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.eventbus.EventBusCodecRegistry -- 已注册本地消息编解码器: long
+20:58:15.174 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.eventbus.EventBusCodecRegistry -- 已注册本地消息编解码器: double
+20:58:15.174 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.eventbus.EventBusCodecRegistry -- 已注册本地消息编解码器: Route
+20:58:15.174 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.eventbus.EventBusCodecRegistry -- 已注册本地消息编解码器: ServiceMetrics
+20:58:15.174 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.core.eventbus.EventBusCodecRegistry -- EventBus本地消息编解码器注册完成
+20:58:15.175 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- HTTP/2 Optimizer initialized
+20:58:15.175 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.core.eventbus.BatchMessageProcessor -- 批量消息处理器已初始化，批大小: 1000, 超时: 20ms
+20:58:15.175 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Batch Message Processor initialized
+20:58:15.176 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Simple EventBus initialized
+20:58:15.178 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- EventBus Manager initialized
+20:58:15.178 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Zero Copy Handler initialized
+20:58:15.180 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.core.logging.LoggingManager -- 日志管理器初始化完成
+20:58:15.180 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Logging Manager initialized
+20:58:15.180 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.core.metrics.MetricsManager -- 指标管理器初始化完成
+20:58:15.180 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Metrics Manager initialized
+20:58:15.180 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.core.tracing.TracingManager -- 追踪管理器初始化完成
+20:58:15.180 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Tracing Manager initialized
+20:58:15.181 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.core.network.NetworkOptimizer -- Network optimizer initialized
+20:58:15.181 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Network Optimizer initialized
+20:58:15.181 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.core.network.TcpTuner -- TCP tuner initialized with default parameters
+20:58:15.181 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- TCP Tuner initialized
+20:58:15.182 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.core.monitoring.SystemMonitor -- System monitor initialized
+20:58:15.182 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- System Monitor initialized
+20:58:15.182 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.core.monitoring.PerformanceMonitor -- Performance monitor initialized
+20:58:15.182 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Performance Monitor initialized
+20:58:15.183 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Logging optimized for high load
+20:58:15.184 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.core.tracing.TracingManager -- 追踪配置已更新: enabled=true, samplingRate=0.1
+20:58:15.184 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Tracing configured with 10% sampling rate
+20:58:15.184 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.core.monitoring.PerformanceMonitor -- Slow request threshold set to 1000ms
+20:58:15.184 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Slow request threshold set to 1000ms
+20:58:15.184 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.ConfigVerticle
+20:58:15.187 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.core.verticle.ConfigVerticle -- Starting ConfigVerticle...
+20:58:15.187 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.191 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.core.http.Http2Optimizer -- 已从配置文件加载 HTTP/2 设置: src/main/resources/vertx-high-performance.json
+20:58:15.191 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- HTTP/2 settings loaded from: src/main/resources/vertx-high-performance.json
+20:58:15.192 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.192 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.195 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.195 [vert.x-worker-thread-4] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.196 [vert.x-worker-thread-4] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.196 [vert.x-worker-thread-4] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.196 [vert.x-worker-thread-4] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.196 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.core.verticle.ConfigVerticle -- ConfigVerticle started successfully
+20:58:15.196 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.ConfigVerticle: f835026c-c40c-48ff-83df-6b9650e42462
+20:58:15.196 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.MonitorVerticle
+20:58:15.197 [vert.x-eventloop-thread-3] INFO com.louloulin.apix.core.verticle.MonitorVerticle -- Starting MonitorVerticle...
+20:58:15.197 [vert.x-eventloop-thread-3] INFO com.louloulin.apix.core.verticle.MonitorVerticle -- MonitorVerticle started successfully
+20:58:15.197 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.MonitorVerticle: d78d8f87-1b91-4cae-9081-7efead53214f
+20:58:15.198 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.NodeModeVerticle
+20:58:15.198 [vert.x-eventloop-thread-4] INFO com.louloulin.apix.core.verticle.NodeModeVerticle -- Starting NodeModeVerticle...
+20:58:15.202 [vert.x-eventloop-thread-4] INFO com.louloulin.apix.core.mode.NodeModeManager -- Initializing NodeModeManager
+20:58:15.202 [vert.x-eventloop-thread-4] INFO com.louloulin.apix.core.mode.NodeModeManager -- Node initialized in STANDALONE mode
+20:58:15.202 [vert.x-eventloop-thread-4] INFO com.louloulin.apix.core.verticle.NodeModeVerticle -- NodeModeVerticle started successfully in STANDALONE mode
+20:58:15.202 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.NodeModeVerticle: c7ec7a39-6855-48f8-be24-424301b72b98
+20:58:15.203 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.DBlessVerticle
+20:58:15.203 [vert.x-eventloop-thread-5] INFO com.louloulin.apix.core.verticle.DBlessVerticle -- Starting DBlessVerticle...
+20:58:15.203 [vert.x-eventloop-thread-5] INFO com.louloulin.apix.core.verticle.DBlessVerticle -- Registered DB-less configuration event bus handlers
+20:58:15.203 [vert.x-eventloop-thread-5] INFO com.louloulin.apix.core.verticle.DBlessVerticle -- Starting DBlessVerticle...
+20:58:15.204 [vert.x-eventloop-thread-5] INFO com.louloulin.apix.core.verticle.DBlessVerticle -- DB-less mode is not enabled, skipping initialization
+20:58:15.204 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.DBlessVerticle: 38f5b8c5-e011-4f95-aaef-95d4bdad41e6
+20:58:15.204 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.EventBusEnhancerVerticle
+20:58:15.204 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.verticle.EventBusEnhancerVerticle -- Starting EventBusEnhancerVerticle...
+20:58:15.204 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.eventbus.DistributedEventBus -- Starting DistributedEventBus
+20:58:15.204 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.eventbus.DistributedEventBus -- Initializing message partitioning with 16 partitions
+20:58:15.204 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.eventbus.DistributedEventBus -- Initializing QoS settings
+20:58:15.204 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.eventbus.DistributedEventBus -- DistributedEventBus started successfully
+20:58:15.205 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.eventbus.HighPerformanceEventBus -- Starting HighPerformanceEventBus
+20:58:15.205 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.eventbus.HighPerformanceEventBus -- Initializing message processing
+20:58:15.205 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.eventbus.HighPerformanceEventBus -- Initializing object pools
+20:58:15.212 [vert.x-eventloop-thread-6] DEBUG com.louloulin.apix.core.eventbus.HighPerformanceEventBus -- Created pools for address: apix.config.get
+20:58:15.212 [vert.x-eventloop-thread-6] DEBUG com.louloulin.apix.core.eventbus.HighPerformanceEventBus -- Created pools for address: apix.route.get.all
+20:58:15.212 [vert.x-eventloop-thread-6] DEBUG com.louloulin.apix.core.eventbus.HighPerformanceEventBus -- Created pools for address: apix.service.get.all
+20:58:15.212 [vert.x-eventloop-thread-6] DEBUG com.louloulin.apix.core.eventbus.HighPerformanceEventBus -- Created pools for address: apix.plugin.get.all
+20:58:15.212 [vert.x-eventloop-thread-6] DEBUG com.louloulin.apix.core.eventbus.HighPerformanceEventBus -- Created pools for address: apix.metrics.get
+20:58:15.212 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.eventbus.HighPerformanceEventBus -- HighPerformanceEventBus started successfully
+20:58:15.212 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.verticle.EventBusEnhancerVerticle -- EventBusEnhancerVerticle started successfully
+20:58:15.212 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.EventBusEnhancerVerticle: 7aafb409-72b2-4e6c-af5a-fe6c6de5a8ed
+20:58:15.212 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.DeploymentVerticle
+20:58:15.213 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.core.verticle.DeploymentVerticle -- Starting DeploymentVerticle...
+20:58:15.213 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.core.verticle.DeploymentVerticle -- DeploymentVerticle started successfully
+20:58:15.213 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.DeploymentVerticle: e52c1f0f-d79a-4bb3-8730-a306ff62e3b9
+20:58:15.213 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.ServiceVerticle
+20:58:15.214 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.core.verticle.ServiceVerticle -- Starting ServiceVerticle...
+20:58:15.214 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.215 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.215 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.215 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.215 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.core.ServiceManager -- 从配置加载服务...
+20:58:15.215 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.core.verticle.ServiceVerticle -- ServiceVerticle started successfully
+20:58:15.215 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.ServiceVerticle: f6f659bb-022b-4907-8c55-1944b88debd5
+20:58:15.216 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.PluginVerticle
+20:58:15.216 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.core.verticle.PluginVerticle -- Starting PluginVerticle...
+20:58:15.217 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.217 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.217 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.217 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.228 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.core.verticle.PluginVerticle -- Registering built-in plugin factories...
+20:58:15.228 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.core.verticle.PluginVerticle -- Registered 1 built-in plugin factories
+20:58:15.229 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.core.verticle.PluginVerticle -- PluginVerticle started successfully
+20:58:15.229 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.PluginVerticle: fadd32ab-7575-4e3d-af1c-0679cf60702b
+20:58:15.229 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.HighAvailabilityVerticle
+20:58:15.229 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.plugins.deploy.PluginHotDeployer -- No plugin configuration files found in plugins
+20:58:15.229 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.core.verticle.HighAvailabilityVerticle -- Starting HighAvailabilityVerticle...
+20:58:15.230 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.plugins.deploy.PluginHotDeployer -- File watcher set up for directory: plugins
+20:58:15.230 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.plugins.deploy.PluginHotDeployer -- Plugin hot deployer started
+20:58:15.232 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.ha.HighAvailabilityManager -- 初始化高可用性管理器
+20:58:15.232 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.ha.HighAvailabilityManager -- 高可用性未启用
+20:58:15.232 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.ha.DataPlaneAutonomyManager -- 初始化数据平面自治管理器
+20:58:15.232 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.ha.DataPlaneAutonomyManager -- 初始化本地缓存
+20:58:15.234 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.ha.DataPlaneAutonomyManager -- 本地缓存初始化完成
+20:58:15.235 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.ha.MultiRegionManager -- 初始化区域多活管理器
+20:58:15.235 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.ha.MultiRegionManager -- 多区域模式未启用
+20:58:15.235 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.core.verticle.HighAvailabilityVerticle -- HighAvailabilityVerticle 启动成功
+20:58:15.235 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.HighAvailabilityVerticle: 1d1cd52e-7cb2-4c60-8056-a56d532536ba
+20:58:15.235 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.ElasticScalingVerticle
+20:58:15.236 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.core.verticle.ElasticScalingVerticle -- Starting ElasticScalingVerticle...
+20:58:15.239 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.scaling.ElasticScalingManager -- 初始化弹性伸缩管理器
+20:58:15.239 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.scaling.ElasticScalingManager -- 弹性伸缩未启用
+20:58:15.239 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.scaling.GracefulScaleDownManager -- 初始化优雅缩容管理器
+20:58:15.240 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.scaling.GracefulScaleDownManager -- 启动缩容检查，间隔: 5000 毫秒
+20:58:15.240 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.scaling.GracefulScaleDownManager -- 优雅缩容管理器初始化完成
+20:58:15.240 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.scaling.ResourceOptimizer -- 初始化资源优化器
+20:58:15.240 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.scaling.ResourceOptimizer -- 资源优化未启用
+20:58:15.240 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.core.verticle.ElasticScalingVerticle -- ElasticScalingVerticle 启动成功
+20:58:15.240 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.ElasticScalingVerticle: 64c447d2-1784-41d2-a6d4-b67a1dde442e
+20:58:15.240 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.ResilienceVerticle
+20:58:15.241 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.core.verticle.ResilienceVerticle -- Starting ResilienceVerticle...
+20:58:15.243 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.resilience.BulkheadManager -- 初始化舱壁管理器
+20:58:15.243 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.resilience.BulkheadManager -- 舱壁管理器初始化完成
+20:58:15.243 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.resilience.CircuitBreakerManager -- 初始化熔断器管理器
+20:58:15.243 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.resilience.CircuitBreakerManager -- 熔断器管理器初始化完成
+20:58:15.244 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.resilience.FallbackManager -- 初始化降级策略管理器
+20:58:15.244 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.resilience.FallbackManager -- 降级策略管理器初始化完成
+20:58:15.244 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.resilience.FaultInjectionManager -- 初始化故障注入管理器
+20:58:15.244 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.resilience.FaultInjectionManager -- 故障注入未启用
+20:58:15.244 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.core.verticle.ResilienceVerticle -- ResilienceVerticle 启动成功
+20:58:15.244 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.ResilienceVerticle: 37c29c08-2be8-418d-9acb-75b627d7e34a
+20:58:15.244 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.MultiLevelCacheVerticle
+20:58:15.244 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.core.verticle.MultiLevelCacheVerticle -- Starting MultiLevelCacheVerticle...
+20:58:15.246 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.cache.MultiLevelCacheManager -- 初始化多级缓存管理器
+20:58:15.247 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.cache.MultiLevelCacheManager -- 初始化本地缓存
+20:58:15.247 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.cache.MultiLevelCacheManager -- 初始化分布式缓存
+20:58:15.247 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.cache.MultiLevelCacheManager -- 分布式缓存初始化成功
+20:58:15.247 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.cache.MultiLevelCacheManager -- Redis 缓存未启用
+20:58:15.248 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.cache.MultiLevelCacheManager -- 缓存清理任务已启动，间隔: 60000 ms
+20:58:15.248 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.cache.CacheConsistencyManager -- 初始化缓存一致性管理器
+20:58:15.248 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.cache.CacheConsistencyManager -- 缓存一致性管理器初始化完成，策略: eventual
+20:58:15.248 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.cache.CacheWarmupManager -- 初始化缓存预热管理器
+20:58:15.248 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.cache.CacheWarmupManager -- 缓存预热管理器初始化完成，模式: async
+20:58:15.248 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.core.verticle.MultiLevelCacheVerticle -- MultiLevelCacheVerticle 启动成功
+20:58:15.248 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.MultiLevelCacheVerticle: 13923943-7add-4f46-9dc3-87f11fd1a367
+20:58:15.249 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.SmartCacheVerticle
+20:58:15.249 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.core.verticle.SmartCacheVerticle -- Starting SmartCacheVerticle...
+20:58:15.251 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.cache.AdaptiveTTLManager -- 初始化自适应 TTL 管理器
+20:58:15.251 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.cache.AdaptiveTTLManager -- 统计信息更新任务已启动，间隔: 60000 ms
+20:58:15.251 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.cache.AdaptiveTTLManager -- 自适应 TTL 管理器初始化完成，策略: frequency
+20:58:15.251 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.cache.HotDataManager -- 初始化热点数据管理器
+20:58:15.252 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.cache.HotDataManager -- 热点数据检测任务已启动，间隔: 10000 ms
+20:58:15.252 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.cache.HotDataManager -- 热点数据管理器初始化完成，算法: frequency, 策略: local
+20:58:15.252 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.cache.BloomFilterManager -- 初始化布隆过滤器管理器
+20:58:15.253 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.cache.BloomFilterManager -- 创建布隆过滤器: namespace=apix, bitSetSize=7000000, hashFunctionsCount=5
+20:58:15.253 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.cache.BloomFilterManager -- 布隆过滤器同步任务已启动，间隔: 60000 ms
+20:58:15.253 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.cache.BloomFilterManager -- 布隆过滤器管理器初始化完成
+20:58:15.253 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.cache.CacheProtectionManager -- 初始化缓存穿透防护管理器
+20:58:15.253 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.cache.CacheProtectionManager -- 互斥锁清理任务已启动，间隔: 1000 ms
+20:58:15.253 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.cache.CacheProtectionManager -- 缓存穿透防护管理器初始化完成
+20:58:15.253 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.core.verticle.SmartCacheVerticle -- SmartCacheVerticle 启动成功
+20:58:15.253 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.SmartCacheVerticle: 0d8114ec-4ee0-41ca-8168-e7ebb28360fc
+20:58:15.253 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying ClusterVerticle for clustered mode
+20:58:15.254 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.ClusterVerticle
+20:58:15.254 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.core.verticle.ClusterVerticle -- Starting ClusterVerticle...
+20:58:15.254 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.cluster.ClusterConfig -- Initialized cluster configuration: type=HAZELCAST, enabled=true
+20:58:15.255 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.cluster.ClusterService -- Initializing cluster service
+20:58:15.256 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.cluster.ClusterService -- Setting up periodic sync with interval: 5000 ms
+20:58:15.258 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.core.verticle.ClusterVerticle -- Node registered with ID: node-1115756419-1, total nodes: 1
+20:58:15.258 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.cluster.ClusterMonitor -- Starting cluster monitoring
+20:58:15.259 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.core.verticle.ClusterVerticle -- ClusterVerticle started successfully
+20:58:15.259 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.ClusterVerticle: 8475ec15-2fec-470c-a8e3-bcec32925774
+20:58:15.259 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.AuthVerticle
+20:58:15.259 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.core.verticle.AuthVerticle -- Starting AuthVerticle...
+20:58:15.260 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.260 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.260 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.260 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.261 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.core.verticle.AuthVerticle -- AuthVerticle started successfully
+20:58:15.261 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.AuthVerticle: 5ea9dc65-c6c4-4704-abad-a2d46ae36ed9
+20:58:15.261 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.CacheVerticle
+20:58:15.261 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.core.verticle.CacheVerticle -- Starting CacheVerticle...
+20:58:15.261 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.core.verticle.CacheVerticle -- Initializing distributed cache in clustered mode
+20:58:15.262 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.core.verticle.CacheVerticle -- CacheVerticle started successfully with distributed cache
+20:58:15.262 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.CacheVerticle: a37d5484-a4a1-471f-b410-74f563585044
+20:58:15.262 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.ModelRouterVerticle
+20:58:15.262 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.core.verticle.ModelRouterVerticle -- Starting ModelRouterVerticle...
+20:58:15.263 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.ai.router.ModelRouter -- Initialized model router with 0 rules
+20:58:15.263 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.core.verticle.ModelRouterVerticle -- ModelRouterVerticle started successfully
+20:58:15.263 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.ModelRouterVerticle: 317e8816-de1f-4e58-b8d7-4545ba65d83b
+20:58:15.263 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.PromptEnhancerVerticle
+20:58:15.264 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.core.verticle.PromptEnhancerVerticle -- Starting PromptEnhancerVerticle...
+20:58:15.265 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.ai.prompt.PromptEnhancer -- 初始化提示词增强器完成，加载了 0 个模板和 0 条规则
+20:58:15.265 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.core.verticle.PromptEnhancerVerticle -- PromptEnhancerVerticle 启动成功
+20:58:15.265 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.PromptEnhancerVerticle: 35662ec6-12c7-4cd8-8471-921a3cdd779a
+20:58:15.266 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.ConcurrencyControlVerticle
+20:58:15.279 [vert.x-eventloop-thread-20] INFO com.louloulin.apix.core.verticle.ConcurrencyControlVerticle -- 启动 ConcurrencyControlVerticle...
+20:58:15.284 [vert.x-eventloop-thread-20] INFO com.louloulin.apix.core.concurrency.ConcurrencyController -- 并发控制器初始化完成，默认并发限制: 100, 最小并发: 10, 最大并发: 1000
+20:58:15.284 [vert.x-eventloop-thread-20] INFO com.louloulin.apix.core.verticle.ConcurrencyControlVerticle -- ConcurrencyControlVerticle 启动完成
+20:58:15.284 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.ConcurrencyControlVerticle: efac4569-743b-4448-bb4e-5f5ce5704d59
+20:58:15.284 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.RequestQueueVerticle
+20:58:15.284 [vert.x-eventloop-thread-21] INFO com.louloulin.apix.core.verticle.RequestQueueVerticle -- 启动 RequestQueueVerticle
+20:58:15.285 [vert.x-eventloop-thread-21] INFO com.louloulin.apix.core.queue.RequestQueueManager -- 启动请求队列处理
+20:58:15.286 [vert.x-eventloop-thread-21] INFO com.louloulin.apix.core.queue.RequestQueueManager -- 初始化请求队列管理器完成，最大队列大小: 10000, 队列处理间隔: 10ms
+20:58:15.287 [vert.x-eventloop-thread-21] INFO com.louloulin.apix.core.verticle.RequestQueueVerticle -- RequestQueueVerticle 启动成功
+20:58:15.287 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.RequestQueueVerticle: 1d495a35-f3da-403b-9163-cf5a0061ade5
+20:58:15.287 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.RateLimitVerticle
+20:58:15.288 [vert.x-eventloop-thread-23] INFO com.louloulin.apix.core.verticle.RateLimitVerticle -- 启动 RateLimitVerticle
+20:58:15.289 [vert.x-eventloop-thread-23] INFO com.louloulin.apix.core.ratelimit.RateLimiter -- 初始化限流器完成，清理间隔: 60000ms
+20:58:15.292 [vert.x-eventloop-thread-23] INFO com.louloulin.apix.core.verticle.RateLimitVerticle -- RateLimitVerticle 启动成功
+20:58:15.293 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.RateLimitVerticle: 1c739750-77b0-4cfb-8a2e-8c6df5405cf8
+20:58:15.293 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.MemoryManagerVerticle
+20:58:15.293 [vert.x-eventloop-thread-24] INFO com.louloulin.apix.core.verticle.MemoryManagerVerticle -- 启动 MemoryManagerVerticle...
+20:58:15.295 [vert.x-eventloop-thread-24] INFO com.louloulin.apix.core.memory.MemoryManager -- 内存管理器初始化完成，低内存阈值: 80.0%，严重内存不足阈值: 95.0%
+20:58:15.295 [vert.x-eventloop-thread-24] INFO com.louloulin.apix.core.verticle.MemoryManagerVerticle -- MemoryManagerVerticle 启动完成
+20:58:15.295 [DefaultDispatcher-worker-1] DEBUG com.louloulin.apix.core.memory.MemoryManager -- 内存使用情况 - 堆内存: 41.04 MB/12.00 GB, 非堆内存: 0 bytes
+20:58:15.295 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.MemoryManagerVerticle: 75508213-0061-486b-8587-c316166922ef
+20:58:15.296 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.edge.EdgeNodeVerticle
+20:58:15.296 [vert.x-eventloop-thread-25] INFO com.louloulin.apix.edge.EdgeNodeVerticle -- Starting EdgeNodeVerticle...
+20:58:15.297 [vert.x-eventloop-thread-25] INFO com.louloulin.apix.edge.EdgeNodeVerticle -- 启动边缘节点Verticle
+20:58:15.305 [vert.x-eventloop-thread-25] INFO com.louloulin.apix.edge.EdgeNodeManager -- 初始化边缘节点管理器
+20:58:15.305 [vert.x-eventloop-thread-25] INFO com.louloulin.apix.edge.EdgeNodeManager -- 边缘节点功能未启用
+20:58:15.305 [vert.x-eventloop-thread-25] INFO com.louloulin.apix.edge.EdgeAutonomyManager -- 初始化边缘自治管理器
+20:58:15.305 [vert.x-eventloop-thread-25] INFO com.louloulin.apix.edge.EdgeAutonomyManager -- 边缘自治功能未启用
+20:58:15.305 [vert.x-eventloop-thread-25] INFO com.louloulin.apix.edge.EdgeIntelligenceManager -- 初始化边缘智能管理器
+20:58:15.305 [vert.x-eventloop-thread-25] INFO com.louloulin.apix.edge.EdgeIntelligenceManager -- 边缘智能功能未启用
+20:58:15.305 [vert.x-eventloop-thread-25] INFO com.louloulin.apix.edge.sync.EdgeSyncManager -- 初始化边缘同步管理器
+20:58:15.305 [vert.x-eventloop-thread-25] INFO com.louloulin.apix.edge.sync.EdgeSyncManager -- 已初始化同步策略: incremental
+20:58:15.306 [vert.x-eventloop-thread-25] INFO com.louloulin.apix.edge.sync.EdgeSyncManager -- 已启动定时同步任务，间隔: 60000ms
+20:58:15.306 [vert.x-eventloop-thread-25] INFO com.louloulin.apix.edge.sync.BandwidthMonitor -- 启动带宽监控
+20:58:15.306 [vert.x-eventloop-thread-25] INFO com.louloulin.apix.edge.sync.NetworkConditionDetector -- 启动网络条件检测
+20:58:15.306 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.NetworkConditionDetector -- 检测网络状况
+20:58:15.320 [vert.x-eventloop-thread-25] INFO com.louloulin.apix.edge.sync.EdgeSyncManager -- 边缘同步管理器初始化完成
+20:58:15.321 [vert.x-eventloop-thread-25] INFO com.louloulin.apix.edge.EdgeNodeVerticle -- 边缘节点管理器、自治管理器、智能管理器和同步管理器初始化成功
+20:58:15.322 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.edge.EdgeNodeVerticle: 11d81b2d-975f-447d-80cc-6c0f386923cc
+20:58:15.322 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.edge.EdgeControlPlaneVerticle
+20:58:15.322 [vert.x-eventloop-thread-27] INFO com.louloulin.apix.edge.EdgeControlPlaneVerticle -- Starting EdgeControlPlaneVerticle...
+20:58:15.323 [vert.x-eventloop-thread-27] INFO com.louloulin.apix.edge.EdgeControlPlaneVerticle -- 启动边缘控制平面Verticle
+20:58:15.323 [vert.x-eventloop-thread-25] WARN com.louloulin.apix.edge.sync.NetworkConditionDetector -- 网络探测失败: Connection refused: localhost/127.0.0.1:80
+20:58:15.323 [vert.x-eventloop-thread-27] INFO com.louloulin.apix.edge.EdgeControlPlaneManager -- 初始化边缘控制平面管理器
+20:58:15.323 [vert.x-eventloop-thread-27] INFO com.louloulin.apix.edge.EdgeControlPlaneManager -- 边缘控制平面功能未启用
+20:58:15.323 [vert.x-eventloop-thread-27] INFO com.louloulin.apix.edge.EdgeControlPlaneVerticle -- 边缘控制平面管理器初始化成功
+20:58:15.324 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.edge.EdgeControlPlaneVerticle: 4ed77daa-35bb-4b7e-a8a0-c9355df8e7be
+20:58:15.324 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.cdn.CDNVerticle
+20:58:15.324 [vert.x-eventloop-thread-28] INFO com.louloulin.apix.cdn.CDNVerticle -- Starting CDNVerticle...
+20:58:15.324 [vert.x-eventloop-thread-28] INFO com.louloulin.apix.cdn.CDNVerticle -- 启动CDN Verticle
+20:58:15.325 [vert.x-eventloop-thread-28] INFO com.louloulin.apix.cdn.CDNManager -- 初始化CDN管理器
+20:58:15.325 [vert.x-eventloop-thread-28] INFO com.louloulin.apix.cdn.CDNManager -- CDN功能已禁用
+20:58:15.325 [vert.x-eventloop-thread-28] INFO com.louloulin.apix.cdn.CDNVerticle -- CDN管理器初始化成功
+20:58:15.325 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.cdn.CDNVerticle: a9ff9f13-a666-4d91-bb27-7d93d601c592
+20:58:15.325 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.dns.SmartDNSVerticle
+20:58:15.326 [vert.x-eventloop-thread-29] INFO com.louloulin.apix.dns.SmartDNSVerticle -- Starting SmartDNSVerticle...
+20:58:15.326 [vert.x-eventloop-thread-29] INFO com.louloulin.apix.dns.SmartDNSVerticle -- 启动智能DNS Verticle
+20:58:15.327 [vert.x-eventloop-thread-29] INFO com.louloulin.apix.dns.SmartDNSManager -- 初始化智能DNS管理器
+20:58:15.327 [vert.x-eventloop-thread-29] INFO com.louloulin.apix.dns.SmartDNSManager -- 智能DNS功能已禁用
+20:58:15.327 [vert.x-eventloop-thread-29] INFO com.louloulin.apix.dns.SmartDNSVerticle -- 智能DNS管理器初始化成功
+20:58:15.327 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.dns.SmartDNSVerticle: 93f018d7-2934-4bed-9209-6382be9c3fd2
+20:58:15.328 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.network.anycast.AnycastVerticle
+20:58:15.328 [vert.x-eventloop-thread-30] INFO com.louloulin.apix.network.anycast.AnycastVerticle -- Starting AnycastVerticle...
+20:58:15.329 [vert.x-eventloop-thread-30] INFO com.louloulin.apix.network.anycast.AnycastVerticle -- 启动Anycast Verticle
+20:58:15.329 [vert.x-eventloop-thread-30] INFO com.louloulin.apix.network.anycast.AnycastManager -- 初始化Anycast管理器
+20:58:15.329 [vert.x-eventloop-thread-30] INFO com.louloulin.apix.network.anycast.AnycastManager -- Anycast功能已禁用
+20:58:15.330 [vert.x-eventloop-thread-30] INFO com.louloulin.apix.network.anycast.AnycastVerticle -- Anycast管理器初始化成功
+20:58:15.330 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.network.anycast.AnycastVerticle: 7818f151-1da3-4b9f-8d9d-c4d6964d2868
+20:58:15.330 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.network.p2p.P2PAccelerationVerticle
+20:58:15.330 [vert.x-eventloop-thread-31] INFO com.louloulin.apix.network.p2p.P2PAccelerationVerticle -- Starting P2PAccelerationVerticle...
+20:58:15.331 [vert.x-eventloop-thread-31] INFO com.louloulin.apix.network.p2p.P2PAccelerationVerticle -- 启动点对点加速Verticle
+20:58:15.332 [vert.x-eventloop-thread-31] INFO com.louloulin.apix.network.p2p.P2PAccelerationManager -- 初始化点对点加速管理器
+20:58:15.332 [vert.x-eventloop-thread-31] INFO com.louloulin.apix.network.p2p.P2PAccelerationManager -- 点对点加速功能已禁用
+20:58:15.332 [vert.x-eventloop-thread-31] INFO com.louloulin.apix.network.p2p.P2PAccelerationVerticle -- 点对点加速管理器初始化成功
+20:58:15.332 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.network.p2p.P2PAccelerationVerticle: 02e7b7a9-397a-4ee3-b6a2-8e77f42435a1
+20:58:15.332 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.resource.ResourceVerticle
+20:58:15.333 [vert.x-eventloop-thread-1] INFO com.louloulin.apix.resource.ResourceVerticle -- Starting ResourceVerticle...
+20:58:15.333 [vert.x-eventloop-thread-1] INFO com.louloulin.apix.resource.ResourceVerticle -- 启动资源Verticle
+20:58:15.336 [vert.x-eventloop-thread-1] INFO com.louloulin.apix.resource.ResourceManager -- 初始化资源管理器
+20:58:15.336 [vert.x-eventloop-thread-1] INFO com.louloulin.apix.resource.ResourceManager -- 资源管理功能已禁用
+20:58:15.336 [vert.x-eventloop-thread-1] INFO com.louloulin.apix.resource.ResourceDistributor -- 初始化资源分发器
+20:58:15.336 [vert.x-eventloop-thread-1] INFO com.louloulin.apix.resource.ResourceDistributor -- 资源分发功能已禁用
+20:58:15.336 [vert.x-eventloop-thread-1] INFO com.louloulin.apix.resource.ResourceOptimizer -- 初始化资源优化器
+20:58:15.336 [vert.x-eventloop-thread-1] INFO com.louloulin.apix.resource.ResourceOptimizer -- 资源优化功能已禁用
+20:58:15.336 [vert.x-eventloop-thread-1] INFO com.louloulin.apix.resource.ResourceVerticle -- 资源组件初始化成功
+20:58:15.336 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.resource.ResourceVerticle: 8d51d413-2af8-4b35-9293-91b6331e4aa9
+20:58:15.336 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.edge.control.EdgeControlVerticle
+20:58:15.337 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeControlVerticle -- Starting EdgeControlVerticle...
+20:58:15.338 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeControlVerticle -- 启动边缘控制Verticle
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeControlCenter -- 初始化边缘控制中心
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeNodeManager -- 初始化边缘节点管理器
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeNodeManager -- 加载了 0 个边缘节点
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeNodeManager -- 加载了 0 个节点组
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeNodeManager -- 加载了 0 个节点的标签
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeNodeManager -- 边缘节点管理器初始化成功
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeMonitoringManager -- 初始化边缘监控管理器
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeMonitoringManager -- 加载了 0 个告警规则
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeMonitoringManager -- 健康检查已启动，间隔: 60000ms
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeMonitoringManager -- 指标收集已启动，间隔: 30000ms
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeMonitoringManager -- 告警检查已启动，间隔: 60000ms
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeMonitoringManager -- 边缘监控管理器初始化成功
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeAuthManager -- 初始化边缘认证管理器
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeAuthManager -- 加载了 0 个用户
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeAuthManager -- 加载了 0 个角色
+20:58:15.340 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeAuthManager -- 会话清理已启动，间隔: 3600000ms
+20:58:15.341 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeAuthManager -- 边缘认证管理器初始化成功
+20:58:15.341 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeAuditLogger -- 初始化边缘审计日志记录器
+20:58:15.341 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeAuditLogger -- 加载了 0 条历史日志
+20:58:15.341 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeAuditLogger -- 日志持久化已启动，间隔: 60000ms
+20:58:15.341 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeAuditLogger -- 日志清理已启动，间隔: 3600000ms
+20:58:15.341 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeAuditLogger -- 边缘审计日志记录器初始化成功
+20:58:15.341 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeControlCenter -- 边缘控制中心初始化完成
+20:58:15.342 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.edge.control.EdgeControlVerticle -- 边缘控制中心初始化成功
+20:58:15.342 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.edge.control.EdgeControlVerticle: 19ed2ac2-a594-4699-875d-3c065863ab48
+20:58:15.342 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.PluginVerticle
+20:58:15.342 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.core.verticle.PluginVerticle -- Starting PluginVerticle...
+20:58:15.342 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.342 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.342 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.343 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.343 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.core.verticle.PluginVerticle -- Registering built-in plugin factories...
+20:58:15.343 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.core.verticle.PluginVerticle -- Registered 1 built-in plugin factories
+20:58:15.343 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.core.verticle.PluginVerticle -- PluginVerticle started successfully
+20:58:15.343 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.PluginVerticle: 99ecef22-bef5-4041-809f-dab8bd9f2130
+20:58:15.343 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.AdminVerticle
+20:58:15.343 [vert.x-eventloop-thread-3] INFO com.louloulin.apix.core.verticle.AdminVerticle -- Starting AdminVerticle...
+20:58:15.344 [vert.x-eventloop-thread-3] INFO com.louloulin.apix.core.verticle.AdminVerticle -- Starting AdminVerticle...
+20:58:15.344 [vert.x-eventloop-thread-3] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.344 [vert.x-eventloop-thread-3] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.344 [vert.x-eventloop-thread-3] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.344 [vert.x-eventloop-thread-3] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.358 [vert.x-eventloop-thread-3] INFO com.louloulin.apix.core.verticle.AdminVerticle -- AdminVerticle 将使用端口: 8072, 配置: {
+  "enabled" : true,
+  "port" : 8072,
+  "host" : "0.0.0.0"
+}
+20:58:15.361 [vert.x-eventloop-thread-3] DEBUG io.netty.handler.codec.compression.Brotli -- brotli4j not in the classpath; Brotli support will be unavailable.
+20:58:15.362 [vert.x-eventloop-thread-3] INFO com.louloulin.apix.core.verticle.AdminVerticle -- AdminVerticle HTTP server started on 0.0.0.0:8072
+20:58:15.362 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.AdminVerticle: 445cc254-fc8b-42ce-bc15-6cdddfbf3d43
+20:58:15.363 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.HealthVerticle
+20:58:15.363 [vert.x-eventloop-thread-4] INFO com.louloulin.apix.core.verticle.HealthVerticle -- Starting HealthVerticle...
+20:58:15.363 [vert.x-eventloop-thread-4] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.364 [vert.x-eventloop-thread-4] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.364 [vert.x-eventloop-thread-4] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.364 [vert.x-eventloop-thread-4] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.366 [vert.x-eventloop-thread-4] INFO com.louloulin.apix.core.verticle.HealthVerticle -- HealthVerticle started on 0.0.0.0:8073
+20:58:15.366 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.HealthVerticle: 09502ae9-669a-412b-9501-dd4ff8439da3
+20:58:15.366 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.verticle.BenchmarkVerticle
+20:58:15.366 [vert.x-eventloop-thread-5] INFO com.louloulin.apix.core.verticle.BenchmarkVerticle -- Starting BenchmarkVerticle
+20:58:15.366 [vert.x-eventloop-thread-5] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.367 [vert.x-eventloop-thread-5] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.367 [vert.x-eventloop-thread-5] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.367 [vert.x-eventloop-thread-5] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.367 [vert.x-eventloop-thread-5] INFO com.louloulin.apix.core.verticle.BenchmarkVerticle -- BenchmarkVerticle 将使用端口: 8074, 配置: {
+  "port" : 8074,
+  "host" : "0.0.0.0"
+}
+20:58:15.367 [vert.x-eventloop-thread-5] INFO com.louloulin.apix.core.verticle.BenchmarkVerticle -- BenchmarkVerticle started on port 8074
+20:58:15.367 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.verticle.BenchmarkVerticle: a681eec8-c47c-44ab-afba-af9db756266e
+20:58:15.368 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.ApixVerticle
+20:58:15.368 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.core.ApixVerticle -- Starting ApixVerticle...
+20:58:15.368 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.core.ApixVerticle -- Starting ApixVerticle...
+20:58:15.368 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.core.ApixVerticle -- Starting ApixVerticle...
+20:58:15.368 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.core.ApixVerticle -- Starting ApixVerticle...
+20:58:15.368 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.core.ApixVerticle -- Starting ApixVerticle...
+20:58:15.368 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.core.ApixVerticle -- Starting ApixVerticle...
+20:58:15.368 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.core.ApixVerticle -- Initializing APIX Gateway...
+20:58:15.368 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.core.ApixVerticle -- Initializing APIX Gateway...
+20:58:15.368 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.core.ApixVerticle -- Starting ApixVerticle...
+20:58:15.368 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.core.ApixVerticle -- Initializing APIX Gateway...
+20:58:15.368 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.ApixVerticle -- Starting ApixVerticle...
+20:58:15.368 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.core.ApixVerticle -- Starting ApixVerticle...
+20:58:15.368 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.ApixVerticle -- Initializing APIX Gateway...
+20:58:15.368 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.core.ApixVerticle -- Initializing APIX Gateway...
+20:58:15.368 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.core.ApixVerticle -- Initializing APIX Gateway...
+20:58:15.368 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.core.ApixVerticle -- Initializing APIX Gateway...
+20:58:15.368 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.core.ApixVerticle -- Starting ApixVerticle...
+20:58:15.368 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.core.ApixVerticle -- Initializing APIX Gateway...
+20:58:15.368 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.core.ApixVerticle -- Initializing APIX Gateway...
+20:58:15.368 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.core.ApixVerticle -- Starting ApixVerticle...
+20:58:15.368 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.core.ApixVerticle -- Initializing APIX Gateway...
+20:58:15.368 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.core.ApixVerticle -- Starting ApixVerticle...
+20:58:15.368 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.core.ApixVerticle -- Starting ApixVerticle...
+20:58:15.368 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.core.ApixVerticle -- Initializing APIX Gateway...
+20:58:15.368 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.core.ApixVerticle -- Starting ApixVerticle...
+20:58:15.368 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.core.ApixVerticle -- Initializing APIX Gateway...
+20:58:15.368 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.core.ApixVerticle -- Initializing APIX Gateway...
+20:58:15.368 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.core.ApixVerticle -- Initializing APIX Gateway...
+20:58:15.368 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.368 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.368 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.368 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.368 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.368 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.368 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.369 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.369 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.369 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.369 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.369 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.369 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.369 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.369 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.369 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.369 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.369 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.369 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.369 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.369 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.369 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.369 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.369 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.369 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.369 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.369 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.369 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.369 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.369 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.370 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.370 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.370 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.core.PluginManager -- Registering built-in plugins...
+20:58:15.370 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.core.PluginManager -- Registering built-in plugins...
+20:58:15.370 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.core.PluginManager -- Registering built-in plugins...
+20:58:15.370 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.core.PluginManager -- Registering built-in plugins...
+20:58:15.370 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.core.PluginManager -- Registering built-in plugins...
+20:58:15.370 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.PluginManager -- Registering built-in plugins...
+20:58:15.370 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.core.PluginManager -- Registering built-in plugins...
+20:58:15.370 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.core.PluginManager -- Registering built-in plugins...
+20:58:15.370 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.370 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.core.PluginManager -- Registering built-in plugins...
+20:58:15.370 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.370 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.core.PluginManager -- Registering built-in plugins...
+20:58:15.370 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.370 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.370 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.370 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.core.PluginManager -- Registering built-in plugins...
+20:58:15.370 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.core.PluginManager -- Registering built-in plugins...
+20:58:15.370 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.core.PluginManager -- Registering built-in plugins...
+20:58:15.370 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.370 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.core.PluginManager -- Registering built-in plugins...
+20:58:15.372 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.core.PluginManager -- Registered 19 built-in plugin factories
+20:58:15.372 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.core.PluginManager -- Registered 19 built-in plugin factories
+20:58:15.372 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.core.PluginManager -- Loading plugins from configuration...
+20:58:15.372 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.core.PluginManager -- Registered 19 built-in plugin factories
+20:58:15.372 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.core.PluginManager -- Registered 19 built-in plugin factories
+20:58:15.372 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.core.PluginManager -- Registered 19 built-in plugin factories
+20:58:15.372 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.core.ServiceManager -- 从配置加载服务...
+20:58:15.372 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.core.PluginManager -- Registered 19 built-in plugin factories
+20:58:15.372 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.core.PluginManager -- Registered 19 built-in plugin factories
+20:58:15.372 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.core.PluginManager -- Loading plugins from configuration...
+20:58:15.372 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.core.PluginManager -- Registered 19 built-in plugin factories
+20:58:15.372 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.core.PluginManager -- Loading plugins from configuration...
+20:58:15.372 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.core.PluginManager -- Registered 19 built-in plugin factories
+20:58:15.372 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.core.PluginManager -- Loading plugins from configuration...
+20:58:15.372 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.core.PluginManager -- Registered 19 built-in plugin factories
+20:58:15.372 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.core.PluginManager -- Registered 19 built-in plugin factories
+20:58:15.372 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.core.PluginManager -- Registered 19 built-in plugin factories
+20:58:15.372 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.core.PluginManager -- Loading plugins from configuration...
+20:58:15.372 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.core.PluginManager -- Registered 19 built-in plugin factories
+20:58:15.372 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.core.ServiceManager -- 从配置加载服务...
+20:58:15.372 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.core.PluginManager -- Loading plugins from configuration...
+20:58:15.372 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.core.PluginManager -- Loading plugins from configuration...
+20:58:15.372 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.core.PluginManager -- Loading plugins from configuration...
+20:58:15.372 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.PluginManager -- Registered 19 built-in plugin factories
+20:58:15.372 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.core.ServiceManager -- 从配置加载服务...
+20:58:15.372 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.PluginManager -- Loading plugins from configuration...
+20:58:15.372 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.core.PluginManager -- Loading plugins from configuration...
+20:58:15.372 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.core.PluginManager -- Loading plugins from configuration...
+20:58:15.372 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.core.ServiceManager -- 从配置加载服务...
+20:58:15.372 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.core.PluginManager -- Loading plugins from configuration...
+20:58:15.372 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.core.ServiceManager -- 从配置加载服务...
+20:58:15.372 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.core.ServiceManager -- 从配置加载服务...
+20:58:15.372 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.core.ServiceManager -- 从配置加载服务...
+20:58:15.372 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.core.ServiceManager -- 从配置加载服务...
+20:58:15.372 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.core.PluginManager -- Loading plugins from configuration...
+20:58:15.372 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.core.PluginManager -- Loading plugins from configuration...
+20:58:15.372 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.core.ServiceManager -- 从配置加载服务...
+20:58:15.372 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.core.ServiceManager -- 从配置加载服务...
+20:58:15.372 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.core.ServiceManager -- 从配置加载服务...
+20:58:15.372 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.ServiceManager -- 从配置加载服务...
+20:58:15.372 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.core.ServiceManager -- 从配置加载服务...
+20:58:15.372 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.core.ServiceManager -- 从配置加载服务...
+20:58:15.373 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.core.RouteManager -- 初始化共享连接池完成
+20:58:15.373 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.core.RouteManager -- 初始化共享连接池完成
+20:58:15.373 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.core.RouteManager -- 初始化共享连接池完成
+20:58:15.373 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.core.RouteManager -- 初始化共享连接池完成
+20:58:15.373 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.RouteManager -- 初始化共享连接池完成
+20:58:15.373 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.core.RouteManager -- 初始化共享连接池完成
+20:58:15.373 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.core.RouteManager -- 初始化共享连接池完成
+20:58:15.373 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.core.RouteManager -- 初始化共享连接池完成
+20:58:15.373 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.core.RouteManager -- 初始化共享连接池完成
+20:58:15.373 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.core.RouteManager -- 初始化共享连接池完成
+20:58:15.373 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.core.RouteManager -- 初始化共享连接池完成
+20:58:15.373 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.core.RouteManager -- 初始化共享连接池完成
+20:58:15.373 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.core.RouteManager -- 初始化共享连接池完成
+20:58:15.373 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.core.RouteManager -- 初始化共享连接池完成
+20:58:15.374 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.admin.AdminApiHandler -- Setting up admin API routes...
+20:58:15.374 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.admin.AdminApiHandler -- Setting up admin API routes...
+20:58:15.374 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.admin.AdminApiHandler -- Setting up admin API routes...
+20:58:15.374 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.admin.AdminApiHandler -- Setting up admin API routes...
+20:58:15.374 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.admin.AdminApiHandler -- Setting up admin API routes...
+20:58:15.374 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.admin.AdminApiHandler -- Setting up admin API routes...
+20:58:15.374 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.admin.AdminApiHandler -- Setting up admin API routes...
+20:58:15.374 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.admin.AdminApiHandler -- Setting up admin API routes...
+20:58:15.374 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.admin.AdminApiHandler -- Setting up admin API routes...
+20:58:15.374 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.admin.AdminApiHandler -- Setting up admin API routes...
+20:58:15.374 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.admin.AdminApiHandler -- Setting up admin API routes...
+20:58:15.374 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.admin.AdminApiHandler -- Setting up admin API routes...
+20:58:15.374 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.admin.AdminApiHandler -- Setting up admin API routes...
+20:58:15.374 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.admin.AdminApiHandler -- Setting up admin API routes...
+20:58:15.380 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.plugins.metrics.MetricsHandler -- Registered metrics routes
+20:58:15.380 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.plugins.metrics.MetricsHandler -- Registered metrics routes
+20:58:15.380 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.plugins.metrics.MetricsHandler -- Registered metrics routes
+20:58:15.380 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.plugins.metrics.MetricsHandler -- Registered metrics routes
+20:58:15.380 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.plugins.metrics.MetricsHandler -- Registered metrics routes
+20:58:15.380 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.plugins.metrics.MetricsHandler -- Registered metrics routes
+20:58:15.380 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.plugins.metrics.MetricsHandler -- Registered metrics routes
+20:58:15.380 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.plugins.metrics.MetricsHandler -- Registered metrics routes
+20:58:15.380 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.plugins.metrics.MetricsHandler -- Registered metrics routes
+20:58:15.380 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.plugins.metrics.MetricsHandler -- Registered metrics routes
+20:58:15.380 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.plugins.metrics.MetricsHandler -- Registered metrics routes
+20:58:15.380 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.plugins.metrics.MetricsHandler -- Registered metrics routes
+20:58:15.380 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.plugins.metrics.MetricsHandler -- Registered metrics routes
+20:58:15.380 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.plugins.metrics.MetricsHandler -- Registered metrics routes
+20:58:15.381 [vert.x-eventloop-thread-16] INFO com.louloulin.apix.core.ApixVerticle -- APIX Gateway listening on 0.0.0.0:8070
+20:58:15.381 [vert.x-eventloop-thread-18] INFO com.louloulin.apix.core.ApixVerticle -- APIX Gateway listening on 0.0.0.0:8070
+20:58:15.381 [vert.x-eventloop-thread-10] INFO com.louloulin.apix.core.ApixVerticle -- APIX Gateway listening on 0.0.0.0:8070
+20:58:15.381 [vert.x-eventloop-thread-9] INFO com.louloulin.apix.core.ApixVerticle -- APIX Gateway listening on 0.0.0.0:8070
+20:58:15.381 [vert.x-eventloop-thread-13] INFO com.louloulin.apix.core.ApixVerticle -- APIX Gateway listening on 0.0.0.0:8070
+20:58:15.381 [vert.x-eventloop-thread-15] INFO com.louloulin.apix.core.ApixVerticle -- APIX Gateway listening on 0.0.0.0:8070
+20:58:15.381 [vert.x-eventloop-thread-17] INFO com.louloulin.apix.core.ApixVerticle -- APIX Gateway listening on 0.0.0.0:8070
+20:58:15.381 [vert.x-eventloop-thread-14] INFO com.louloulin.apix.core.ApixVerticle -- APIX Gateway listening on 0.0.0.0:8070
+20:58:15.381 [vert.x-eventloop-thread-8] INFO com.louloulin.apix.core.ApixVerticle -- APIX Gateway listening on 0.0.0.0:8070
+20:58:15.381 [vert.x-eventloop-thread-11] INFO com.louloulin.apix.core.ApixVerticle -- APIX Gateway listening on 0.0.0.0:8070
+20:58:15.381 [vert.x-eventloop-thread-6] INFO com.louloulin.apix.core.ApixVerticle -- APIX Gateway listening on 0.0.0.0:8070
+20:58:15.381 [vert.x-eventloop-thread-19] INFO com.louloulin.apix.core.ApixVerticle -- APIX Gateway listening on 0.0.0.0:8070
+20:58:15.381 [vert.x-eventloop-thread-7] INFO com.louloulin.apix.core.ApixVerticle -- APIX Gateway listening on 0.0.0.0:8070
+20:58:15.381 [vert.x-eventloop-thread-12] INFO com.louloulin.apix.core.ApixVerticle -- APIX Gateway listening on 0.0.0.0:8070
+20:58:15.381 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.ApixVerticle: d9eaf70c-0d1c-4a9f-ac94-70935c69acc3
+20:58:15.381 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying High Performance Server for benchmarking
+20:58:15.381 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Deploying verticle: com.louloulin.apix.core.http.HighPerformanceServer
+20:58:15.381 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.config.ConfigManager -- Loading default configuration...
+20:58:15.381 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.config.ConfigManager -- Loaded configuration from file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.381 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.config.ConfigManager -- Setting up configuration retriever...
+20:58:15.382 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.config.ConfigManager -- Configuration retriever set up successfully for file: /Users/louloulin/Documents/linchong/actor/apix/config-control-plane.json
+20:58:15.382 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.core.http.HighPerformanceServer -- HighPerformanceServer 将使用端口: 8071, 配置: {
+  "port" : 8071,
+  "host" : "0.0.0.0"
+}
+20:58:15.382 [vert.x-eventloop-thread-2] INFO com.louloulin.apix.core.http.HighPerformanceServer -- High Performance Server started on 0.0.0.0:8071
+20:58:15.382 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- Successfully deployed com.louloulin.apix.core.http.HighPerformanceServer: 65723e92-ea4f-4a00-9583-9cc7e67801b5
+20:58:15.382 [vert.x-eventloop-thread-0] INFO com.louloulin.apix.Main -- APIX Gateway successfully deployed all verticles
+20:58:16.308 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:17.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:18.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:19.308 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:20.185 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.monitoring.SystemMonitor -- Collected system metrics: CPU usage=10.40%, Memory used=69.59MB
+20:58:20.257 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Performing cluster data synchronization
+20:58:20.269 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized routes to cluster
+20:58:20.269 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized services to cluster
+20:58:20.269 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized plugins to cluster
+20:58:20.296 [DefaultDispatcher-worker-2] DEBUG com.louloulin.apix.core.memory.MemoryManager -- 内存使用情况 - 堆内存: 70.56 MB/12.00 GB, 非堆内存: 0 bytes
+20:58:20.308 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:21.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:22.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:22.421 [vert.x-eventloop-thread-16] DEBUG io.netty.util.Recycler -- -Dio.netty.recycler.maxCapacityPerThread: 4096
+20:58:22.421 [vert.x-eventloop-thread-16] DEBUG io.netty.util.Recycler -- -Dio.netty.recycler.ratio: 8
+20:58:22.421 [vert.x-eventloop-thread-16] DEBUG io.netty.util.Recycler -- -Dio.netty.recycler.chunkSize: 32
+20:58:22.421 [vert.x-eventloop-thread-16] DEBUG io.netty.util.Recycler -- -Dio.netty.recycler.blocking: false
+20:58:22.421 [vert.x-eventloop-thread-16] DEBUG io.netty.util.Recycler -- -Dio.netty.recycler.batchFastThreadLocalOnly: true
+20:58:22.445 [vert.x-eventloop-thread-16] DEBUG io.netty.handler.codec.compression.ZlibCodecFactory -- -Dio.netty.noJdkZlibDecoder: false
+20:58:22.445 [vert.x-eventloop-thread-16] DEBUG io.netty.handler.codec.compression.ZlibCodecFactory -- -Dio.netty.noJdkZlibEncoder: false
+20:58:22.455 [vert.x-eventloop-thread-16] INFO io.vertx.ext.web.handler.impl.LoggerHandlerImpl -- 0:0:0:0:0:0:0:1 - - [Tue, 13 May 2025 12:58:22 GMT] "GET /ping HTTP/1.1" 200 4 "-" "curl/8.7.1"
+5月 13, 2025 8:58:23 下午 com.hazelcast.internal.server.tcp.TcpServerConnection
+信息: [192.168.3.40]:5701 [dev] [4.2.8] Initialized new cluster connection between /192.168.3.40:5701 and /192.168.3.40:60589
+20:58:23.306 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:24.308 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:25.183 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.monitoring.SystemMonitor -- Collected system metrics: CPU usage=36.42%, Memory used=77.69MB
+20:58:25.253 [vert.x-eventloop-thread-14] DEBUG com.louloulin.apix.cache.HotDataManager -- 检测到 0 个热点数据
+20:58:25.257 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Performing cluster data synchronization
+20:58:25.260 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterMonitor -- Collected metrics for local node: 1115756419
+20:58:25.261 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized routes to cluster
+20:58:25.261 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized plugins to cluster
+20:58:25.261 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized services to cluster
+20:58:25.297 [DefaultDispatcher-worker-1] DEBUG com.louloulin.apix.core.memory.MemoryManager -- 内存使用情况 - 堆内存: 78.68 MB/12.00 GB, 非堆内存: 0 bytes
+20:58:25.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:25.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.NetworkConditionDetector -- 检测网络状况
+20:58:25.308 [vert.x-eventloop-thread-25] WARN com.louloulin.apix.edge.sync.NetworkConditionDetector -- 网络探测失败: Connection refused: localhost/127.0.0.1:80
+20:58:26.306 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:27.308 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:28.306 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+5月 13, 2025 8:58:29 下午 com.hazelcast.internal.cluster.ClusterService
+信息: [192.168.3.40]:5701 [dev] [4.2.8] 
+
+Members {size:2, ver:2} [
+	Member [192.168.3.40]:5701 - 23681792-42a6-4b42-bef4-eb8350186ac9 this
+	Member [192.168.3.40]:5702 - 559879d2-56b6-485e-a29a-72e8a5504e3e
+]
+
+20:58:29.306 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+5月 13, 2025 8:58:29 下午 com.hazelcast.internal.partition.impl.MigrationManager
+信息: [192.168.3.40]:5701 [dev] [4.2.8] Repartitioning cluster data. Migration tasks count: 271
+5月 13, 2025 8:58:29 下午 com.hazelcast.internal.partition.impl.MigrationManager
+信息: [192.168.3.40]:5701 [dev] [4.2.8] All migration tasks have been completed. (repartitionTime=Tue May 13 20:58:29 CST 2025, plannedMigrations=271, completedMigrations=271, remainingMigrations=0, totalCompletedMigrations=271)
+20:58:30.184 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.monitoring.SystemMonitor -- Collected system metrics: CPU usage=36.81%, Memory used=63.45MB
+20:58:30.258 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Performing cluster data synchronization
+20:58:30.264 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized plugins to cluster
+20:58:30.264 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized services to cluster
+20:58:30.264 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized routes to cluster
+20:58:30.298 [DefaultDispatcher-worker-2] DEBUG com.louloulin.apix.core.memory.MemoryManager -- 内存使用情况 - 堆内存: 66.98 MB/12.00 GB, 非堆内存: 0 bytes
+20:58:30.308 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:30.335 [vert.x-eventloop-thread-2] DEBUG io.vertx.core.eventbus.impl.clustered.ConnectionHolder -- Not connected to server 5a6209a5-669e-42ef-bdcf-190a3fa9602b - starting queuing
+20:58:30.338 [vert.x-eventloop-thread-2] DEBUG io.vertx.core.eventbus.impl.clustered.ConnectionHolder -- Draining the queue for server 5a6209a5-669e-42ef-bdcf-190a3fa9602b
+20:58:31.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:32.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+5月 13, 2025 8:58:33 下午 com.hazelcast.internal.server.tcp.TcpServerConnection
+信息: [192.168.3.40]:5701 [dev] [4.2.8] Initialized new cluster connection between /192.168.3.40:5701 and /192.168.3.40:60677
+20:58:33.308 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:34.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:35.183 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.monitoring.SystemMonitor -- Collected system metrics: CPU usage=27.24%, Memory used=75.89MB
+20:58:35.252 [vert.x-eventloop-thread-14] DEBUG com.louloulin.apix.cache.HotDataManager -- 检测到 0 个热点数据
+20:58:35.257 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Performing cluster data synchronization
+20:58:35.260 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterMonitor -- Collected metrics for local node: 1115756419
+20:58:35.262 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized services to cluster
+20:58:35.265 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized routes to cluster
+20:58:35.265 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized plugins to cluster
+20:58:35.298 [DefaultDispatcher-worker-1] DEBUG com.louloulin.apix.core.memory.MemoryManager -- 内存使用情况 - 堆内存: 76.19 MB/12.00 GB, 非堆内存: 0 bytes
+20:58:35.306 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:35.306 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.NetworkConditionDetector -- 检测网络状况
+20:58:35.307 [vert.x-eventloop-thread-25] WARN com.louloulin.apix.edge.sync.NetworkConditionDetector -- 网络探测失败: Connection refused: localhost/127.0.0.1:80
+20:58:36.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:37.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:38.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+5月 13, 2025 8:58:39 下午 com.hazelcast.internal.cluster.ClusterService
+信息: [192.168.3.40]:5701 [dev] [4.2.8] 
+
+Members {size:3, ver:3} [
+	Member [192.168.3.40]:5701 - 23681792-42a6-4b42-bef4-eb8350186ac9 this
+	Member [192.168.3.40]:5702 - 559879d2-56b6-485e-a29a-72e8a5504e3e
+	Member [192.168.3.40]:5703 - f72e9278-08d6-4f39-b562-469aaa42c498
+]
+
+20:58:39.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+5月 13, 2025 8:58:39 下午 com.hazelcast.internal.partition.impl.MigrationManager
+信息: [192.168.3.40]:5701 [dev] [4.2.8] Repartitioning cluster data. Migration tasks count: 271
+5月 13, 2025 8:58:39 下午 com.hazelcast.internal.partition.impl.MigrationManager
+信息: [192.168.3.40]:5701 [dev] [4.2.8] All migration tasks have been completed. (repartitionTime=Tue May 13 20:58:39 CST 2025, plannedMigrations=271, completedMigrations=271, remainingMigrations=0, totalCompletedMigrations=542)
+20:58:40.183 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.monitoring.SystemMonitor -- Collected system metrics: CPU usage=39.45%, Memory used=87.23MB
+20:58:40.256 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Performing cluster data synchronization
+20:58:40.263 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized routes to cluster
+20:58:40.263 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized services to cluster
+20:58:40.263 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized plugins to cluster
+20:58:40.303 [DefaultDispatcher-worker-2] DEBUG com.louloulin.apix.core.memory.MemoryManager -- 内存使用情况 - 堆内存: 87.52 MB/12.00 GB, 非堆内存: 0 bytes
+20:58:40.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:40.325 [vert.x-eventloop-thread-2] DEBUG io.vertx.core.eventbus.impl.clustered.ConnectionHolder -- Not connected to server ebfa3185-3445-44cc-8bd1-dddd49ef2d27 - starting queuing
+20:58:40.326 [vert.x-eventloop-thread-2] DEBUG io.vertx.core.eventbus.impl.clustered.ConnectionHolder -- Draining the queue for server ebfa3185-3445-44cc-8bd1-dddd49ef2d27
+20:58:41.306 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:42.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:43.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+5月 13, 2025 8:58:43 下午 com.hazelcast.internal.server.tcp.TcpServerConnection
+信息: [192.168.3.40]:5701 [dev] [4.2.8] Initialized new cluster connection between /192.168.3.40:5701 and /192.168.3.40:60777
+20:58:44.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:45.183 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.monitoring.SystemMonitor -- Collected system metrics: CPU usage=30.51%, Memory used=90.18MB
+20:58:45.252 [vert.x-eventloop-thread-14] DEBUG com.louloulin.apix.cache.HotDataManager -- 检测到 0 个热点数据
+20:58:45.256 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Performing cluster data synchronization
+20:58:45.259 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterMonitor -- Collected metrics for local node: 1115756419
+20:58:45.262 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized routes to cluster
+20:58:45.263 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized services to cluster
+20:58:45.264 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized plugins to cluster
+20:58:45.306 [DefaultDispatcher-worker-1] DEBUG com.louloulin.apix.core.memory.MemoryManager -- 内存使用情况 - 堆内存: 90.55 MB/12.00 GB, 非堆内存: 0 bytes
+20:58:45.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:45.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.NetworkConditionDetector -- 检测网络状况
+20:58:45.307 [vert.x-eventloop-thread-25] WARN com.louloulin.apix.edge.sync.NetworkConditionDetector -- 网络探测失败: Connection refused: localhost/127.0.0.1:80
+20:58:46.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:47.306 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:48.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:49.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+5月 13, 2025 8:58:49 下午 com.hazelcast.internal.cluster.ClusterService
+信息: [192.168.3.40]:5701 [dev] [4.2.8] 
+
+Members {size:4, ver:4} [
+	Member [192.168.3.40]:5701 - 23681792-42a6-4b42-bef4-eb8350186ac9 this
+	Member [192.168.3.40]:5702 - 559879d2-56b6-485e-a29a-72e8a5504e3e
+	Member [192.168.3.40]:5703 - f72e9278-08d6-4f39-b562-469aaa42c498
+	Member [192.168.3.40]:5704 - 117fb904-02fa-4a99-bc46-5b541a14ea2d
+]
+
+5月 13, 2025 8:58:49 下午 com.hazelcast.internal.partition.impl.MigrationManager
+信息: [192.168.3.40]:5701 [dev] [4.2.8] Repartitioning cluster data. Migration tasks count: 271
+5月 13, 2025 8:58:49 下午 com.hazelcast.internal.partition.impl.MigrationManager
+信息: [192.168.3.40]:5701 [dev] [4.2.8] All migration tasks have been completed. (repartitionTime=Tue May 13 20:58:49 CST 2025, plannedMigrations=271, completedMigrations=271, remainingMigrations=0, totalCompletedMigrations=813)
+20:58:50.183 [vert.x-eventloop-thread-0] DEBUG com.louloulin.apix.core.monitoring.SystemMonitor -- Collected system metrics: CPU usage=30.76%, Memory used=99.18MB
+20:58:50.257 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Performing cluster data synchronization
+20:58:50.268 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized services to cluster
+20:58:50.268 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized routes to cluster
+20:58:50.268 [vert.x-eventloop-thread-15] DEBUG com.louloulin.apix.cluster.ClusterService -- Successfully synchronized plugins to cluster
+20:58:50.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:50.307 [DefaultDispatcher-worker-2] DEBUG com.louloulin.apix.core.memory.MemoryManager -- 内存使用情况 - 堆内存: 102.88 MB/12.00 GB, 非堆内存: 0 bytes
+20:58:50.449 [vert.x-eventloop-thread-2] DEBUG io.vertx.core.eventbus.impl.clustered.ConnectionHolder -- Not connected to server 1bc1289f-49e2-4ec6-916b-ea6cfe24e9eb - starting queuing
+20:58:50.450 [vert.x-eventloop-thread-2] DEBUG io.vertx.core.eventbus.impl.clustered.ConnectionHolder -- Draining the queue for server 1bc1289f-49e2-4ec6-916b-ea6cfe24e9eb
+20:58:51.306 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:52.307 [vert.x-eventloop-thread-25] DEBUG com.louloulin.apix.edge.sync.BandwidthMonitor -- 当前带宽使用: 0 字节/秒
+20:58:52.605 [vert.x-eventloop-thread-18] DEBUG com.louloulin.apix.core.tracing.TracingManager -- 请求追踪: GET /api/cluster/status - 0ms - 状态码: 404
+20:58:52.605 [vert.x-eventloop-thread-18] WARN io.vertx.ext.web.handler.impl.LoggerHandlerImpl -- 0:0:0:0:0:0:0:1 - - [Tue, 13 May 2025 12:58:52 GMT] "GET /api/cluster/status HTTP/1.1" 404 53 "-" "curl/8.7.1"
+20:58:52.606 [Thread-2] INFO com.louloulin.apix.Main -- Shutting down APIX Gateway...

@@ -1,0 +1,86 @@
+[
+  {
+    "name": "io.vertx.core.net.impl.VertxHandler",
+    "methods": [
+      { "name": "exceptionCaught", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Throwable"] },
+      { "name": "close", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "io.netty.channel.ChannelPromise"] },
+      { "name": "channelRead", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object"] },
+      { "name": "channelReadComplete", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "channelWritabilityChanged", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "userEventTriggered", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object"] },
+      { "name": "channelActive", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "channelInactive", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "handlerAdded", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "handlerRemoved", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] }
+    ]
+  },
+  {
+    "name": "io.netty.channel.ChannelHandlerMask",
+    "fields": [
+      { "name": "MASK_EXCEPTION_CAUGHT" },
+      { "name": "MASK_CHANNEL_READ" },
+      { "name": "MASK_CHANNEL_READ_COMPLETE" },
+      { "name": "MASK_CHANNEL_WRITABILITY_CHANGED" },
+      { "name": "MASK_USER_EVENT_TRIGGERED" },
+      { "name": "MASK_CHANNEL_ACTIVE" },
+      { "name": "MASK_CHANNEL_INACTIVE" },
+      { "name": "MASK_HANDLER_ADDED" },
+      { "name": "MASK_HANDLER_REMOVED" },
+      { "name": "MASK_CLOSE" }
+    ]
+  },
+  {
+    "name": "io.netty.channel.ChannelHandlerAdapter",
+    "methods": [
+      { "name": "exceptionCaught", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Throwable"] },
+      { "name": "close", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "io.netty.channel.ChannelPromise"] }
+    ]
+  },
+  {
+    "name": "io.netty.channel.ChannelInboundHandlerAdapter",
+    "methods": [
+      { "name": "channelRead", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object"] },
+      { "name": "exceptionCaught", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Throwable"] },
+      { "name": "channelReadComplete", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "channelWritabilityChanged", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "userEventTriggered", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object"] },
+      { "name": "channelActive", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "channelInactive", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "handlerAdded", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] },
+      { "name": "handlerRemoved", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] }
+    ]
+  },
+  {
+    "name": "io.netty.channel.ChannelOutboundHandlerAdapter",
+    "methods": [
+      { "name": "close", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "io.netty.channel.ChannelPromise"] },
+      { "name": "write", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object", "io.netty.channel.ChannelPromise"] },
+      { "name": "flush", "parameterTypes": ["io.netty.channel.ChannelHandlerContext"] }
+    ]
+  },
+  {
+    "name": "io.netty.handler.codec.http.HttpServerCodec",
+    "methods": [
+      { "name": "channelRead", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object"] }
+    ]
+  },
+  {
+    "name": "io.vertx.core.http.impl.Http1xOrH2CHandler",
+    "methods": [
+      { "name": "channelRead", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object"] }
+    ]
+  },
+  {
+    "name": "io.vertx.core.http.impl.Http1xUpgradeToH2CHandler",
+    "methods": [
+      { "name": "channelRead", "parameterTypes": ["io.netty.channel.ChannelHandlerContext", "java.lang.Object"] }
+    ]
+  },
+  {
+    "name": "com.louloulin.apix.MainKt",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  }
+]
