@@ -159,6 +159,17 @@ object EventBusAddresses {
     const val CLUSTER_GET_STATS = "apix.cluster.get.stats"
     const val CLUSTER_NODE_STATE_CHANGE = "apix.cluster.node.state.change"
 
+    // 水平扩展相关
+    const val SCALING_CONFIG = "apix.scaling.config"
+    const val SCALING_NODES = "apix.scaling.nodes"
+    const val SCALING_AFFINITY = "apix.scaling.affinity"
+    const val SCALING_STATS = "apix.scaling.stats"
+
+    // 请求处理相关
+    const val DEFAULT_REQUEST_PROCESSOR = "apix.request.processor.default"
+    const val AI_REQUEST_PROCESSOR = "apix.request.processor.ai"
+    const val ADMIN_REQUEST_PROCESSOR = "apix.request.processor.admin"
+
     // 节点模式相关
     const val NODE_MODE_GET = "apix.node.mode.get"
     const val NODE_INFO_GET = "apix.node.info.get"
