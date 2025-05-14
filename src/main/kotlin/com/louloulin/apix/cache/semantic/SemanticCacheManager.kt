@@ -16,7 +16,8 @@ class SemanticCacheManager(
     private val vertx: Vertx,
     private val embeddingEngine: EmbeddingEngine,
     private val underlyingCache: CacheManager,
-    private val similarityThreshold: Float = 0.8f
+    private val similarityThreshold: Float = 0.8f,
+    private val config: JsonObject = JsonObject()
 ) : CacheManager {
     private val logger = LoggerFactory.getLogger(SemanticCacheManager::class.java)
     
@@ -27,6 +28,31 @@ class SemanticCacheManager(
     private val semanticHits = AtomicLong(0)
     private val exactHits = AtomicLong(0)
     private val misses = AtomicLong(0)
+    
+    // 相似度匹配器
+    private val similarityMatcher = OptimizedSimilarityMatcher(
+        vertx,
+        config.getJsonObject("similarityMatcher", JsonObject())
+            .put("similarityThreshold", similarityThreshold)
+    )
+    
+    // 部分响应缓存
+    private val partialResponseCache = if (config.getBoolean("enablePartialResponseCache", false)) {
+        PartialResponseCache(
+            vertx,
+            embeddingEngine,
+            config.getJsonObject("partialResponseCache", JsonObject())
+                .put("similarityThreshold", similarityThreshold)
+        )
+    } else {
+        null
+    }
+    
+    // 是否启用向量量化
+    private val enableVectorQuantization = config.getBoolean("enableVectorQuantization", false)
+    
+    // 量化位数
+    private val quantizationBits = config.getInteger("quantizationBits", 8)
     
     /**
      * 语义缓存条目，包含原始查询、响应和嵌入向量
@@ -65,6 +91,49 @@ class SemanticCacheManager(
     }
     
     /**
+     * 应用向量量化，减少内存占用
+     */
+    private fun quantizeVector(vector: FloatArray): FloatArray {
+        // 如果量化位数为0，不进行量化
+        if (quantizationBits <= 0) {
+            return vector
+        }
+        
+        // 找到向量的最大和最小值
+        var minVal = Float.MAX_VALUE
+        var maxVal = Float.MIN_VALUE
+        
+        for (value in vector) {
+            if (value < minVal) minVal = value
+            if (value > maxVal) maxVal = value
+        }
+        
+        // 如果向量是常量，不进行量化
+        if (maxVal == minVal) {
+            return vector
+        }
+        
+        val range = maxVal - minVal
+        val quantizedVector = FloatArray(vector.size)
+        
+        // 量化到指定位数
+        val levels = (1 shl quantizationBits) - 1
+        
+        for (i in vector.indices) {
+            // 归一化到 0-1 范围
+            val normalized = (vector[i] - minVal) / range
+            
+            // 量化到指定级别
+            val quantized = (normalized * levels).toInt()
+            
+            // 反量化回浮点数
+            quantizedVector[i] = (quantized.toFloat() / levels) * range + minVal
+        }
+        
+        return quantizedVector
+    }
+    
+    /**
      * 查找语义相似的缓存条目
      */
     fun findSimilar(query: String): Future<Pair<String, JsonObject>?> {
@@ -73,52 +142,50 @@ class SemanticCacheManager(
         // 计算查询的嵌入向量
         embeddingEngine.embed(query)
             .onSuccess { queryEmbedding ->
-                // 查找最相似的缓存条目
-                var bestKey: String? = null
-                var bestSimilarity = 0f
-                
-                for ((key, embedding) in keyEmbeddings) {
-                    val similarity = embeddingEngine.similarity(queryEmbedding, embedding)
-                    
-                    if (similarity > similarityThreshold && similarity > bestSimilarity) {
-                        bestSimilarity = similarity
-                        bestKey = key
-                    }
-                }
-                
-                if (bestKey != null) {
-                    // 找到了相似的缓存条目
-                    underlyingCache.get(bestKey)
-                        .onSuccess { cachedValue ->
-                            if (cachedValue != null) {
-                                val originalQuery = cachedValue.getString("query")
-                                val response = cachedValue.getJsonObject("response")
-                                
-                                if (originalQuery != null && response != null) {
-                                    semanticHits.incrementAndGet()
-                                    promise.complete(Pair(originalQuery, response))
+                // 使用优化的相似度匹配器查找最相似的缓存条目
+                similarityMatcher.findMostSimilar(queryEmbedding, 1)
+                    .onSuccess { results ->
+                        if (results.isEmpty()) {
+                            promise.complete(null)
+                            return@onSuccess
+                        }
+                        
+                        val (bestKey, bestSimilarity) = results[0]
+                        
+                        // 从底层缓存中获取缓存条目
+                        underlyingCache.get(bestKey)
+                            .onSuccess { cachedValue ->
+                                if (cachedValue != null) {
+                                    val originalQuery = cachedValue.getString("query")
+                                    val response = cachedValue.getJsonObject("response")
+                                    
+                                    if (originalQuery != null && response != null) {
+                                        semanticHits.incrementAndGet()
+                                        promise.complete(Pair(originalQuery, response))
+                                    } else {
+                                        logger.warn("Invalid cache entry format for key: $bestKey")
+                                        misses.incrementAndGet()
+                                        promise.complete(null)
+                                    }
                                 } else {
-                                    logger.warn("Invalid cache entry format for key: $bestKey")
+                                    // 缓存条目已过期或被删除
+                                    keyEmbeddings.remove(bestKey)
+                                    similarityMatcher.removeVector(bestKey)
                                     misses.incrementAndGet()
                                     promise.complete(null)
                                 }
-                            } else {
-                                // 缓存条目已过期或被删除
-                                keyEmbeddings.remove(bestKey)
+                            }
+                            .onFailure { err ->
+                                logger.error("Error getting cache entry for key: $bestKey", err)
                                 misses.incrementAndGet()
                                 promise.complete(null)
                             }
-                        }
-                        .onFailure { err ->
-                            logger.error("Error getting cache entry for key: $bestKey", err)
-                            misses.incrementAndGet()
-                            promise.complete(null)
-                        }
-                } else {
-                    // 没有找到相似的缓存条目
-                    misses.incrementAndGet()
-                    promise.complete(null)
-                }
+                    }
+                    .onFailure { err ->
+                        logger.error("Error finding similar cache entry", err)
+                        misses.incrementAndGet()
+                        promise.complete(null)
+                    }
             }
             .onFailure { err ->
                 logger.error("Error computing embedding for query", err)
@@ -259,6 +326,13 @@ class SemanticCacheManager(
         // 计算查询的嵌入向量
         embeddingEngine.embed(query)
             .onSuccess { embedding ->
+                // 如果启用了向量量化，应用量化
+                val finalEmbedding = if (enableVectorQuantization) {
+                    quantizeVector(embedding)
+                } else {
+                    embedding
+                }
+                
                 // 生成缓存键
                 val cacheKey = generateCacheKey(query)
                 
@@ -272,8 +346,34 @@ class SemanticCacheManager(
                 underlyingCache.set(cacheKey, cacheEntry, ttlSeconds)
                     .onSuccess {
                         // 存储嵌入向量
-                        keyEmbeddings[cacheKey] = embedding
-                        promise.complete()
+                        keyEmbeddings[cacheKey] = finalEmbedding
+                        
+                        // 添加到相似度匹配器
+                        similarityMatcher.addVector(cacheKey, finalEmbedding)
+                            .onSuccess {
+                                // 如果启用了部分响应缓存，缓存响应片段
+                                if (partialResponseCache != null && response.containsKey("content")) {
+                                    val content = response.getString("content", "")
+                                    if (content.isNotEmpty()) {
+                                        partialResponseCache.cacheResponse(query, content, JsonObject().put("source", "semantic_cache"))
+                                            .onSuccess {
+                                                promise.complete()
+                                            }
+                                            .onFailure { err ->
+                                                logger.warn("Error caching response chunks", err)
+                                                promise.complete() // 即使部分响应缓存失败，也认为缓存成功
+                                            }
+                                    } else {
+                                        promise.complete()
+                                    }
+                                } else {
+                                    promise.complete()
+                                }
+                            }
+                            .onFailure { err ->
+                                logger.error("Error adding vector to similarity matcher", err)
+                                promise.fail(err)
+                            }
                     }
                     .onFailure { err ->
                         logger.error("Error setting cache entry for query: $query", err)
@@ -296,7 +396,16 @@ class SemanticCacheManager(
             .onSuccess {
                 // 从嵌入向量映射中删除
                 keyEmbeddings.remove(key)
-                promise.complete()
+                
+                // 从相似度匹配器中删除
+                similarityMatcher.removeVector(key)
+                    .onSuccess {
+                        promise.complete()
+                    }
+                    .onFailure { err ->
+                        logger.warn("Error removing vector from similarity matcher", err)
+                        promise.complete() // 即使删除向量失败，也认为删除成功
+                    }
             }
             .onFailure { err ->
                 logger.error("Error removing cache entry for key: $key", err)
@@ -314,7 +423,23 @@ class SemanticCacheManager(
             .onSuccess {
                 // 清空嵌入向量映射
                 keyEmbeddings.clear()
-                promise.complete()
+                
+                // 清空相似度匹配器
+                similarityMatcher.clear()
+                
+                // 清空部分响应缓存
+                if (partialResponseCache != null) {
+                    partialResponseCache.clear()
+                        .onSuccess {
+                            promise.complete()
+                        }
+                        .onFailure { err ->
+                            logger.warn("Error clearing partial response cache", err)
+                            promise.complete() // 即使清空部分响应缓存失败，也认为清空成功
+                        }
+                } else {
+                    promise.complete()
+                }
             }
             .onFailure { err ->
                 logger.error("Error clearing cache", err)
@@ -330,25 +455,21 @@ class SemanticCacheManager(
         // 获取底层缓存的统计信息
         underlyingCache.getStats()
             .onSuccess { underlyingStats ->
-                // 添加语义缓存的统计信息
                 val stats = JsonObject()
-                    .put("underlying", underlyingStats)
                     .put("semanticHits", semanticHits.get())
                     .put("exactHits", exactHits.get())
                     .put("misses", misses.get())
-                    .put("totalHits", semanticHits.get() + exactHits.get())
-                    .put("hitRatio", if (semanticHits.get() + exactHits.get() + misses.get() > 0) {
-                        (semanticHits.get() + exactHits.get()).toDouble() / (semanticHits.get() + exactHits.get() + misses.get())
-                    } else {
-                        0.0
-                    })
-                    .put("semanticHitRatio", if (semanticHits.get() + exactHits.get() > 0) {
-                        semanticHits.get().toDouble() / (semanticHits.get() + exactHits.get())
-                    } else {
-                        0.0
-                    })
+                    .put("totalRequests", semanticHits.get() + exactHits.get() + misses.get())
+                    .put("hitRatio", if (semanticHits.get() + exactHits.get() + misses.get() > 0) 
+                        (semanticHits.get() + exactHits.get()).toFloat() / (semanticHits.get() + exactHits.get() + misses.get()) else 0f)
                     .put("embeddingCount", keyEmbeddings.size)
-                    .put("similarityThreshold", similarityThreshold)
+                    .put("underlyingCache", underlyingStats)
+                    .put("similarityMatcher", similarityMatcher.getStats())
+                
+                // 添加部分响应缓存的统计信息
+                if (partialResponseCache != null) {
+                    stats.put("partialResponseCache", partialResponseCache.getStats())
+                }
                 
                 promise.complete(stats)
             }
@@ -363,8 +484,18 @@ class SemanticCacheManager(
     override fun close(): Future<Void> {
         val promise = Promise.promise<Void>()
         
-        // 关闭底层缓存
-        underlyingCache.close()
+        // 关闭部分响应缓存
+        val partialCacheFuture = if (partialResponseCache != null) {
+            partialResponseCache.clear()
+        } else {
+            Future.succeededFuture()
+        }
+        
+        partialCacheFuture
+            .compose {
+                // 关闭底层缓存
+                underlyingCache.close()
+            }
             .compose {
                 // 关闭嵌入式引擎
                 embeddingEngine.close()
@@ -372,6 +503,7 @@ class SemanticCacheManager(
             .onSuccess {
                 // 清空嵌入向量映射
                 keyEmbeddings.clear()
+                similarityMatcher.clear()
                 promise.complete()
             }
             .onFailure { err ->

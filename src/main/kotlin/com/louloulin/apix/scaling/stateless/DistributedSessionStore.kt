@@ -9,44 +9,44 @@ import java.util.concurrent.TimeUnit
 
 /**
  * 分布式会话存储
- * 
+ *
  * 提供集群环境中的会话管理功能
  */
 class DistributedSessionStore(private val vertx: Vertx) {
     private val logger = LoggerFactory.getLogger(DistributedSessionStore::class.java)
-    
+
     // 会话过期时间（默认30分钟）
-    private val sessionTimeout = TimeUnit.MINUTES.toMillis(30)
-    
+    private var sessionTimeout = TimeUnit.MINUTES.toMillis(30)
+
     // 会话清理间隔（默认5分钟）
-    private val cleanupInterval = TimeUnit.MINUTES.toMillis(5)
-    
+    private var cleanupInterval = TimeUnit.MINUTES.toMillis(5)
+
     // 会话存储名称
     private val sessionMapName = "apix.sessions"
-    
+
     // 会话访问时间存储名称
     private val sessionAccessMapName = "apix.sessions.access"
-    
+
     init {
         // 启动会话清理定时器
         startCleanupTimer()
     }
-    
+
     /**
      * 创建会话
-     * 
+     *
      * @param sessionId 会话ID
      * @param data 会话数据
      * @return 操作结果的Future
      */
     fun createSession(sessionId: String, data: JsonObject): Future<Void> {
         val promise = Promise.promise<Void>()
-        
+
         // 获取会话存储
         vertx.sharedData().getAsyncMap<String, String>(sessionMapName) { ar ->
             if (ar.succeeded()) {
                 val sessionMap = ar.result()
-                
+
                 // 存储会话数据
                 sessionMap.put(sessionId, data.encode()) { putAr ->
                     if (putAr.succeeded()) {
@@ -69,29 +69,29 @@ class DistributedSessionStore(private val vertx: Vertx) {
                 promise.fail(ar.cause())
             }
         }
-        
+
         return promise.future()
     }
-    
+
     /**
      * 获取会话
-     * 
+     *
      * @param sessionId 会话ID
      * @return 包含会话数据的Future
      */
     fun getSession(sessionId: String): Future<JsonObject?> {
         val promise = Promise.promise<JsonObject?>()
-        
+
         // 获取会话存储
         vertx.sharedData().getAsyncMap<String, String>(sessionMapName) { ar ->
             if (ar.succeeded()) {
                 val sessionMap = ar.result()
-                
+
                 // 获取会话数据
                 sessionMap.get(sessionId) { getAr ->
                     if (getAr.succeeded()) {
                         val sessionData = getAr.result()
-                        
+
                         if (sessionData != null) {
                             try {
                                 // 解析会话数据
@@ -115,25 +115,25 @@ class DistributedSessionStore(private val vertx: Vertx) {
                 promise.fail(ar.cause())
             }
         }
-        
+
         return promise.future()
     }
-    
+
     /**
      * 更新会话
-     * 
+     *
      * @param sessionId 会话ID
      * @param data 会话数据
      * @return 操作结果的Future
      */
     fun updateSession(sessionId: String, data: JsonObject): Future<Void> {
         val promise = Promise.promise<Void>()
-        
+
         // 获取会话存储
         vertx.sharedData().getAsyncMap<String, String>(sessionMapName) { ar ->
             if (ar.succeeded()) {
                 val sessionMap = ar.result()
-                
+
                 // 更新会话数据
                 sessionMap.put(sessionId, data.encode()) { putAr ->
                     if (putAr.succeeded()) {
@@ -156,24 +156,24 @@ class DistributedSessionStore(private val vertx: Vertx) {
                 promise.fail(ar.cause())
             }
         }
-        
+
         return promise.future()
     }
-    
+
     /**
      * 删除会话
-     * 
+     *
      * @param sessionId 会话ID
      * @return 操作结果的Future
      */
     fun deleteSession(sessionId: String): Future<Void> {
         val promise = Promise.promise<Void>()
-        
+
         // 获取会话存储
         vertx.sharedData().getAsyncMap<String, String>(sessionMapName) { ar ->
             if (ar.succeeded()) {
                 val sessionMap = ar.result()
-                
+
                 // 删除会话数据
                 sessionMap.remove(sessionId) { removeAr ->
                     if (removeAr.succeeded()) {
@@ -181,7 +181,7 @@ class DistributedSessionStore(private val vertx: Vertx) {
                         vertx.sharedData().getAsyncMap<String, Long>(sessionAccessMapName) { accessAr ->
                             if (accessAr.succeeded()) {
                                 val accessMap = accessAr.result()
-                                
+
                                 accessMap.remove(sessionId) { accessRemoveAr ->
                                     if (accessRemoveAr.succeeded()) {
                                         promise.complete()
@@ -205,24 +205,24 @@ class DistributedSessionStore(private val vertx: Vertx) {
                 promise.fail(ar.cause())
             }
         }
-        
+
         return promise.future()
     }
-    
+
     /**
      * 更新会话访问时间
-     * 
+     *
      * @param sessionId 会话ID
      * @return 操作结果的Future
      */
     fun updateSessionAccessTime(sessionId: String): Future<Void> {
         val promise = Promise.promise<Void>()
-        
+
         // 获取会话访问时间存储
         vertx.sharedData().getAsyncMap<String, Long>(sessionAccessMapName) { ar ->
             if (ar.succeeded()) {
                 val accessMap = ar.result()
-                
+
                 // 更新会话访问时间
                 accessMap.put(sessionId, System.currentTimeMillis()) { putAr ->
                     if (putAr.succeeded()) {
@@ -237,10 +237,10 @@ class DistributedSessionStore(private val vertx: Vertx) {
                 promise.fail(ar.cause())
             }
         }
-        
+
         return promise.future()
     }
-    
+
     /**
      * 启动会话清理定时器
      */
@@ -249,39 +249,39 @@ class DistributedSessionStore(private val vertx: Vertx) {
             cleanupExpiredSessions()
         }
     }
-    
+
     /**
      * 清理过期会话
      */
     private fun cleanupExpiredSessions() {
         logger.debug("开始清理过期会话")
-        
+
         // 获取会话访问时间存储
         vertx.sharedData().getAsyncMap<String, Long>(sessionAccessMapName) { ar ->
             if (ar.succeeded()) {
                 val accessMap = ar.result()
-                
+
                 // 获取所有会话访问时间
                 accessMap.entries { entriesAr ->
                     if (entriesAr.succeeded()) {
                         val entries = entriesAr.result()
                         val now = System.currentTimeMillis()
                         val expiredSessionIds = mutableListOf<String>()
-                        
+
                         // 找出过期的会话
                         for (entry in entries) {
                             val sessionId = entry.key
                             val accessTime = entry.value
-                            
+
                             if (now - accessTime > sessionTimeout) {
                                 expiredSessionIds.add(sessionId)
                             }
                         }
-                        
+
                         // 删除过期的会话
                         if (expiredSessionIds.isNotEmpty()) {
                             logger.debug("发现 {} 个过期会话", expiredSessionIds.size)
-                            
+
                             for (sessionId in expiredSessionIds) {
                                 deleteSession(sessionId)
                                     .onSuccess {
@@ -303,10 +303,10 @@ class DistributedSessionStore(private val vertx: Vertx) {
             }
         }
     }
-    
+
     /**
      * 设置会话过期时间
-     * 
+     *
      * @param timeout 过期时间（毫秒）
      */
     fun setSessionTimeout(timeout: Long) {
@@ -314,28 +314,24 @@ class DistributedSessionStore(private val vertx: Vertx) {
             this.sessionTimeout = timeout
         }
     }
-    
+
     /**
      * 设置会话清理间隔
-     * 
+     *
      * @param interval 清理间隔（毫秒）
      */
     fun setCleanupInterval(interval: Long) {
         if (interval > 0) {
             this.cleanupInterval = interval
-            
+
             // 重新启动清理定时器
             vertx.cancelTimer(cleanupTimerId)
             startCleanupTimer()
         }
     }
-    
+
     // 清理定时器ID
     private var cleanupTimerId: Long = -1
-    
-    // 会话过期时间（可配置）
-    private var sessionTimeout: Long = TimeUnit.MINUTES.toMillis(30)
-    
-    // 会话清理间隔（可配置）
-    private var cleanupInterval: Long = TimeUnit.MINUTES.toMillis(5)
+
+    // 会话过期时间和清理间隔已在类开始处定义
 }
