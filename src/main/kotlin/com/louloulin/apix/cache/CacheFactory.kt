@@ -2,6 +2,7 @@ package com.louloulin.apix.cache
 
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
+import io.vertx.redis.client.RedisOptions
 import org.slf4j.LoggerFactory
 
 /**
@@ -19,7 +20,20 @@ object CacheFactory {
         return MemoryCacheManager(vertx)
     }
 
-    // Redis 缓存管理器暂时移除
+    /**
+     * 创建 Redis 缓存管理器
+     * @param vertx Vertx 实例
+     * @param redisOptions Redis 配置选项
+     * @param keyPrefix 键前缀
+     * @return Redis 缓存管理器
+     */
+    fun createRedisCache(
+        vertx: Vertx,
+        redisOptions: RedisOptions,
+        keyPrefix: String = "apix:cache:"
+    ): CacheManager {
+        return RedisCacheManager(vertx, redisOptions, keyPrefix)
+    }
 
     /**
      * 创建多级缓存管理器
@@ -47,8 +61,15 @@ object CacheFactory {
             "memory" -> createMemoryCache(vertx)
 
             "redis" -> {
-                logger.warn("Redis cache is not available, falling back to memory cache")
-                createMemoryCache(vertx)
+                val redisConfig = config.getJsonObject("redis", JsonObject())
+                val redisOptions = RedisOptions()
+                    .setConnectionString(redisConfig.getString("connectionString", "redis://localhost:6379"))
+                    .setMaxPoolSize(redisConfig.getInteger("maxPoolSize", 8))
+                    .setMaxPoolWaiting(redisConfig.getInteger("maxPoolWaiting", 32))
+
+                val keyPrefix = redisConfig.getString("keyPrefix", "apix:cache:")
+
+                createRedisCache(vertx, redisOptions, keyPrefix)
             }
 
             "multilevel" -> {
