@@ -215,6 +215,15 @@ object EventBusAddresses {
     const val THREAD_MODEL_START_MONITORING = "apix.thread.model.start.monitoring"
     const val THREAD_MODEL_STOP_MONITORING = "apix.thread.model.stop.monitoring"
 
+    // 异步处理相关
+    const val ASYNC_BATCH_PROCESS = "apix.async.batch.process"
+    const val ASYNC_PARALLEL_PROCESS = "apix.async.parallel.process"
+    const val ASYNC_WITH_RETRY = "apix.async.with.retry"
+    const val ASYNC_WITH_TIMEOUT = "apix.async.with.timeout"
+    const val ASYNC_WITH_CIRCUIT_BREAKER = "apix.async.with.circuit.breaker"
+    const val ASYNC_GET_STATS = "apix.async.get.stats"
+    const val ASYNC_RESET_STATS = "apix.async.reset.stats"
+
     // 内存管理相关
     const val MEMORY_USAGE_GET = "apix.memory.usage.get"
     const val MEMORY_GC_TRIGGER = "apix.memory.gc.trigger"
