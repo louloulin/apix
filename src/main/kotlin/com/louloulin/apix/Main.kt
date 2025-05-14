@@ -52,8 +52,12 @@ import com.louloulin.apix.core.verticle.ThreadModelOptimizerVerticle
 import com.louloulin.apix.core.verticle.AsyncProcessorVerticle
 import com.louloulin.apix.core.verticle.RateLimitVerticle
 import com.louloulin.apix.core.verticle.RequestQueueVerticle
+import com.louloulin.apix.core.verticle.VertxOptimizerVerticle
 import com.louloulin.apix.edge.EdgeNodeVerticle
 import com.louloulin.apix.edge.EdgeControlPlaneVerticle
+import com.louloulin.apix.core.config.VertxConfigOptimizer
+import com.louloulin.apix.core.deploy.AdaptiveDeploymentManager
+import com.louloulin.apix.core.eventbus.EnhancedEventBus
 import io.vertx.kotlin.coroutines.await
 import io.vertx.core.CompositeFuture
 import io.vertx.core.metrics.MetricsOptions
@@ -252,6 +256,7 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         futures.add(vertx.deployVerticle(ConcurrencyControlVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ThreadModelOptimizerVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(AsyncProcessorVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(VertxOptimizerVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ModelRouterVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(SemanticRouterVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(LoadBalancedModelRouterVerticle::class.java.name, options))
@@ -395,6 +400,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
             deployVerticle(vertx, AsyncProcessorVerticle::class.java.name, standardOptions)
         }
         .compose {
+            // Then deploy VertxOptimizerVerticle
+            deployVerticle(vertx, VertxOptimizerVerticle::class.java.name, standardOptions)
+        }
+        .compose {
             // Then deploy EdgeNodeVerticle
             deployVerticle(vertx, EdgeNodeVerticle::class.java.name, standardOptions)
         }
@@ -534,6 +543,19 @@ private fun initializePerformanceComponents(vertx: Vertx) {
         // 初始化SimpleEventBus
         val jcToolsEventBus = SimpleEventBus.getInstance(vertx)
         logger.info("Simple EventBus initialized")
+
+        // 初始化增强版EventBus
+        val enhancedEventBus = EnhancedEventBus.getInstance(vertx)
+        logger.info("Enhanced EventBus initialized")
+
+        // 初始化Vert.x配置优化器
+        val vertxConfigOptimizer = VertxConfigOptimizer.getInstance()
+        val optimizedProfile = vertxConfigOptimizer.autoSelectProfile()
+        logger.info("Vert.x Config Optimizer initialized with profile: {}", optimizedProfile)
+
+        // 初始化自适应部署管理器
+        val adaptiveDeploymentManager = AdaptiveDeploymentManager.getInstance(vertx)
+        logger.info("Adaptive Deployment Manager initialized")
 
         // 初始化EventBus管理器
         val eventBusManager = EventBusManager.getInstance(vertx)
