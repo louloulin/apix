@@ -8,7 +8,7 @@
 
 Kong AI Gateway 是业界领先的 AI 网关解决方案，主要特性包括：
 
-- **多 LLM 支持**：支持 OpenAI、Anthropic、Cohere、Azure OpenAI、AWS Bedrock、Google Vertex AI 等多种 LLM 提供商
+- **多 LLM 支持**：支持 OpenAI、Anthropic、Cohere、Azure OpenAI、AWS Bedrock ✅、Google Vertex AI 等多种 LLM 提供商
 - **语义缓存**：基于相似度的语义缓存，提高性能并降低成本
 - **AI 安全功能**：提供 PII 数据清理、提示词注入防护、内容安全检查等安全功能
 - **可观测性**：提供 AI 特定指标、成本分析和使用统计
@@ -118,8 +118,8 @@ APIX 是一个基于 GraalVM 和 Vert.x 构建的高性能 AI 代理网关，采
 #### 3.1.4 可观测性增强
 
 - **AI 特定指标**：完善 AI 特定指标收集和分析 ✅
-- **成本跟踪**：实现基本的成本跟踪功能
-- **使用统计**：增强使用统计功能
+- **成本跟踪**：实现基本的成本跟踪功能 ✅
+- **使用统计**：增强使用统计功能 ✅
 
 ### 3.2 中期目标（6-9个月）
 
@@ -177,11 +177,11 @@ APIX 是一个基于 GraalVM 和 Vert.x 构建的高性能 AI 代理网关，采
 - 支持 Cohere 的 Generate、Embed 和 Chat 接口 ✅
 - 添加 Cohere 特定的配置选项 ✅
 
-#### 4.1.2 AWS Bedrock 集成
+#### 4.1.2 AWS Bedrock 集成 ✅
 
-- 实现 AWS Bedrock API 客户端
-- 支持 Anthropic Claude、Amazon Titan 等模型
-- 添加 AWS 认证和区域配置
+- 实现 AWS Bedrock API 客户端 ✅
+- 支持 Anthropic Claude、Amazon Titan 等模型 ✅
+- 添加 AWS 认证和区域配置 ✅
 
 #### 4.1.3 Google Vertex AI 集成
 
@@ -249,11 +249,11 @@ APIX 是一个基于 GraalVM 和 Vert.x 构建的高性能 AI 代理网关，采
 - 添加成本预算和警报功能 ✅
 - 提供成本优化建议 ✅
 
-#### 4.4.3 使用统计
+#### 4.4.3 使用统计 ✅
 
-- 增强用户级别的使用统计
-- 添加应用级别的使用统计
-- 提供使用趋势分析
+- 增强用户级别的使用统计 ✅
+- 添加应用级别的使用统计 ✅
+- 提供使用趋势分析 ✅
 
 ## 5. 技术架构优化
 
@@ -281,13 +281,13 @@ APIX 是一个基于 GraalVM 和 Vert.x 构建的高性能 AI 代理网关，采
 
 #### 5.2.1 内存优化
 
-- 减少内存分配和垃圾回收
-- 实现对象池
-- 优化缓存内存使用
+- 减少内存分配和垃圾回收 ✅
+- 实现对象池 ✅
+- 优化缓存内存使用 ✅
 
 #### 5.2.2 并发优化
 
-- 实现自适应并发控制
+- 实现自适应并发控制 ✅
 - 优化线程模型
 - 增强异步处理能力
 
