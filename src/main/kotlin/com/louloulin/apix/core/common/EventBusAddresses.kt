@@ -154,6 +154,10 @@ object EventBusAddresses {
     const val CLUSTER_ROUTES_SYNC = "apix.cluster.routes.sync"
     const val CLUSTER_SERVICES_SYNC = "apix.cluster.services.sync"
     const val CLUSTER_PLUGINS_SYNC = "apix.cluster.plugins.sync"
+    const val CLUSTER_GET_NODES = "apix.cluster.get.nodes"
+    const val CLUSTER_GET_NODE_INFO = "apix.cluster.get.node.info"
+    const val CLUSTER_GET_STATS = "apix.cluster.get.stats"
+    const val CLUSTER_NODE_STATE_CHANGE = "apix.cluster.node.state.change"
 
     // 节点模式相关
     const val NODE_MODE_GET = "apix.node.mode.get"
@@ -456,5 +460,5 @@ object EventBusAddresses {
     const val CLUSTER_SET_SHARD_ASSIGNMENT = "apix.cluster.set.shard.assignment"
     const val CLUSTER_GET_LOCAL_REGION = "apix.cluster.get.local.region"
     const val CLUSTER_GET_REGIONS = "apix.cluster.get.regions"
-    const val CLUSTER_GET_NODES = "apix.cluster.get.nodes"
+    // 已在上面定义 const val CLUSTER_GET_NODES = "apix.cluster.get.nodes"
 }
