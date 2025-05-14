@@ -128,6 +128,12 @@ object EventBusAddresses {
     const val PLUGIN_MARKET_DELETE = "apix.plugin.market.delete"
     const val PLUGIN_MARKET_GET_INSTALLED = "apix.plugin.market.get.installed"
 
+    // 流式响应
+    const val STREAM_HANDLE_OPENAI = "apix.stream.handle.openai"
+    const val STREAM_HANDLE_ANTHROPIC = "apix.stream.handle.anthropic"
+    const val STREAM_HANDLE_GENERIC = "apix.stream.handle.generic"
+    const val STREAM_STATS_GET = "apix.stream.stats.get"
+
     // AI 提示词增强
     const val AI_PROMPT_ENHANCE = "apix.ai.prompt.enhance"
     const val AI_PROMPT_TEMPLATES_GET = "apix.ai.prompt.templates.get"
