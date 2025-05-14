@@ -100,6 +100,22 @@ object EventBusAddresses {
     const val AI_MODEL_RULE_REMOVE = "apix.ai.model.rule.remove"
     const val AI_MODEL_RULES_CLEAR = "apix.ai.model.rules.clear"
 
+    // 语义路由
+    const val AI_SEMANTIC_ROUTE = "apix.ai.semantic.route"
+    const val AI_SEMANTIC_RULES_GET = "apix.ai.semantic.rules.get"
+    const val AI_SEMANTIC_RULE_ADD = "apix.ai.semantic.rule.add"
+    const val AI_SEMANTIC_RULE_REMOVE = "apix.ai.semantic.rule.remove"
+    const val AI_SEMANTIC_RULES_CLEAR = "apix.ai.semantic.rules.clear"
+
+    // 负载均衡模型路由
+    const val AI_LOAD_BALANCED_ROUTE = "apix.ai.load.balanced.route"
+    const val AI_LOAD_BALANCED_REQUEST_COMPLETION = "apix.ai.load.balanced.request.completion"
+    const val AI_LOAD_BALANCED_GROUPS_GET = "apix.ai.load.balanced.groups.get"
+    const val AI_LOAD_BALANCED_STATS_GET = "apix.ai.load.balanced.stats.get"
+    const val AI_LOAD_BALANCED_GROUP_ADD = "apix.ai.load.balanced.group.add"
+    const val AI_LOAD_BALANCED_GROUP_REMOVE = "apix.ai.load.balanced.group.remove"
+    const val AI_LOAD_BALANCED_GROUPS_CLEAR = "apix.ai.load.balanced.groups.clear"
+
     // AI 提示词增强
     const val AI_PROMPT_ENHANCE = "apix.ai.prompt.enhance"
     const val AI_PROMPT_TEMPLATES_GET = "apix.ai.prompt.templates.get"

@@ -30,6 +30,8 @@ import com.louloulin.apix.core.verticle.EventBusEnhancerVerticle
 import com.louloulin.apix.core.verticle.HealthVerticle
 import com.louloulin.apix.core.verticle.HighAvailabilityVerticle
 import com.louloulin.apix.core.verticle.ModelRouterVerticle
+import com.louloulin.apix.core.verticle.SemanticRouterVerticle
+import com.louloulin.apix.core.verticle.LoadBalancedModelRouterVerticle
 import com.louloulin.apix.core.verticle.ServiceVerticle
 import com.louloulin.apix.cdn.CDNVerticle
 import com.louloulin.apix.dns.SmartDNSVerticle
@@ -248,6 +250,9 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         futures.add(vertx.deployVerticle(ConcurrencyControlVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ThreadModelOptimizerVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(AsyncProcessorVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(ModelRouterVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(SemanticRouterVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(LoadBalancedModelRouterVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(EdgeNodeVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(EdgeControlPlaneVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ApixVerticle::class.java.name, options))
@@ -340,6 +345,14 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy ModelRouterVerticle
             deployVerticle(vertx, ModelRouterVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy SemanticRouterVerticle
+            deployVerticle(vertx, SemanticRouterVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy LoadBalancedModelRouterVerticle
+            deployVerticle(vertx, LoadBalancedModelRouterVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy PromptEnhancerVerticle
