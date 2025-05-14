@@ -165,6 +165,17 @@ class PromptGuardPlugin(
                             "anthropic" -> {
                                 body.put("prompt", sanitizedPrompt)
                             }
+                            "cohere" -> {
+                                if (path == "message") {
+                                    body.put("message", sanitizedPrompt)
+                                } else if (path == "prompt") {
+                                    body.put("prompt", sanitizedPrompt)
+                                } else if (path.startsWith("texts.")) {
+                                    val index = path.substring(6).toInt()
+                                    val texts = body.getJsonArray("texts")
+                                    texts.set(index, sanitizedPrompt)
+                                }
+                            }
                             "text" -> {
                                 body.put(path, sanitizedPrompt)
                             }
@@ -208,7 +219,7 @@ class PromptGuardPlugin(
      * Extracts the prompt from the request body based on the API format.
      * Returns a triple of (prompt, format, path) where:
      * - prompt is the extracted prompt text
-     * - format is the API format (openai, anthropic, text)
+     * - format is the API format (openai, anthropic, cohere, text)
      * - path is the path to the prompt in the request body
      */
     private fun extractPrompt(jsonBody: JsonObject): Triple<String?, String, String> {
@@ -226,8 +237,26 @@ class PromptGuardPlugin(
 
         // Try Anthropic format
         val prompt = jsonBody.getString("prompt")
-        if (prompt != null) {
+        if (prompt != null && !jsonBody.containsKey("texts")) { // Check it's not Cohere embed
             return Triple(prompt, "anthropic", "prompt")
+        }
+
+        // Try Cohere chat format
+        val message = jsonBody.getString("message")
+        if (message != null && jsonBody.containsKey("model")) {
+            return Triple(message, "cohere", "message")
+        }
+
+        // Try Cohere generate format
+        if (prompt != null && jsonBody.containsKey("model") && !jsonBody.containsKey("messages")) {
+            return Triple(prompt, "cohere", "prompt")
+        }
+
+        // Try Cohere embed format
+        val texts = jsonBody.getJsonArray("texts")
+        if (texts != null && texts.size() > 0) {
+            // For embedding, we'll just check the first text
+            return Triple(texts.getString(0), "cohere", "texts.0")
         }
 
         // Try content field (generic)

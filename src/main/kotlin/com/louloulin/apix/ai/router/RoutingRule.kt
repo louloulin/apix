@@ -20,7 +20,7 @@ data class RoutingRule(
     fun matches(content: String, contentType: String, requestType: String): Boolean {
         return condition.matches(content, contentType, requestType)
     }
-    
+
     /**
      * Convert to JSON.
      */
@@ -32,7 +32,7 @@ data class RoutingRule(
             .put("condition", condition.toJson())
             .put("targetModel", targetModel)
     }
-    
+
     companion object {
         /**
          * Create from JSON.
@@ -44,8 +44,14 @@ data class RoutingRule(
             val conditionJson = json.getJsonObject("condition", JsonObject())
             val condition = RuleCondition.fromJson(conditionJson)
             val targetModel = json.getString("targetModel", "gpt-3.5-turbo")
-            
-            return RoutingRule(id, name, priority, condition, targetModel)
+            // Support for Cohere models
+            val finalTargetModel = if (targetModel.startsWith("cohere:")) {
+                targetModel
+            } else {
+                targetModel
+            }
+
+            return RoutingRule(id, name, priority, condition, finalTargetModel)
         }
     }
 }
@@ -61,7 +67,7 @@ data class RuleCondition(
 ) {
     // Compiled pattern for regex conditions
     private val compiledPattern: Pattern? = if (type == ConditionType.REGEX) Pattern.compile(pattern) else null
-    
+
     /**
      * Check if this condition matches the given request.
      */
@@ -70,11 +76,11 @@ data class RuleCondition(
         if (contentTypes.isNotEmpty() && !contentTypes.contains(contentType)) {
             return false
         }
-        
+
         if (requestTypes.isNotEmpty() && !requestTypes.contains(requestType)) {
             return false
         }
-        
+
         // Check content pattern
         return when (type) {
             ConditionType.CONTAINS -> content.contains(pattern)
@@ -89,7 +95,7 @@ data class RuleCondition(
             ConditionType.LANGUAGE -> detectLanguage(content) == pattern
         }
     }
-    
+
     /**
      * Estimate token count for a string.
      * This is a simple approximation - in production, use a proper tokenizer.
@@ -98,7 +104,7 @@ data class RuleCondition(
         // Simple approximation: 1 token ≈ 4 characters
         return text.length / 4
     }
-    
+
     /**
      * Detect language of a string.
      * This is a simple implementation - in production, use a proper language detector.
@@ -108,7 +114,7 @@ data class RuleCondition(
         val chineseChars = text.count { it.code in 0x4E00..0x9FFF }
         val japaneseChars = text.count { it.code in 0x3040..0x309F || it.code in 0x30A0..0x30FF }
         val koreanChars = text.count { it.code in 0xAC00..0xD7A3 }
-        
+
         return when {
             chineseChars > text.length * 0.1 -> "zh"
             japaneseChars > text.length * 0.1 -> "ja"
@@ -117,7 +123,7 @@ data class RuleCondition(
             else -> "en" // Default to English
         }
     }
-    
+
     /**
      * Convert to JSON.
      */
@@ -128,7 +134,7 @@ data class RuleCondition(
             .put("contentTypes", contentTypes)
             .put("requestTypes", requestTypes)
     }
-    
+
     companion object {
         /**
          * Create from JSON.
@@ -140,23 +146,23 @@ data class RuleCondition(
             } catch (e: IllegalArgumentException) {
                 ConditionType.CONTAINS
             }
-            
+
             val pattern = json.getString("pattern", "")
-            
+
             val contentTypesArray = json.getJsonArray("contentTypes")
             val contentTypes = if (contentTypesArray != null) {
                 (0 until contentTypesArray.size()).map { contentTypesArray.getString(it) }
             } else {
                 listOf()
             }
-            
+
             val requestTypesArray = json.getJsonArray("requestTypes")
             val requestTypes = if (requestTypesArray != null) {
                 (0 until requestTypesArray.size()).map { requestTypesArray.getString(it) }
             } else {
                 listOf()
             }
-            
+
             return RuleCondition(type, pattern, contentTypes, requestTypes)
         }
     }

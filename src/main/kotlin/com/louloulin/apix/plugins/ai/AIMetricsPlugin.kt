@@ -53,6 +53,7 @@ class AIMetricsPlugin(
     // Token counting patterns
     private val openaiCompletionPattern = Pattern.compile("\"model\"\\s*:\\s*\"([^\"]+)\"")
     private val anthropicCompletionPattern = Pattern.compile("\"model\"\\s*:\\s*\"([^\"]+)\"")
+    private val cohereCompletionPattern = Pattern.compile("\"model\"\\s*:\\s*\"([^\"]+)\"")
 
     /**
      * Initialize the plugin
@@ -213,7 +214,12 @@ class AIMetricsPlugin(
 
         // Cohere format
         val cohereModel = body.getString("model")
-        if (cohereModel != null && (body.containsKey("message") || body.containsKey("texts"))) {
+        if (cohereModel != null && (
+                body.containsKey("message") ||
+                body.containsKey("texts") ||
+                body.containsKey("prompt") ||
+                body.containsKey("chat_history")
+            )) {
             return ModelInfo(cohereModel, "cohere")
         }
 
@@ -250,12 +256,27 @@ class AIMetricsPlugin(
                 }
             }
             "cohere" -> {
+                // For generate endpoint
                 val meta = response.getJsonObject("meta")
                 if (meta != null) {
                     val billableTokens = meta.getInteger("billed_units", 0)
                     val inputTokens = meta.getInteger("input_tokens", 0)
                     val outputTokens = billableTokens - inputTokens
                     return TokenInfo(inputTokens, outputTokens, billableTokens)
+                }
+
+                // For chat endpoint
+                val usage = response.getJsonObject("usage")
+                if (usage != null) {
+                    val inputTokens = usage.getInteger("input_tokens", 0)
+                    val outputTokens = usage.getInteger("output_tokens", 0)
+                    return TokenInfo(inputTokens, outputTokens, inputTokens + outputTokens)
+                }
+
+                // For embed endpoint
+                val tokens = response.getInteger("tokens", 0)
+                if (tokens > 0) {
+                    return TokenInfo(tokens, 0, tokens)
                 }
             }
         }

@@ -123,6 +123,30 @@
     "targetUrl" : "https://api.anthropic.com/v1/messages",
     "plugins" : [ "rate-limiter", "auth", "prompt-validator", "request-logger", "response-cache", "token-usage", "header-transform" ],
     "enabled" : true
+  }, {
+    "id" : "cohere-generate",
+    "name" : "Cohere Generate",
+    "path" : "/v1/generate",
+    "methods" : [ "POST" ],
+    "targetUrl" : "https://api.cohere.ai/v1/generate",
+    "plugins" : [ "rate-limiter", "auth", "prompt-validator", "request-logger", "response-cache", "token-usage", "header-transform" ],
+    "enabled" : true
+  }, {
+    "id" : "cohere-chat",
+    "name" : "Cohere Chat",
+    "path" : "/v1/chat",
+    "methods" : [ "POST" ],
+    "targetUrl" : "https://api.cohere.ai/v1/chat",
+    "plugins" : [ "rate-limiter", "auth", "prompt-validator", "request-logger", "response-cache", "token-usage", "header-transform" ],
+    "enabled" : true
+  }, {
+    "id" : "cohere-embed",
+    "name" : "Cohere Embed",
+    "path" : "/v1/embed",
+    "methods" : [ "POST" ],
+    "targetUrl" : "https://api.cohere.ai/v1/embed",
+    "plugins" : [ "rate-limiter", "auth", "prompt-validator", "request-logger", "response-cache", "token-usage", "header-transform" ],
+    "enabled" : true
   } ],
   "services" : [ {
     "id" : "openai",
@@ -141,6 +165,18 @@
     "name" : "Anthropic API",
     "url" : "https://api.anthropic.com",
     "host" : "api.anthropic.com",
+    "port" : 443,
+    "protocol" : "https",
+    "path" : "",
+    "retries" : 3,
+    "connectTimeout" : 30000,
+    "readTimeout" : 60000,
+    "enabled" : true
+  }, {
+    "id" : "cohere",
+    "name" : "Cohere API",
+    "url" : "https://api.cohere.ai",
+    "host" : "api.cohere.ai",
     "port" : 443,
     "protocol" : "https",
     "path" : "",

@@ -100,7 +100,7 @@ APIX 是一个基于 GraalVM 和 Vert.x 构建的高性能 AI 代理网关，采
 #### 3.1.1 LLM 提供商集成增强
 
 - **完善现有集成**：优化 OpenAI、Anthropic 等现有集成
-- **增加新提供商支持**：添加 Cohere、AWS Bedrock、Google Vertex AI 支持
+- **增加新提供商支持**：添加 Cohere ✅、AWS Bedrock、Google Vertex AI 支持
 - **开源模型支持**：增强对 Llama、Mistral 等开源模型的支持
 
 #### 3.1.2 语义缓存系统优化
@@ -171,11 +171,11 @@ APIX 是一个基于 GraalVM 和 Vert.x 构建的高性能 AI 代理网关，采
 
 ### 4.1 LLM 提供商集成增强
 
-#### 4.1.1 Cohere 集成
+#### 4.1.1 Cohere 集成 ✅
 
-- 实现 Cohere API 客户端
-- 支持 Cohere 的 Generate、Embed 和 Chat 接口
-- 添加 Cohere 特定的配置选项
+- 实现 Cohere API 客户端 ✅
+- 支持 Cohere 的 Generate、Embed 和 Chat 接口 ✅
+- 添加 Cohere 特定的配置选项 ✅
 
 #### 4.1.2 AWS Bedrock 集成
 
