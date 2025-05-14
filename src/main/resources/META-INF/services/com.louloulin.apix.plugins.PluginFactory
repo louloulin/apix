@@ -2,3 +2,4 @@ com.louloulin.apix.plugins.ai.PromptGuardPluginFactory
 com.louloulin.apix.plugins.ai.PIIFilterPluginFactory
 com.louloulin.apix.plugins.ai.ContentSafetyPluginFactory
 com.louloulin.apix.plugins.ai.AIMetricsPluginFactory
+com.louloulin.apix.plugins.ai.CostTrackingPluginFactory

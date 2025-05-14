@@ -1,0 +1,37 @@
+{
+  "id": "cost-tracking-1",
+  "type": "cost-tracking",
+  "enabled": true,
+  "track_costs": true,
+  "budget_enabled": true,
+  "monthly_budget": 100.0,
+  "daily_budget": 10.0,
+  "alert_threshold_percent": 80,
+  "optimization_suggestions_enabled": true,
+  "model_pricing": {
+    "gpt-4": {
+      "input_price": 0.03,
+      "output_price": 0.06,
+      "provider": "openai",
+      "unit": "1K tokens"
+    },
+    "gpt-3.5-turbo": {
+      "input_price": 0.0015,
+      "output_price": 0.002,
+      "provider": "openai",
+      "unit": "1K tokens"
+    },
+    "claude-2": {
+      "input_price": 0.008,
+      "output_price": 0.024,
+      "provider": "anthropic",
+      "unit": "1K tokens"
+    },
+    "command": {
+      "input_price": 0.0015,
+      "output_price": 0.002,
+      "provider": "cohere",
+      "unit": "1K tokens"
+    }
+  }
+}
