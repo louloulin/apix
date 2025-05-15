@@ -38,7 +38,20 @@ class DeploymentVerticle : BaseVerticle() {
     }
 
     override fun onStart(startPromise: Promise<Void>) {
-        logger.info("DeploymentVerticle started successfully")
+        // Add a default route for testing
+        val defaultRoute = Route(
+            id = "default-route",
+            name = "Default Route",
+            path = "/api",
+            targetUrl = "http://localhost:8080",
+            methods = listOf("GET", "POST", "PUT", "DELETE"),
+            plugins = listOf(),
+            enabled = true
+        )
+
+        routes[defaultRoute.id] = defaultRoute
+
+        logger.info("DeploymentVerticle started successfully with default route")
         startPromise.complete()
     }
 

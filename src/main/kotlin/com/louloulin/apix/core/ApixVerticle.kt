@@ -8,6 +8,7 @@ import com.louloulin.apix.core.network.NetworkOptimizer
 import com.louloulin.apix.core.tracing.TracingManager
 import com.louloulin.apix.core.verticle.BaseVerticle
 import com.louloulin.apix.plugins.PluginManager
+import com.louloulin.apix.plugins.api.PluginSystemApiHandler
 import io.vertx.core.Promise
 import io.vertx.core.http.Http2Settings
 import io.vertx.core.http.HttpServerOptions
@@ -103,6 +104,10 @@ class ApixVerticle : BaseVerticle() {
                         // 设置插件指标API路由
                         val metricsHandler = com.louloulin.apix.plugins.metrics.MetricsHandler(vertx)
                         metricsHandler.registerRoutes(mainRouter)
+
+                        // 设置插件系统优化API路由
+                        val pluginSystemApiHandler = PluginSystemApiHandler(vertx)
+                        pluginSystemApiHandler.registerRoutes(mainRouter)
 
                         // Gateway routes are set up automatically by the RouteManager
 
