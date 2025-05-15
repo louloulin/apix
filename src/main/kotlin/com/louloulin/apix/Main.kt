@@ -44,6 +44,7 @@ import com.louloulin.apix.edge.control.EdgeControlVerticle
 import com.louloulin.apix.core.verticle.MonitorVerticle
 import com.louloulin.apix.core.verticle.NodeModeVerticle
 import com.louloulin.apix.core.verticle.PluginVerticle
+import com.louloulin.apix.plugins.verticle.PluginSystemVerticle
 import com.louloulin.apix.core.verticle.PromptEnhancerVerticle
 import com.louloulin.apix.core.verticle.ResilienceVerticle
 import com.louloulin.apix.core.verticle.ConcurrencyControlVerticle
@@ -246,6 +247,7 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         futures.add(vertx.deployVerticle(ServiceVerticle::class.java.name, options))
         // 在HighAvailabilityVerticle之前部署PluginVerticle，以处理插件请求
         futures.add(vertx.deployVerticle(PluginVerticle::class.java.name, options))
+        futures.add(vertx.deployVerticle(PluginSystemVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(HighAvailabilityVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ElasticScalingVerticle::class.java.name, options))
         futures.add(vertx.deployVerticle(ResilienceVerticle::class.java.name, options))
@@ -310,6 +312,10 @@ private fun deployVerticles(vertx: Vertx, availableProcessors: Int): Future<Void
         .compose {
             // Then deploy PluginVerticle (needed before HighAvailabilityVerticle to handle plugin requests)
             deployVerticle(vertx, PluginVerticle::class.java.name, standardOptions)
+        }
+        .compose {
+            // Then deploy PluginSystemVerticle (optimized plugin system)
+            deployVerticle(vertx, PluginSystemVerticle::class.java.name, standardOptions)
         }
         .compose {
             // Then deploy HighAvailabilityVerticle
